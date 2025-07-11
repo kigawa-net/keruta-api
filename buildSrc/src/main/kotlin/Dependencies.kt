@@ -32,6 +32,9 @@ object Dependencies {
     const val jjwtImpl = "io.jsonwebtoken:jjwt-impl:${Versions.jjwt}"
     const val jjwtJackson = "io.jsonwebtoken:jjwt-jackson:${Versions.jjwt}"
 
+    // Jackson
+    const val jacksonDatatypeJsr310 = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
+
     // Kotlin
     const val kotlinReflect = "org.jetbrains.kotlin:kotlin-reflect"
     const val kotlinStdlib = "org.jetbrains.kotlin:kotlin-stdlib"

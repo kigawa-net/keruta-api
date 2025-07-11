@@ -16,6 +16,7 @@ dependencies {
     implementation(Dependencies.jjwtApi)
     implementation(Dependencies.jjwtImpl)
     implementation(Dependencies.jjwtJackson)
+    implementation(Dependencies.jacksonDatatypeJsr310)
     implementation(Dependencies.springdocOpenApi)
     implementation(Dependencies.keycloakSpringBootAdapter)
     implementation(Dependencies.keycloakSpringSecurityAdapter)
