@@ -1,5 +1,6 @@
 package net.kigawa.keruta.infra.security.config
 
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
@@ -15,6 +16,8 @@ import java.util.NoSuchElementException
  */
 @ControllerAdvice
 class GlobalExceptionHandler {
+
+    private val logger = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
 
     /**
      * Handles NoSuchElementException which occurs when a requested resource is not found.
@@ -62,6 +65,9 @@ class GlobalExceptionHandler {
         request: WebRequest
     ): ResponseEntity<Map<String, Any>> {
         val errorMessage = "An unexpected error occurred. Our team has been notified and is working to resolve the issue. Please try again later."
+
+        // Log the 500 error to the console
+        logger.error("500 Internal Server Error: {}", ex.message, ex)
 
         return createErrorResponse(
             HttpStatus.INTERNAL_SERVER_ERROR,
