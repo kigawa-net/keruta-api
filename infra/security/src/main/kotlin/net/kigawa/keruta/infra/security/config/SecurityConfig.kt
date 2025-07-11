@@ -1,5 +1,6 @@
 package net.kigawa.keruta.infra.security.config
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
@@ -18,6 +19,21 @@ import org.springframework.web.filter.CorsFilter
 @EnableWebSecurity
 class SecurityConfig {
 
+    @Value("\${spring.web.cors.allowed-origins:*}")
+    private lateinit var allowedOrigins: String
+
+    @Value("\${spring.web.cors.allowed-methods:GET,POST,PUT,DELETE,PATCH,OPTIONS}")
+    private lateinit var allowedMethods: String
+
+    @Value("\${spring.web.cors.allowed-headers:*}")
+    private lateinit var allowedHeaders: String
+
+    @Value("\${spring.web.cors.allow-credentials:false}")
+    private var allowCredentials: Boolean = false
+
+    @Value("\${spring.web.cors.max-age:3600}")
+    private var maxAge: Long = 3600
+
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
@@ -35,11 +51,11 @@ class SecurityConfig {
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
-        configuration.allowedOrigins = listOf("*")
-        configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-        configuration.allowedHeaders = listOf("*")
-        configuration.allowCredentials = false
-        configuration.maxAge = 3600
+        configuration.allowedOrigins = allowedOrigins.split(",").map { it.trim() }
+        configuration.allowedMethods = allowedMethods.split(",").map { it.trim() }
+        configuration.allowedHeaders = allowedHeaders.split(",").map { it.trim() }
+        configuration.allowCredentials = allowCredentials
+        configuration.maxAge = maxAge
 
         val source = UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", configuration)
