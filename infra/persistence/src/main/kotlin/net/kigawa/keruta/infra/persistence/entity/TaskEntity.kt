@@ -63,12 +63,21 @@ data class TaskEntity(
     }
 
     fun toDomain(): Task {
+        // Convert status string to TaskStatus enum, using PENDING as fallback if the status is invalid
+        val taskStatus = try {
+            TaskStatus.valueOf(status)
+        } catch (e: IllegalArgumentException) {
+            // Log the error and use PENDING as a fallback
+            println("Invalid task status: $status for task: $id. Using PENDING as fallback.")
+            TaskStatus.PENDING
+        }
+
         return Task(
             id = id,
             title = title,
             description = description,
             priority = priority,
-            status = TaskStatus.valueOf(status),
+            status = taskStatus,
             // repository parameter removed from Task model
             documents = document?.let { listOf(DomainDocument(title = title, content = it)) } ?: emptyList(),
             image = image,

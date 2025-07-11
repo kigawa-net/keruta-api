@@ -153,7 +153,7 @@ class TaskController(
             val taskStatus = try {
                 net.kigawa.keruta.core.domain.model.TaskStatus.valueOf(statusStr.uppercase())
             } catch (e: IllegalArgumentException) {
-                logger.error("Invalid task status: {} for task: {}. Valid statuses are: {}", 
+                logger.error("Invalid task status: {} for task: {}. Valid statuses are: {}",
                     statusStr, id, net.kigawa.keruta.core.domain.model.TaskStatus.values().joinToString(", "), e)
                 return ResponseEntity.badRequest().build()
             }
