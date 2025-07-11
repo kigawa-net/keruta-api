@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: html}">
+<body>
+    <div id="content">
+        <div class="mb-3">
+            <a href="/admin/tasks/pods" class="btn btn-secondary">Back to Task Pods</a>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                Task Pod Details
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">ID:</div>
+                    <div class="col-md-9" th:text="${task.id}">ID</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Title:</div>
+                    <div class="col-md-9" th:text="${task.title}">Title</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Description:</div>
+                    <div class="col-md-9" th:text="${task.description ?: 'N/A'}">Description</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Status:</div>
+                    <div class="col-md-9">
+                        <span th:class="${'badge ' +
+                            (task.status == T(net.kigawa.keruta.core.domain.model.TaskStatus).PENDING ? 'bg-warning' :
+                            (task.status == T(net.kigawa.keruta.core.domain.model.TaskStatus).IN_PROGRESS ? 'bg-info' :
+                            (task.status == T(net.kigawa.keruta.core.domain.model.TaskStatus).COMPLETED ? 'bg-success' :
+                            'bg-danger')))}"
+                            th:text="${task.status}">
+                            Status
+                        </span>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Priority:</div>
+                    <div class="col-md-9" th:text="${task.priority}">Priority</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Pod Name:</div>
+                    <div class="col-md-9" th:text="${task.podName ?: 'N/A'}">Pod Name</div>
+                </div>
+                <div class="row mb-3" th:if="${task.repositoryId != null}">
+                    <div class="col-md-3 fw-bold">Repository:</div>
+                    <div class="col-md-9" th:text="${task.repositoryId}">Repository ID</div>
+                </div>
+                <div class="row mb-3" th:if="${task.agentId != null}">
+                    <div class="col-md-3 fw-bold">Agent:</div>
+                    <div class="col-md-9" th:text="${task.agentId}">Agent ID</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Created:</div>
+                    <div class="col-md-9" th:text="${#temporals.format(task.createdAt, 'yyyy-MM-dd HH:mm:ss')}">Created</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Updated:</div>
+                    <div class="col-md-9" th:text="${#temporals.format(task.updatedAt, 'yyyy-MM-dd HH:mm:ss')}">Updated</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Pod Logs</span>
+                <div>
+                    <button id="autoScrollToggle" class="btn btn-sm btn-outline-secondary">Auto-scroll: ON</button>
+                    <button id="clearLogs" class="btn btn-sm btn-outline-danger ms-2">Clear Display</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="log-container" class="bg-dark text-light p-3 rounded" style="height: 500px; overflow-y: auto; font-family: monospace;">
+                    <!-- Static logs from the database -->
+                    <div th:if="${task.logs == null || task.logs.isEmpty()}" id="no-logs-message">
+                        <p class="text-muted">No logs available. New logs will appear here in real-time.</p>
+                    </div>
+                    <div th:unless="${task.logs == null || task.logs.isEmpty()}" id="static-logs">
+                        <pre th:text="${task.logs}">Logs</pre>
+                    </div>
+
+                    <!-- Dynamic logs from WebSocket will be appended here -->
+                    <div id="dynamic-logs"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Input Form -->
+        <div class="card mt-3 mb-3">
+            <div class="card-header">
+                Add Log Entry
+            </div>
+            <div class="card-body">
+                <form id="log-form">
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Log Message</label>
+                        <textarea class="form-control" id="message" name="message" rows="3" required></textarea>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="source" class="form-label">Source</label>
+                            <select class="form-select" id="source" name="source">
+                                <option value="admin" selected>Admin</option>
+                                <option value="stdout">stdout</option>
+                                <option value="stderr">stderr</option>
+                                <option value="system">System</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="level" class="form-label">Level</label>
+                            <select class="form-select" id="level" name="level">
+                                <option value="INFO" selected>INFO</option>
+                                <option value="WARN">WARN</option>
+                                <option value="ERROR">ERROR</option>
+                                <option value="DEBUG">DEBUG</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Log</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <a th:href="@{/admin/tasks/{id}/kubernetes-manifest(id=${task.id})}" class="btn btn-primary">View Kubernetes Manifest</a>
+            <a th:href="@{/admin/tasks/{id}/logs(id=${task.id})}" class="btn btn-secondary ms-2">View Task Logs</a>
+        </div>
+    </div>
+
+    <!-- Log Polling JavaScript (WebSocket functionality has been removed) -->
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const taskId = /*[[${task.id}]]*/ 'task-id';
+            const logContainer = document.getElementById('log-container');
+            const dynamicLogs = document.getElementById('dynamic-logs');
+            const autoScrollToggle = document.getElementById('autoScrollToggle');
+            const clearLogsBtn = document.getElementById('clearLogs');
+            const logForm = document.getElementById('log-form');
+
+            let autoScroll = true;
+            let lastLogTimestamp = new Date().toISOString();
+
+            // Initialize with system message
+            appendSystemMessage('Log polling initialized. Refresh the page to see new logs.');
+
+            // Poll for new logs every 5 seconds
+            const pollInterval = 5000; // 5 seconds
+
+            // Function to fetch logs from the server
+            function fetchLogs() {
+                fetch(`/api/v1/tasks/${taskId}/logs`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch logs');
+                        }
+                        return response.text();
+                    })
+                    .then(logs => {
+                        // Process new logs if needed
+                        // This is a simple implementation that just displays the logs
+                        // In a real implementation, you would parse the logs and display only new ones
+                    })
+                    .catch(error => {
+                        console.error('Error fetching logs:', error);
+                    });
+            }
+
+            // Start polling
+            // const pollTimer = setInterval(fetchLogs, pollInterval);
+
+            // For now, we're not implementing polling to avoid unnecessary server load
+            // Users can refresh the page to see new logs
+
+            // Toggle auto-scroll
+            autoScrollToggle.addEventListener('click', function() {
+                autoScroll = !autoScroll;
+                this.textContent = `Auto-scroll: ${autoScroll ? 'ON' : 'OFF'}`;
+
+                if (autoScroll) {
+                    logContainer.scrollTop = logContainer.scrollHeight;
+                }
+            });
+
+            // Clear logs display
+            clearLogsBtn.addEventListener('click', function() {
+                dynamicLogs.innerHTML = '';
+                appendSystemMessage('Log display cleared. Historical logs are still saved in the database.');
+            });
+
+            // Handle log form submission
+            logForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const message = document.getElementById('message').value;
+                const source = document.getElementById('source').value;
+                const level = document.getElementById('level').value;
+
+                if (!message.trim()) {
+                    return;
+                }
+
+                // Send log to API
+                fetch(`/api/v1/tasks/${taskId}/logs/stream?source=${source}&level=${level}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
+                    body: message
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to send log');
+                    }
+
+                    // Clear form
+                    document.getElementById('message').value = '';
+                })
+                .catch(error => {
+                    console.error('Error sending log:', error);
+                    appendSystemMessage(`Error sending log: ${error.message}`);
+                });
+            });
+
+            // Helper function to append a log message
+            function appendLogMessage(logMessage) {
+                const logEntry = document.createElement('div');
+                logEntry.className = `log-entry log-${logMessage.level.toLowerCase()}`;
+
+                const timestamp = new Date(logMessage.timestamp).toISOString().replace('T', ' ').substring(0, 19);
+
+                logEntry.innerHTML = `
+                    <span class="timestamp text-muted">[${timestamp}]</span>
+                    <span class="source text-${getSourceColor(logMessage.source)}">[${logMessage.source}]</span>
+                    <span class="level text-${getLevelColor(logMessage.level)}">[${logMessage.level}]</span>
+                    <span class="message">${escapeHtml(logMessage.message)}</span>
+                `;
+
+                dynamicLogs.appendChild(logEntry);
+
+                // Hide "No logs available" message if it exists
+                const noLogsMessage = document.getElementById('no-logs-message');
+                if (noLogsMessage) {
+                    noLogsMessage.style.display = 'none';
+                }
+            }
+
+            // Helper function to append a system message
+            function appendSystemMessage(message) {
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry log-system';
+
+                const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+                logEntry.innerHTML = `
+                    <span class="timestamp text-muted">[${timestamp}]</span>
+                    <span class="source text-secondary">[system]</span>
+                    <span class="level text-info">[INFO]</span>
+                    <span class="message">${message}</span>
+                `;
+
+                dynamicLogs.appendChild(logEntry);
+
+                if (autoScroll) {
+                    logContainer.scrollTop = logContainer.scrollHeight;
+                }
+
+                // Hide "No logs available" message if it exists
+                const noLogsMessage = document.getElementById('no-logs-message');
+                if (noLogsMessage) {
+                    noLogsMessage.style.display = 'none';
+                }
+            }
+
+            // Helper function to get color for log level
+            function getLevelColor(level) {
+                switch(level.toUpperCase()) {
+                    case 'ERROR': return 'danger';
+                    case 'WARN': return 'warning';
+                    case 'INFO': return 'info';
+                    case 'DEBUG': return 'secondary';
+                    default: return 'light';
+                }
+            }
+
+            // Helper function to get color for log source
+            function getSourceColor(source) {
+                switch(source.toLowerCase()) {
+                    case 'stdout': return 'success';
+                    case 'stderr': return 'danger';
+                    case 'admin': return 'primary';
+                    case 'system': return 'secondary';
+                    default: return 'light';
+                }
+            }
+
+            // Helper function to escape HTML
+            function escapeHtml(unsafe) {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            // Scroll to bottom initially
+            logContainer.scrollTop = logContainer.scrollHeight;
+        });
+    </script>
+
+    <style>
+        .log-entry {
+            margin-bottom: 2px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .timestamp {
+            margin-right: 5px;
+            font-size: 0.85em;
+        }
+        .source, .level {
+            margin-right: 5px;
+            font-weight: bold;
+        }
+        #log-container {
+            font-size: 0.9em;
+        }
+        .log-error {
+            color: #dc3545;
+        }
+        .log-warn {
+            color: #ffc107;
+        }
+        .log-info {
+            color: #0dcaf0;
+        }
+        .log-debug {
+            color: #6c757d;
+        }
+        .log-system {
+            color: #adb5bd;
+            font-style: italic;
+        }
+    </style>
+</body>
+</html>

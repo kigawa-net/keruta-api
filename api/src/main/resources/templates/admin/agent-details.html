@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: html}">
+<body>
+    <div id="content">
+        <div class="mb-3">
+            <a href="/admin/agents" class="btn btn-secondary">Back to Agent List</a>
+            <a th:href="@{/admin/agents/edit/{id}(id=${agent.id})}" class="btn btn-primary">Edit Agent</a>
+            <a th:href="@{/admin/agents/delete/{id}(id=${agent.id})}" class="btn btn-danger" 
+               onclick="return confirm('Are you sure you want to delete this agent?')">Delete Agent</a>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                Agent Details
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">ID:</div>
+                    <div class="col-md-9" th:text="${agent.id}">ID</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Name:</div>
+                    <div class="col-md-9" th:text="${agent.name}">Name</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Languages:</div>
+                    <div class="col-md-9" th:text="${#strings.listJoin(agent.languages, ', ')}">Languages</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Status:</div>
+                    <div class="col-md-9">
+                        <span th:class="${'badge ' + 
+                            (agent.status == T(net.kigawa.keruta.core.domain.model.AgentStatus).AVAILABLE ? 'bg-success' : 
+                            (agent.status == T(net.kigawa.keruta.core.domain.model.AgentStatus).BUSY ? 'bg-warning' : 
+                            'bg-danger'))}"
+                            th:text="${agent.status}">
+                            Status
+                        </span>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Current Task:</div>
+                    <div class="col-md-9" th:text="${agent.currentTaskId ?: 'None'}">Current Task</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Install Command:</div>
+                    <div class="col-md-9">
+                        <pre class="bg-light p-3 rounded" th:text="${agent.installCommand ?: 'None'}">Install Command</pre>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Execute Command:</div>
+                    <div class="col-md-9">
+                        <pre class="bg-light p-3 rounded" th:text="${agent.executeCommand ?: 'None'}">Execute Command</pre>
+                        <small class="text-muted">Available environment variables: KERUTA_TASK_ID, KERUTA_INPUT_FILE_PATH, KERUTA_OUTPUT_DIR</small>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Created:</div>
+                    <div class="col-md-9" th:text="${#temporals.format(agent.createdAt, 'yyyy-MM-dd HH:mm')}">Created</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Updated:</div>
+                    <div class="col-md-9" th:text="${#temporals.format(agent.updatedAt, 'yyyy-MM-dd HH:mm')}">Updated</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

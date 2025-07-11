@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: html}">
+<body>
+    <div id="content">
+        <div class="mb-3">
+            <a href="/admin/jobs" class="btn btn-secondary">Back to Jobs</a>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                Job Details
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">ID:</div>
+                    <div class="col-md-9" th:text="${job.id}">ID</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Task ID:</div>
+                    <div class="col-md-9">
+                        <a th:href="@{/admin/tasks/edit/{id}(id=${job.taskId})}" th:text="${job.taskId}">Task ID</a>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Status:</div>
+                    <div class="col-md-9">
+                        <span th:class="${'badge ' + 
+                            (job.status == T(net.kigawa.keruta.core.domain.model.JobStatus).PENDING ? 'bg-warning' : 
+                            (job.status == T(net.kigawa.keruta.core.domain.model.JobStatus).RUNNING ? 'bg-info' : 
+                            (job.status == T(net.kigawa.keruta.core.domain.model.JobStatus).COMPLETED ? 'bg-success' : 
+                            'bg-danger')))}"
+                            th:text="${job.status}">
+                            Status
+                        </span>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Image:</div>
+                    <div class="col-md-9" th:text="${job.image}">Image</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Namespace:</div>
+                    <div class="col-md-9" th:text="${job.namespace}">Namespace</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Pod Name:</div>
+                    <div class="col-md-9" th:text="${job.podName ?: 'N/A'}">Pod Name</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Created:</div>
+                    <div class="col-md-9" th:text="${#temporals.format(job.createdAt, 'yyyy-MM-dd HH:mm:ss')}">Created</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Updated:</div>
+                    <div class="col-md-9" th:text="${#temporals.format(job.updatedAt, 'yyyy-MM-dd HH:mm:ss')}">Updated</div>
+                </div>
+                <div class="row mb-3" th:if="${job.resources != null}">
+                    <div class="col-md-3 fw-bold">Resources:</div>
+                    <div class="col-md-9">
+                        CPU: <span th:text="${job.resources.cpu}">CPU</span>,
+                        Memory: <span th:text="${job.resources.memory}">Memory</span>
+                    </div>
+                </div>
+                <div class="row mb-3" th:if="${!job.additionalEnv.isEmpty()}">
+                    <div class="col-md-3 fw-bold">Environment Variables:</div>
+                    <div class="col-md-9">
+                        <ul class="list-group">
+                            <li class="list-group-item" th:each="env : ${job.additionalEnv}">
+                                <span th:text="${env.key}">Key</span>: <span th:text="${env.value}">Value</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                Job Logs
+            </div>
+            <div class="card-body">
+                <div th:if="${job.logs == null || job.logs.isEmpty()}">
+                    <p>No logs available.</p>
+                </div>
+                <div th:unless="${job.logs == null || job.logs.isEmpty()}">
+                    <pre class="bg-dark text-light p-3 rounded" style="max-height: 500px; overflow-y: auto;" th:text="${job.logs}">Logs</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

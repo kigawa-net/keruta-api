@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: html}">
+<body>
+    <div id="content">
+        <div class="mb-3">
+            <a href="/admin/agents/create" class="btn btn-primary">Create New Agent</a>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                Agent List
+            </div>
+            <div class="card-body">
+                <div th:if="${#lists.isEmpty(agents)}">
+                    <p>No agents available.</p>
+                </div>
+                <div th:unless="${#lists.isEmpty(agents)}">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Languages</th>
+                                <th>Status</th>
+                                <th>Current Task</th>
+                                <th>Created</th>
+                                <th>Updated</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="agent : ${agents}">
+                                <td th:text="${agent.id}">ID</td>
+                                <td th:text="${agent.name}">Name</td>
+                                <td th:text="${#strings.listJoin(agent.languages, ', ')}">Languages</td>
+                                <td>
+                                    <span th:class="${'badge ' + 
+                                        (agent.status == T(net.kigawa.keruta.core.domain.model.AgentStatus).AVAILABLE ? 'bg-success' : 
+                                        (agent.status == T(net.kigawa.keruta.core.domain.model.AgentStatus).BUSY ? 'bg-warning' : 
+                                        'bg-danger'))}"
+                                        th:text="${agent.status}">
+                                        Status
+                                    </span>
+                                </td>
+                                <td th:text="${agent.currentTaskId ?: 'None'}">Current Task</td>
+                                <td th:text="${#temporals.format(agent.createdAt, 'yyyy-MM-dd HH:mm')}">Created</td>
+                                <td th:text="${#temporals.format(agent.updatedAt, 'yyyy-MM-dd HH:mm')}">Updated</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a th:href="@{/admin/agents/view/{id}(id=${agent.id})}" class="btn btn-sm btn-outline-secondary">View</a>
+                                        <a th:href="@{/admin/agents/edit/{id}(id=${agent.id})}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                        <a th:href="@{/admin/agents/delete/{id}(id=${agent.id})}" class="btn btn-sm btn-outline-danger" 
+                                           onclick="return confirm('Are you sure you want to delete this agent?')">Delete</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

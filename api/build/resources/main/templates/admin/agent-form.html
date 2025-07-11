@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: html}">
+<body>
+    <div id="content">
+        <div class="card">
+            <div class="card-header">
+                <span th:text="${agent.id == null ? 'Create Agent' : 'Edit Agent'}">Agent Form</span>
+            </div>
+            <div class="card-body">
+                <form th:action="${agent.id == null ? '/admin/agents/create' : '/admin/agents/edit/' + agent.id}" method="post" th:object="${agent}">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" th:value="*{name}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="languages" class="form-label">Languages</label>
+                        <input type="text" class="form-control" id="languages" name="languages" th:value="${#strings.listJoin(agent.languages, ', ')}" placeholder="e.g. java, python, javascript">
+                        <small class="form-text text-muted">Comma-separated list of programming languages supported by this agent.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option th:each="statusOption : ${statuses}" 
+                                    th:value="${statusOption}" 
+                                    th:text="${statusOption}"
+                                    th:selected="${statusOption == agent.status}">
+                                Status
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="installCommand" class="form-label">Install Command</label>
+                        <textarea class="form-control" id="installCommand" name="installCommand" rows="4" th:text="*{installCommand}"></textarea>
+                        <small class="form-text text-muted">Command to install the agent. This will be executed in the init container.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="executeCommand" class="form-label">Execute Command</label>
+                        <textarea class="form-control" id="executeCommand" name="executeCommand" rows="4" th:text="*{executeCommand}"></textarea>
+                        <small class="form-text text-muted">Command to execute the agent. Environment variables like KERUTA_TASK_ID will be available.</small>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="/admin/agents" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: html}">
+<body>
+    <div id="content">
+        <div class="mb-3">
+            <a th:href="@{/admin/tasks/{id}/pod(id=${task.id})}" class="btn btn-secondary">Back to Task Pod Details</a>
+            <a th:href="@{/admin/tasks/{id}/logs(id=${task.id})}" class="btn btn-secondary ms-2">View Task Logs</a>
+        </div>
+
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${successMessage}">Success message</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${errorMessage}">Error message</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                Kubernetes Manifest for Task: <span th:text="${task.title}">Task Title</span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Task ID:</div>
+                    <div class="col-md-9" th:text="${task.id}">ID</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Pod Name:</div>
+                    <div class="col-md-9" th:text="${task.podName ?: 'N/A'}">Pod Name</div>
+                </div>
+
+                <form th:action="@{/admin/tasks/{id}/kubernetes-manifest(id=${task.id})}" method="post">
+                    <div class="form-group">
+                        <label for="manifest" class="form-label">Kubernetes Manifest:</label>
+                        <textarea id="manifest" name="manifest" class="form-control" rows="20" th:text="${task.kubernetesManifest ?: '# No manifest available'}"></textarea>
+                    </div>
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-primary">Update Manifest</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
