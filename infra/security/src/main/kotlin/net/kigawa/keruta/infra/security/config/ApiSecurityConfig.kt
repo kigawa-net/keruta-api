@@ -14,7 +14,7 @@ import org.springframework.security.web.SecurityFilterChain
  */
 @Configuration
 @EnableWebSecurity
-class ApiSecurityConfig {
+class ApiSecurityConfig(private val securityConfig: SecurityConfig) {
 
     @Bean
     @Order(1) // Higher priority than the default SecurityFilterChain
@@ -22,6 +22,7 @@ class ApiSecurityConfig {
         http
             .securityMatcher("/api/**") // Only apply this configuration to API endpoints
             .csrf { it.disable() }
+            .cors { it.configurationSource(securityConfig.corsConfigurationSource()) }
             .authorizeHttpRequests { auth ->
                 auth
                     // Allow all API requests
