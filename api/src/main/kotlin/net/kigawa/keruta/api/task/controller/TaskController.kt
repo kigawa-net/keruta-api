@@ -2,6 +2,7 @@ package net.kigawa.keruta.api.task.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import net.kigawa.keruta.api.task.dto.CreateTaskRequest
 import net.kigawa.keruta.api.task.dto.ScriptRequest
 import net.kigawa.keruta.api.task.dto.ScriptResponse
 import net.kigawa.keruta.api.task.dto.TaskResponse
@@ -19,6 +20,21 @@ class TaskController(
     private val taskLogHandler: TaskLogHandler,
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
+
+    @PostMapping
+    @Operation(summary = "Create a new task", description = "Creates a new task in the system")
+    fun createTask(@RequestBody request: CreateTaskRequest): ResponseEntity<TaskResponse> {
+        logger.info("Creating new task: {}", request)
+        try {
+            val task = request.toDomain()
+            val createdTask = taskService.createTask(task)
+            logger.info("Task created successfully: id={}", createdTask.id)
+            return ResponseEntity.ok(TaskResponse.fromDomain(createdTask))
+        } catch (e: Exception) {
+            logger.error("Failed to create task", e)
+            return ResponseEntity.internalServerError().build()
+        }
+    }
 
     @GetMapping
     @Operation(summary = "Get all tasks", description = "Retrieves all tasks in the system")
