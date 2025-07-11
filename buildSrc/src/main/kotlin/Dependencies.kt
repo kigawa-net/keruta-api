@@ -34,6 +34,7 @@ object Dependencies {
 
     // Jackson
     const val jacksonDatatypeJsr310 = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
+    const val jacksonModuleKotlin = "com.fasterxml.jackson.module:jackson-module-kotlin"
 
     // Kotlin
     const val kotlinReflect = "org.jetbrains.kotlin:kotlin-reflect"
