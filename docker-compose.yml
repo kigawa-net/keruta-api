@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+
+  mongodb:
+    image: mongo:latest
+    container_name: keruta-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=keruta
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    restart: unless-stopped
+    networks:
+      - keruta-network
+
+  # Keycloak is configured to automatically import the "keruta" realm from data/keycloak.default.realm.json
+  # The realm includes a properly configured client with ID "keruta"
+  # 
+  # If needed, you can access the admin console at http://localhost:8180/admin/ with admin/admin
+  # See keruta-doc/keruta/keycloak_integration.md for detailed instructions on Keycloak configuration
+  keycloak:
+    image: bitnami/keycloak:latest
+    container_name: keruta-keycloak
+    ports:
+      - "8180:8080"
+    environment:
+      KEYCLOAK_ADMIN_USER: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 8080
+      KC_HOSTNAME_STRICT_BACKCHANNEL: true
+      KEYCLOAK_DATABASE_VENDOR: postgresql
+      KEYCLOAK_DATABASE_HOST: postgres
+      KEYCLOAK_DATABASE_PORT: 5432
+      KEYCLOAK_DATABASE_NAME: keycloak
+      KEYCLOAK_DATABASE_USER: postgres
+      KEYCLOAK_DATABASE_PASSWORD: postgres
+      KEYCLOAK_DATABASE_SCHEMA: public
+      KC_HTTP_ENABLED: 'true'
+      KEYCLOAK_EXTRA_ARGS: "--import-realm"
+    volumes:
+      - ./data/keycloak.default.realm.json:/opt/bitnami/keycloak/data/import/keycloak.default.realm.json
+      - keycloak_data:/opt/keycloak/data
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - keruta-network
+  postgres:
+    image: postgres:15.6-alpine
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./src/db/migrations/00_create_db.sql:/docker-entrypoint-initdb.d/create-db.sql
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - keruta-network
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+
+networks:
+  keruta-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+  keycloak_data:
+    driver: local
+  postgres-data:

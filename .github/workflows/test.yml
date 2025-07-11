@@ -1,0 +1,53 @@
+name: test
+
+on:
+  workflow_call:
+
+jobs: {}
+#  back:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - run:
+#          mkdir -p temp/test/app-data
+#      - run: |
+#          docker compose -f docker-compose.test.yml up backend-test --exit-code-from backend-test
+#      - run: docker compose -f docker-compose.test.yml logs
+#        if: always()
+#
+#      # キャッシュがない場合は Docker イメージをビルド後、tar アーカイブをキャッシュ先に保存
+#      - name: Build Docker image and save
+#        if: steps.cache.outputs.cache-hit != 'true'
+#        run: |
+#          # キャッシュディレクトリを作成
+#          mkdir -p ./temp
+#          # イメージのキャッシュ（tar をキャッシュ・ディレクトリに出力）
+#          docker save --output ./temp/postgres.tar postgres
+#          docker save --output ./temp/python.tar python
+#          docker save --output ./temp/rsync.tar secoresearch/rsync
+#
+#
+#  migration:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - run:
+#          mkdir -p temp/test/app-data-test-migration
+#      - run: |
+#          docker compose -f docker-compose.test-migration.yml up test-migration --exit-code-from test-migration
+#      - run: docker compose -f docker-compose.test-migration.yml logs
+#        if: always()
+#
+#      # キャッシュがない場合は Docker イメージをビルド後、tar アーカイブをキャッシュ先に保存
+#      - name: Build Docker image and save
+#        if: steps.cache.outputs.cache-hit != 'true'
+#        run: |
+#          # キャッシュディレクトリを作成
+#          mkdir -p ./temp
+#          # イメージのキャッシュ（tar をキャッシュ・ディレクトリに出力）
+#          docker save --output ./temp/postgres.tar postgres
+#          docker save --output ./temp/python.tar python
+#          docker save --output ./temp/rsync.tar secoresearch/rsync
+#
