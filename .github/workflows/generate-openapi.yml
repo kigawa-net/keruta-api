@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'keruta-api/api/**'
+      - 'api/**'
       - 'infra/**'
       - '.github/workflows/generate-openapi.yml'
 
@@ -37,7 +37,7 @@ jobs:
         run: |
           # set -e を追加してコマンド失敗時にスクリプトを終了
           set -e
-          ./gradlew :keruta-api:api:bootRun --args='--spring.profiles.active=test' || { echo "Gradleビルドに失敗しました"; exit 1; } &
+          ./gradlew :api:bootRun --args='--spring.profiles.active=test' || { echo "Gradleビルドに失敗しました"; exit 1; } &
           echo "Waiting for application to start..."
 
           # Health check instead of sleep
