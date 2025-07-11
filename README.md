@@ -33,6 +33,13 @@ Keruta API is structured as a multi-module Gradle project:
 ./gradlew test --continue
 ```
 
+### Logging Configuration
+The application uses INFO level logging by default. The log configuration is defined in:
+- `api/src/main/resources/application.properties`
+- `infra/app/src/main/resources/application.properties`
+
+To enable more detailed DEBUG logging, modify these files and change the log levels from INFO to DEBUG.
+
 ### Code Quality
 ```bash
 # Check code style (all modules)

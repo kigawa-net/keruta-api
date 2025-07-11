@@ -2,32 +2,34 @@ package net.kigawa.keruta.api
 
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.servlet.view.RedirectView
+import org.springframework.web.bind.annotation.ResponseBody
 
 /**
  * Controller for handling the root and welcome pages.
- * Redirects to the admin dashboard.
+ * Returns a simple welcome message.
  */
 @Controller
 class RootController {
 
     /**
-     * Redirects the root path to the admin dashboard.
+     * Returns a welcome message for the root path.
      *
-     * @return RedirectView to the admin dashboard
+     * @return Welcome message
      */
     @GetMapping("/")
-    fun rootToAdmin(): RedirectView {
-        return RedirectView("/admin")
+    @ResponseBody
+    fun root(): String {
+        return "Welcome to Keruta API. Please use the API endpoints or refer to the documentation."
     }
 
     /**
-     * Redirects the welcome path to the admin dashboard.
+     * Returns a welcome message for the welcome path.
      *
-     * @return RedirectView to the admin dashboard
+     * @return Welcome message
      */
     @GetMapping("/welcome")
-    fun welcomeToAdmin(): RedirectView {
-        return RedirectView("/admin")
+    @ResponseBody
+    fun welcome(): String {
+        return "Welcome to Keruta API. Please use the API endpoints or refer to the documentation."
     }
 }

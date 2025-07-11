@@ -29,10 +29,10 @@
                                 <td th:text="${task.title}">Title</td>
                                 <td th:text="${task.podName}">Pod Name</td>
                                 <td>
-                                    <span th:class="${'badge ' + 
-                                        (task.status == T(net.kigawa.keruta.core.domain.model.TaskStatus).PENDING ? 'bg-warning' : 
-                                        (task.status == T(net.kigawa.keruta.core.domain.model.TaskStatus).IN_PROGRESS ? 'bg-info' : 
-                                        (task.status == T(net.kigawa.keruta.core.domain.model.TaskStatus).COMPLETED ? 'bg-success' : 
+                                    <span th:class="${'badge ' +
+                                        (task.status == T(net.kigawa.keruta.core.domain.model.TaskStatus).PENDING ? 'bg-warning' :
+                                        (task.status == T(net.kigawa.keruta.core.domain.model.TaskStatus).IN_PROGRESS ? 'bg-info' :
+                                        (task.status == T(net.kigawa.keruta.core.domain.model.TaskStatus).COMPLETED ? 'bg-success' :
                                         'bg-danger')))}"
                                         th:text="${task.status}">
                                         Status
@@ -45,6 +45,10 @@
                                         <a th:href="@{/admin/tasks/{id}/pod(id=${task.id})}" class="btn btn-sm btn-outline-info">Details</a>
                                         <a th:href="@{/admin/tasks/{id}/kubernetes-manifest(id=${task.id})}" class="btn btn-sm btn-outline-primary">Manifest</a>
                                         <a th:href="@{/admin/tasks/{id}/logs(id=${task.id})}" class="btn btn-sm btn-outline-secondary">Logs</a>
+                                        <form th:action="@{/admin/tasks/{id}/delete(id=${task.id})}" method="post" style="display: inline;">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('このタスクを削除してもよろしいですか？');">削除</button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
