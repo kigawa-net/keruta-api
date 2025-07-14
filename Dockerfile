@@ -3,19 +3,19 @@ FROM gradle:jdk21 AS builder
 WORKDIR /app
 
 # Copy gradle files first for better layer caching
-COPY ../gradlew .
-COPY ../gradle gradle
-COPY ../build.gradle.kts .
-COPY ../settings.gradle.kts .
-COPY ../buildSrc buildSrc
+COPY ./gradlew .
+COPY ./gradle gradle
+COPY ./build.gradle.kts .
+COPY ./settings.gradle.kts .
+COPY ./buildSrc buildSrc
 
 # Download dependencies
 RUN gradle dependencies --no-daemon
 
 # Copy source code
-COPY ../api api
-COPY ../core core
-COPY ../infra infra
+COPY ./api api
+COPY ./core core
+COPY ./infra infra
 
 # Build the application
 RUN gradle bootJar --no-daemon
