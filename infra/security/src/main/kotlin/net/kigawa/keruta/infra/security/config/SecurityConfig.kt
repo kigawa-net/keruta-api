@@ -34,6 +34,9 @@ class SecurityConfig {
     @Value("\${spring.web.cors.max-age:3600}")
     private var maxAge: Long = 3600
 
+    @Value("\${spring.web.cors.specific-origins:http://localhost:3000,http://localhost:3001,https://keruta.kigawa.net}")
+    private lateinit var specificOriginsString: String
+
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
@@ -51,10 +54,22 @@ class SecurityConfig {
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
-        configuration.allowedOrigins = allowedOrigins.split(",").map { it.trim() }
+
+        // Always include specific origins that need to be allowed
+        val specificOrigins = specificOriginsString.split(",").map { it.trim() }
+
+        // If allowedOrigins contains a wildcard, replace it with specific origins
+        // Otherwise, add the specific origins to the existing list
+        if (allowedOrigins.contains("*")) {
+            configuration.allowedOrigins = specificOrigins
+        } else {
+            val configuredOrigins = allowedOrigins.split(",").map { it.trim() }
+            configuration.allowedOrigins = (configuredOrigins + specificOrigins).distinct()
+        }
+
         configuration.allowedMethods = allowedMethods.split(",").map { it.trim() }
         configuration.allowedHeaders = allowedHeaders.split(",").map { it.trim() }
-        configuration.allowCredentials = allowCredentials
+        configuration.allowCredentials = true  // Always allow credentials
         configuration.maxAge = maxAge
 
         val source = UrlBasedCorsConfigurationSource()
