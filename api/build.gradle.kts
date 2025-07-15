@@ -32,7 +32,11 @@ dependencies {
     implementation(Dependencies.springBootStarterData)
     implementation(Dependencies.mongodbDriver)
 
-    testImplementation(Dependencies.springBootStarterTest)
+    testImplementation(Dependencies.springBootStarterTest) {
+        exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
+    }
+    testImplementation("org.junit.jupiter:junit-jupiter:${Versions.junit}")
+    testImplementation("org.springframework.security:spring-security-test")
     testImplementation(Dependencies.testcontainersJunit)
     testImplementation(Dependencies.testcontainersCore)
     testImplementation(Dependencies.testcontainersMongodb)

@@ -11,6 +11,7 @@ object Versions {
     const val fabric8KubernetesClient = "6.5.1"
     const val testcontainers = "1.19.3"
     const val kotlinxCoroutines = "1.7.3"
+    const val junit = "5.10.1"
 }
 
 object Dependencies {
