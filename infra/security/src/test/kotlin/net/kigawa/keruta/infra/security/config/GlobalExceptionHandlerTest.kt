@@ -1,5 +1,8 @@
 package net.kigawa.keruta.infra.security.config
 
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
@@ -8,9 +11,6 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.http.HttpStatus
 import org.springframework.web.context.request.WebRequest
 import java.util.NoSuchElementException
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
 
 @ExtendWith(MockitoExtension::class)
 class GlobalExceptionHandlerTest {
@@ -91,7 +91,10 @@ class GlobalExceptionHandlerTest {
 
         val error = body["error"] as Map<*, *>
         assertEquals("INTERNAL_SERVER_ERROR", error["code"])
-        assertEquals("An unexpected error occurred. Our team has been notified and is working to resolve the issue. Please try again later.", error["message"])
+        assertEquals(
+            "An unexpected error occurred. Our team has been notified and is working to resolve the issue. Please try again later.",
+            error["message"],
+        )
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), error["status"])
 
         val meta = body["meta"] as Map<*, *>

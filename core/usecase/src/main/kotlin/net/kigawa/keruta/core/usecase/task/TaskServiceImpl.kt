@@ -120,6 +120,10 @@ class TaskServiceImpl(
         return taskRepository.findByStatus(status)
     }
 
+    override fun getTasksBySession(session: String): List<Task> {
+        return taskRepository.findBySession(session)
+    }
+
     override fun createJob(
         taskId: String,
         image: String,
@@ -269,7 +273,7 @@ class TaskServiceImpl(
                 cleanupScript = "#!/bin/bash\necho 'No cleanup script provided'",
                 environment = emptyMap(),
                 createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                updatedAt = LocalDateTime.now(),
             )
             // Store the default script for future use
             scriptStorage[id] = defaultScript

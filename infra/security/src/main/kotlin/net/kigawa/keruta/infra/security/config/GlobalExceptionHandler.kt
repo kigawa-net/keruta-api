@@ -27,7 +27,7 @@ class GlobalExceptionHandler {
     @ExceptionHandler(NoSuchElementException::class)
     fun handleNoSuchElementException(
         ex: NoSuchElementException,
-        request: WebRequest
+        request: WebRequest,
     ): ResponseEntity<Map<String, Any>> {
         val errorMessage = ex.message ?: "The requested resource could not be found. Please check your input and try again."
         val path = getRequestPath(request)
@@ -37,7 +37,7 @@ class GlobalExceptionHandler {
         return createErrorResponse(
             HttpStatus.NOT_FOUND,
             "RESOURCE_NOT_FOUND",
-            errorMessage
+            errorMessage,
         )
     }
 
@@ -48,7 +48,7 @@ class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleIllegalArgumentException(
         ex: IllegalArgumentException,
-        request: WebRequest
+        request: WebRequest,
     ): ResponseEntity<Map<String, Any>> {
         val errorMessage = ex.message ?: "Invalid input provided. Please check your request parameters and try again."
         val path = getRequestPath(request)
@@ -58,7 +58,7 @@ class GlobalExceptionHandler {
         return createErrorResponse(
             HttpStatus.BAD_REQUEST,
             "INVALID_INPUT",
-            errorMessage
+            errorMessage,
         )
     }
 
@@ -69,7 +69,7 @@ class GlobalExceptionHandler {
     @ExceptionHandler(Exception::class)
     fun handleGenericException(
         ex: Exception,
-        request: WebRequest
+        request: WebRequest,
     ): ResponseEntity<Map<String, Any>> {
         val errorMessage = "An unexpected error occurred. Our team has been notified and is working to resolve the issue. Please try again later."
         val path = getRequestPath(request)
@@ -80,7 +80,7 @@ class GlobalExceptionHandler {
         return createErrorResponse(
             HttpStatus.INTERNAL_SERVER_ERROR,
             "INTERNAL_SERVER_ERROR",
-            errorMessage
+            errorMessage,
         )
     }
 
@@ -90,18 +90,18 @@ class GlobalExceptionHandler {
     private fun createErrorResponse(
         status: HttpStatus,
         code: String,
-        message: String
+        message: String,
     ): ResponseEntity<Map<String, Any>> {
         val errorResponse = mapOf(
             "error" to mapOf(
                 "code" to code,
                 "message" to message,
-                "status" to status.value()
+                "status" to status.value(),
             ),
             "meta" to mapOf(
                 "timestamp" to ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
-                "version" to "1.0.0"
-            )
+                "version" to "1.0.0",
+            ),
         )
 
         return ResponseEntity.status(status).body(errorResponse)

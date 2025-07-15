@@ -71,4 +71,12 @@ interface TaskRepository {
      * @return The updated task
      */
     fun updateLogs(id: String, logs: String): Task
+
+    /**
+     * Finds tasks by their session.
+     *
+     * @param session The session to filter by
+     * @return List of tasks with the specified session
+     */
+    fun findBySession(session: String): List<Task>
 }

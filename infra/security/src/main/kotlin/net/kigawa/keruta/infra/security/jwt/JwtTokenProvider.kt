@@ -27,6 +27,7 @@ class JwtTokenProvider(
     private val userDetailsService: UserDetailsService,
 ) {
     private val logger = LoggerFactory.getLogger(JwtTokenProvider::class.java)
+
     @Value("\${jwt.secret:your-secret-key-here-should-be-very-long-and-secure}")
     private lateinit var secretString: String
 
@@ -161,7 +162,9 @@ class JwtTokenProvider(
                 .build()
                 .parseClaimsJws(token)
                 .body.also {
-                    logger.debug("JWT claims extracted successfully: subject=${it.subject}, expiration=${it.expiration}")
+                    logger.debug(
+                        "JWT claims extracted successfully: subject=${it.subject}, expiration=${it.expiration}",
+                    )
                 }
         } catch (e: Exception) {
             logger.error("Failed to parse JWT token", e)

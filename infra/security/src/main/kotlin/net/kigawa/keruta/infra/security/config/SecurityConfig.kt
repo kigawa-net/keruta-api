@@ -69,7 +69,7 @@ class SecurityConfig {
 
         configuration.allowedMethods = allowedMethods.split(",").map { it.trim() }
         configuration.allowedHeaders = allowedHeaders.split(",").map { it.trim() }
-        configuration.allowCredentials = true  // Always allow credentials
+        configuration.allowCredentials = true // Always allow credentials
         configuration.maxAge = maxAge
 
         val source = UrlBasedCorsConfigurationSource()

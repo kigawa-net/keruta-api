@@ -118,4 +118,8 @@ class TaskRepositoryImpl(private val mongoTaskRepository: MongoTaskRepository) :
         val updatedTask = task.copy(logs = updatedLogs, updatedAt = LocalDateTime.now())
         return save(updatedTask)
     }
+
+    override fun findBySession(session: String): List<Task> {
+        return mongoTaskRepository.findBySession(session).map { it.toDomain() }
+    }
 }

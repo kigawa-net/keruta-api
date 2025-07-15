@@ -8,7 +8,6 @@ import net.kigawa.keruta.infra.security.jwt.JwtTokenProvider
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.util.Base64
-import java.util.UUID
 
 /**
  * Provider for Kubernetes client.

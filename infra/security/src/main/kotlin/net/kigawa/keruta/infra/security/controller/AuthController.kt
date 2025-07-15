@@ -48,7 +48,10 @@ class AuthController {
      * @return The token response with dummy tokens
      */
     @PostMapping("/refresh")
-    @Operation(summary = "Refresh token (Disabled)", description = "Authentication has been disabled, returns dummy tokens")
+    @Operation(
+        summary = "Refresh token (Disabled)",
+        description = "Authentication has been disabled, returns dummy tokens",
+    )
     fun refresh(@RequestBody refreshTokenRequest: RefreshTokenRequest): ResponseEntity<TokenResponse> {
         logger.info("Token refresh request received (Authentication disabled)")
         return ResponseEntity.ok(TokenResponse(dummyAccessToken, dummyRefreshToken))

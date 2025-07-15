@@ -64,6 +64,12 @@ class TaskController(
         return taskService.getTasksByStatus(taskStatus).map { TaskResponse.fromDomain(it) }
     }
 
+    @GetMapping("/session/{session}")
+    @Operation(summary = "Get tasks by session", description = "Retrieves all tasks with a specific session")
+    fun getTasksBySession(@PathVariable session: String): List<TaskResponse> {
+        return taskService.getTasksBySession(session).map { TaskResponse.fromDomain(it) }
+    }
+
     @GetMapping("/{id}/logs")
     @Operation(
         summary = "Get task logs",
@@ -161,7 +167,12 @@ class TaskController(
         @PathVariable id: String,
         @RequestBody statusRequest: Map<String, String>,
     ): ResponseEntity<TaskResponse> {
-        logger.info("updateTaskStatus id={} status={} message={}", id, statusRequest["status"], statusRequest["message"])
+        logger.info(
+            "updateTaskStatus id={} status={} message={}",
+            id,
+            statusRequest["status"],
+            statusRequest["message"],
+        )
         val statusStr = statusRequest["status"] ?: return ResponseEntity.badRequest().build()
         val message = statusRequest["message"]
 
@@ -169,8 +180,13 @@ class TaskController(
             val taskStatus = try {
                 net.kigawa.keruta.core.domain.model.TaskStatus.valueOf(statusStr.uppercase())
             } catch (e: IllegalArgumentException) {
-                logger.error("Invalid task status: {} for task: {}. Valid statuses are: {}",
-                    statusStr, id, net.kigawa.keruta.core.domain.model.TaskStatus.values().joinToString(", "), e)
+                logger.error(
+                    "Invalid task status: {} for task: {}. Valid statuses are: {}",
+                    statusStr,
+                    id,
+                    net.kigawa.keruta.core.domain.model.TaskStatus.values().joinToString(", "),
+                    e,
+                )
                 return ResponseEntity.badRequest().build()
             }
 
@@ -182,7 +198,7 @@ class TaskController(
                 // If message is provided, update both status and description
                 val taskWithMessage = task.copy(
                     status = taskStatus,
-                    description = message
+                    description = message,
                 )
                 taskService.updateTask(id, taskWithMessage)
             } else {

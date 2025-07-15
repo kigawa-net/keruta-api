@@ -44,12 +44,12 @@ class RestAuthenticationEntryPoint(private val objectMapper: ObjectMapper) : Aut
             "error" to mapOf(
                 "code" to "UNAUTHORIZED",
                 "message" to errorMessage,
-                "status" to HttpServletResponse.SC_UNAUTHORIZED
+                "status" to HttpServletResponse.SC_UNAUTHORIZED,
             ),
             "meta" to mapOf(
                 "timestamp" to ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
-                "version" to "1.0.0"
-            )
+                "version" to "1.0.0",
+            ),
         )
 
         response.contentType = MediaType.APPLICATION_JSON_VALUE

@@ -23,6 +23,7 @@ data class TaskResponse(
     val kubernetesManifest: String?,
     val logs: String?,
     val parentId: String?,
+    val session: String?,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
 ) {
@@ -47,6 +48,7 @@ data class TaskResponse(
                 kubernetesManifest = task.kubernetesManifest,
                 logs = task.logs,
                 parentId = task.parentId,
+                session = task.session,
                 createdAt = task.createdAt,
                 updatedAt = task.updatedAt,
             )

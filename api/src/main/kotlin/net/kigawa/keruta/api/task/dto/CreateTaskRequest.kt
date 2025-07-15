@@ -20,6 +20,7 @@ data class CreateTaskRequest(
     val additionalEnv: Map<String, String> = emptyMap(),
     val repositoryId: String? = null,
     val parentId: String? = null,
+    val session: String? = null,
 ) {
     /**
      * Converts this DTO to a Task domain model.
@@ -41,6 +42,7 @@ data class CreateTaskRequest(
             additionalEnv = additionalEnv,
             repositoryId = repositoryId,
             parentId = parentId,
+            session = session,
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now(),
         )

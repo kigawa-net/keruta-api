@@ -88,6 +88,14 @@ interface TaskService {
     fun getTasksByStatus(status: TaskStatus): List<Task>
 
     /**
+     * Gets tasks by session.
+     *
+     * @param session The session to filter by
+     * @return List of tasks with the specified session
+     */
+    fun getTasksBySession(session: String): List<Task>
+
+    /**
      * Creates a Kubernetes Job for a task.
      *
      * @param taskId The ID of the task

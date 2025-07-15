@@ -26,4 +26,12 @@ interface MongoTaskRepository : MongoRepository<TaskEntity, String> {
      */
     @Query(value = "{ 'status': ?0 }", sort = "{ 'priority': -1 }")
     fun findNextInQueue(status: String): TaskEntity?
+
+    /**
+     * Finds tasks by session.
+     *
+     * @param session The session to filter by
+     * @return List of tasks with the specified session
+     */
+    fun findBySession(session: String): List<TaskEntity>
 }
