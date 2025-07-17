@@ -5,7 +5,10 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import net.kigawa.keruta.api.session.dto.CreateSessionRequest
 import net.kigawa.keruta.api.session.dto.SessionResponse
 import net.kigawa.keruta.api.session.dto.UpdateSessionRequest
+import net.kigawa.keruta.api.workspace.dto.CreateWorkspaceRequest
+import net.kigawa.keruta.api.workspace.dto.WorkspaceResponse
 import net.kigawa.keruta.core.usecase.session.SessionService
+import net.kigawa.keruta.core.usecase.session.SessionServiceImpl
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.*
 @Tag(name = "Session", description = "Session management API")
 class SessionController(
     private val sessionService: SessionService,
+    private val sessionServiceImpl: SessionServiceImpl,
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -163,6 +167,40 @@ class SessionController(
             ResponseEntity.ok(SessionResponse.fromDomain(updatedSession))
         } catch (e: NoSuchElementException) {
             ResponseEntity.notFound().build()
+        }
+    }
+
+    @GetMapping("/{id}/workspaces")
+    @Operation(summary = "Get session workspaces", description = "Gets all workspaces for a specific session")
+    fun getSessionWorkspaces(@PathVariable id: String): ResponseEntity<List<WorkspaceResponse>> {
+        return try {
+            val workspaces = sessionServiceImpl.getSessionWorkspaces(id)
+            ResponseEntity.ok(workspaces.map { WorkspaceResponse.fromDomain(it) })
+        } catch (e: NoSuchElementException) {
+            ResponseEntity.notFound().build()
+        }
+    }
+
+    @PostMapping("/{id}/workspaces")
+    @Operation(summary = "Create session workspace", description = "Creates a workspace for a specific session")
+    fun createSessionWorkspace(
+        @PathVariable id: String,
+        @RequestBody request: CreateWorkspaceRequest,
+    ): ResponseEntity<WorkspaceResponse> {
+        return try {
+            val workspace = sessionServiceImpl.createSessionWorkspace(
+                sessionId = id,
+                workspaceName = request.name,
+                templateId = request.templateId,
+            )
+            ResponseEntity.ok(WorkspaceResponse.fromDomain(workspace))
+        } catch (e: NoSuchElementException) {
+            ResponseEntity.notFound().build()
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
+        } catch (e: Exception) {
+            logger.error("Failed to create workspace for session", e)
+            ResponseEntity.internalServerError().build()
         }
     }
 }
