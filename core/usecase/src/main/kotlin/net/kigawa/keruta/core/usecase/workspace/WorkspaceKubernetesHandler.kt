@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
  * Kubernetes resources for workspaces.
  */
 @Component
-class WorkspaceKubernetesHandler(
+open class WorkspaceKubernetesHandler(
     private val coderService: CoderService,
 ) {
     private val logger = LoggerFactory.getLogger(WorkspaceKubernetesHandler::class.java)

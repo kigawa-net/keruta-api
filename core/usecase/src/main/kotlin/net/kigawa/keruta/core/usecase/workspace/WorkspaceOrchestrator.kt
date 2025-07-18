@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture
  * Handles the asynchronous creation, starting, stopping, and deletion of workspaces.
  */
 @Component
-class WorkspaceOrchestrator(
+open class WorkspaceOrchestrator(
     private val workspaceRepository: WorkspaceRepository,
     private val workspaceKubernetesHandler: WorkspaceKubernetesHandler,
 ) {

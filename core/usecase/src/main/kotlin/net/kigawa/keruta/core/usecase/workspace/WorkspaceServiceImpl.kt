@@ -18,7 +18,7 @@ import java.util.UUID
  * Service implementation for workspace operations.
  */
 @Service
-class WorkspaceServiceImpl(
+open class WorkspaceServiceImpl(
     private val workspaceRepository: WorkspaceRepository,
     private val workspaceTemplateRepository: WorkspaceTemplateRepository,
     private val sessionRepository: SessionRepository,
