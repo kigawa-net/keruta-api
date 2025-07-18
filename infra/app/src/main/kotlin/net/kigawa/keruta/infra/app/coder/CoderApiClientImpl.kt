@@ -7,6 +7,7 @@ import org.springframework.web.client.RestTemplate
 
 @Service
 class CoderApiClientImpl(
+    @org.springframework.beans.factory.annotation.Qualifier("coderInfraRestTemplate")
     private val restTemplate: RestTemplate,
     private val coderProperties: CoderProperties,
 ) : CoderApiClient {

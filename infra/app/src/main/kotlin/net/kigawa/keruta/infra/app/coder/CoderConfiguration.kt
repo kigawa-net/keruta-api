@@ -12,7 +12,7 @@ import java.time.Duration
 class CoderConfiguration {
 
     @Bean
-    fun coderRestTemplate(
+    fun coderInfraRestTemplate(
         restTemplateBuilder: RestTemplateBuilder,
         coderProperties: CoderProperties,
     ): RestTemplate {
