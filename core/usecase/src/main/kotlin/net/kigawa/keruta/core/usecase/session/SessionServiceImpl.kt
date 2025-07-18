@@ -15,6 +15,7 @@ import java.time.LocalDateTime
 class SessionServiceImpl(
     private val sessionRepository: SessionRepository,
     private val workspaceService: WorkspaceService,
+    private val sessionEventListener: SessionEventListener,
 ) : SessionService {
 
     private val logger = LoggerFactory.getLogger(SessionServiceImpl::class.java)
@@ -28,7 +29,17 @@ class SessionServiceImpl(
     }
 
     override suspend fun createSession(session: Session): Session {
-        return sessionRepository.save(session)
+        val createdSession = sessionRepository.save(session)
+        
+        // Trigger workspace creation event
+        try {
+            sessionEventListener.onSessionCreated(createdSession)
+        } catch (e: Exception) {
+            logger.error("Failed to handle session creation event for session: {}", createdSession.id, e)
+            // Don't fail the session creation if workspace creation fails
+        }
+        
+        return createdSession
     }
 
     override suspend fun updateSession(id: String, session: Session): Session {
@@ -44,13 +55,12 @@ class SessionServiceImpl(
     override suspend fun deleteSession(id: String) {
         logger.info("Deleting session and its workspaces: id={}", id)
 
-        // Delete all workspaces associated with this session
+        // Trigger session deletion event
         try {
-            workspaceService.deleteWorkspacesBySessionId(id)
-            logger.info("Successfully deleted workspaces for session: id={}", id)
+            sessionEventListener.onSessionDeleted(id)
         } catch (e: Exception) {
-            logger.error("Failed to delete workspaces for session: id={}", id, e)
-            throw e
+            logger.error("Failed to handle session deletion event for session: {}", id, e)
+            // Continue with deletion even if event handling fails
         }
 
         // Delete the session itself
@@ -77,11 +87,22 @@ class SessionServiceImpl(
         logger.info("Updating session status: id={} status={}", id, status)
         try {
             val existingSession = getSessionById(id)
+            val oldStatus = existingSession.status
             val updatedSession = existingSession.copy(
                 status = status,
                 updatedAt = LocalDateTime.now(),
             )
             val savedSession = sessionRepository.save(updatedSession)
+            
+            // Trigger status change event if status actually changed
+            if (oldStatus != status) {
+                try {
+                    sessionEventListener.onSessionStatusChanged(savedSession, oldStatus)
+                } catch (e: Exception) {
+                    logger.error("Failed to handle session status change event for session: {}", id, e)
+                }
+            }
+            
             logger.info("Session status updated successfully: id={} status={}", id, status)
             return savedSession
         } catch (e: NoSuchElementException) {
