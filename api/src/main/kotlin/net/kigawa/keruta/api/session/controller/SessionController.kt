@@ -48,7 +48,8 @@ class SessionController(
     fun getSessionById(@PathVariable id: String): ResponseEntity<SessionResponse> {
         return try {
             val session = sessionService.getSessionById(id)
-            ResponseEntity.ok(SessionResponse.fromDomain(session))
+            val workspaces = sessionServiceImpl.getSessionWorkspaces(id)
+            ResponseEntity.ok(SessionResponse.fromDomain(session, workspaces))
         } catch (e: NoSuchElementException) {
             ResponseEntity.notFound().build()
         }

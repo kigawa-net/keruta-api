@@ -1,6 +1,7 @@
 package net.kigawa.keruta.api.session.dto
 
 import net.kigawa.keruta.core.domain.model.Session
+import net.kigawa.keruta.core.domain.model.Workspace
 import java.time.LocalDateTime
 
 data class SessionResponse(
@@ -12,9 +13,10 @@ data class SessionResponse(
     val metadata: Map<String, String> = emptyMap(),
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
+    val workspaces: List<SessionWorkspaceInfo> = emptyList(),
 ) {
     companion object {
-        fun fromDomain(session: Session): SessionResponse {
+        fun fromDomain(session: Session, workspaces: List<Workspace> = emptyList()): SessionResponse {
             return SessionResponse(
                 id = session.id,
                 name = session.name,
@@ -24,6 +26,32 @@ data class SessionResponse(
                 metadata = session.metadata,
                 createdAt = session.createdAt,
                 updatedAt = session.updatedAt,
+                workspaces = workspaces.map { SessionWorkspaceInfo.fromDomain(it) },
+            )
+        }
+    }
+}
+
+/**
+ * Workspace information for session response.
+ */
+data class SessionWorkspaceInfo(
+    val id: String,
+    val name: String,
+    val status: String,
+    val workspaceUrl: String? = null,
+    val createdAt: LocalDateTime,
+    val lastUsedAt: LocalDateTime? = null,
+) {
+    companion object {
+        fun fromDomain(workspace: Workspace): SessionWorkspaceInfo {
+            return SessionWorkspaceInfo(
+                id = workspace.id,
+                name = workspace.name,
+                status = workspace.status.name,
+                workspaceUrl = workspace.resourceInfo?.ingressUrl,
+                createdAt = workspace.createdAt,
+                lastUsedAt = workspace.lastUsedAt,
             )
         }
     }
