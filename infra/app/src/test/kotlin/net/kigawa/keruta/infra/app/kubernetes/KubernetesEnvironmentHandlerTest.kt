@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.Mockito.*
+import org.mockito.Mockito.lenient
 import org.mockito.junit.jupiter.MockitoExtension
 
 @ExtendWith(MockitoExtension::class)
@@ -26,7 +27,8 @@ class KubernetesEnvironmentHandlerTest {
 
     @BeforeEach
     fun setUp() {
-        `when`(kubernetesConfig.apiUrl).thenReturn("http://keruta-api")
+        lenient().`when`(kubernetesConfig.apiUrl).thenReturn("http://keruta-api")
+        lenient().`when`(kubernetesConfig.getFullApiUrl()).thenReturn("http://keruta-api")
         environmentHandler = KubernetesEnvironmentHandler(kerutaAgentService, kubernetesConfig, clientProvider)
     }
 

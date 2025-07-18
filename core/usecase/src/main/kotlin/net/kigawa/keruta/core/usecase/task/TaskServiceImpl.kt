@@ -261,6 +261,7 @@ class TaskServiceImpl(
         logger.info("Getting script for task with id: $id")
 
         // Verify that the task exists
+        @Suppress("UNUSED_VARIABLE")
         val task = getTaskById(id)
 
         // Return the script from storage or create a default script if not found

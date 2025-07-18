@@ -24,7 +24,7 @@ class CoderService(
     /**
      * Creates a workspace in Coder.
      */
-    fun createWorkspace(workspace: Workspace, template: WorkspaceTemplate): CoderWorkspaceCreationResult {
+    fun createWorkspace(workspace: Workspace, @Suppress("UNUSED_PARAMETER") template: WorkspaceTemplate): CoderWorkspaceCreationResult {
         logger.info("Creating workspace in Coder: ${workspace.name}")
 
         val request = CoderCreateWorkspaceRequest(

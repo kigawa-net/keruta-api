@@ -30,6 +30,7 @@ open class WorkspaceServiceImpl(
         logger.info("Creating workspace: ${request.name} for session: ${request.sessionId}")
 
         // Validate session exists
+        @Suppress("UNUSED_VARIABLE")
         val session = sessionRepository.findById(request.sessionId)
             ?: throw IllegalArgumentException("Session not found: ${request.sessionId}")
 
@@ -196,6 +197,7 @@ open class WorkspaceServiceImpl(
     }
 
     override suspend fun updateWorkspaceTemplate(template: WorkspaceTemplate): WorkspaceTemplate {
+        @Suppress("UNUSED_VARIABLE")
         val existing = workspaceTemplateRepository.findById(template.id)
             ?: throw IllegalArgumentException("Template not found: ${template.id}")
 
