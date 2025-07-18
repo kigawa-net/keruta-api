@@ -4,7 +4,6 @@ import net.kigawa.keruta.core.usecase.coder.*
 import org.springframework.http.*
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
-import com.fasterxml.jackson.annotation.JsonProperty
 
 @Service
 class CoderApiClientImpl(
@@ -19,8 +18,10 @@ class CoderApiClientImpl(
                 set("Coder-Session-Token", coderProperties.sessionToken)
                 contentType = MediaType.APPLICATION_JSON
             }
-            val entity = HttpEntity(request, headers)
-            restTemplate.postForObject(url, entity, CoderWorkspaceResponse::class.java)
+            val requestDto = CoderCreateWorkspaceRequestDto.fromUseCase(request)
+            val entity = HttpEntity(requestDto, headers)
+            val responseDto = restTemplate.postForObject(url, entity, CoderWorkspaceResponseDto::class.java)
+            responseDto?.toUseCase()
         } catch (e: Exception) {
             null
         }
@@ -33,7 +34,8 @@ class CoderApiClientImpl(
                 set("Coder-Session-Token", coderProperties.sessionToken)
             }
             val entity = HttpEntity<Any>(headers)
-            restTemplate.exchange(url, HttpMethod.GET, entity, CoderWorkspaceResponse::class.java).body
+            val responseDto = restTemplate.exchange(url, HttpMethod.GET, entity, CoderWorkspaceResponseDto::class.java).body
+            responseDto?.toUseCase()
         } catch (e: Exception) {
             null
         }
@@ -48,7 +50,8 @@ class CoderApiClientImpl(
             }
             val body = mapOf("transition" to "start")
             val entity = HttpEntity(body, headers)
-            restTemplate.postForObject(url, entity, CoderWorkspaceBuildResponse::class.java)
+            val responseDto = restTemplate.postForObject(url, entity, CoderWorkspaceBuildResponseDto::class.java)
+            responseDto?.toUseCase()
         } catch (e: Exception) {
             null
         }
@@ -63,7 +66,8 @@ class CoderApiClientImpl(
             }
             val body = mapOf("transition" to "stop")
             val entity = HttpEntity(body, headers)
-            restTemplate.postForObject(url, entity, CoderWorkspaceBuildResponse::class.java)
+            val responseDto = restTemplate.postForObject(url, entity, CoderWorkspaceBuildResponseDto::class.java)
+            responseDto?.toUseCase()
         } catch (e: Exception) {
             null
         }
@@ -90,8 +94,8 @@ class CoderApiClientImpl(
                 set("Coder-Session-Token", coderProperties.sessionToken)
             }
             val entity = HttpEntity<Any>(headers)
-            val response = restTemplate.exchange(url, HttpMethod.GET, entity, Array<CoderTemplateResponse>::class.java)
-            response.body?.toList() ?: emptyList()
+            val response = restTemplate.exchange(url, HttpMethod.GET, entity, Array<CoderTemplateResponseDto>::class.java)
+            response.body?.map { it.toUseCase() } ?: emptyList()
         } catch (e: Exception) {
             emptyList()
         }
