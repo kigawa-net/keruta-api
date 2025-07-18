@@ -12,6 +12,7 @@ object Versions {
     const val testcontainers = "1.19.3"
     const val kotlinxCoroutines = "1.7.3"
     const val junit = "5.10.1"
+    const val mockitoKotlin = "5.2.1"
 }
 
 object Dependencies {
@@ -66,4 +67,7 @@ object Dependencies {
     const val testcontainersCore = "org.testcontainers:testcontainers:${Versions.testcontainers}"
     const val testcontainersMongodb = "org.testcontainers:mongodb:${Versions.testcontainers}"
     const val testcontainersPostgresql = "org.testcontainers:postgresql:${Versions.testcontainers}"
+
+    // Mockito for Kotlin
+    const val mockitoKotlin = "org.mockito.kotlin:mockito-kotlin:${Versions.mockitoKotlin}"
 }

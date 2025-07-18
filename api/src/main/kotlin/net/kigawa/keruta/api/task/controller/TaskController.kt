@@ -106,7 +106,7 @@ class TaskController(
     ): ResponseEntity<Void> {
         return try {
             // Verify task exists and append logs to the database
-            val task = taskService.getTaskById(id)
+            taskService.getTaskById(id) // Just verify task exists
             taskService.appendTaskLogs(id, logContent)
 
             // Send log update

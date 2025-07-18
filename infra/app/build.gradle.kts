@@ -26,4 +26,5 @@ dependencies {
     implementation(Dependencies.fabric8KubernetesClient)
 
     testImplementation(Dependencies.springBootStarterTest)
+    testImplementation(Dependencies.mockitoKotlin)
 }

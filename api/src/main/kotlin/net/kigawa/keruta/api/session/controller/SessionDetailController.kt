@@ -26,7 +26,7 @@ class SessionDetailController(
         summary = "Get session detail",
         description = "Retrieves detailed information about a session including workspaces",
     )
-    fun getSessionDetail(@PathVariable id: String): ResponseEntity<SessionDetailResponse> {
+    suspend fun getSessionDetail(@PathVariable id: String): ResponseEntity<SessionDetailResponse> {
         return try {
             val session = sessionService.getSessionById(id)
             val workspaces = sessionServiceImpl.getSessionWorkspaces(id)

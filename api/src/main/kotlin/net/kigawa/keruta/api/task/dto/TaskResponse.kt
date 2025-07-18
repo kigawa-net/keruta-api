@@ -33,7 +33,7 @@ data class TaskResponse(
             val resources = null
 
             return TaskResponse(
-                id = task.id ?: "",
+                id = task.id,
                 title = task.title,
                 description = task.description,
                 priority = task.priority,
