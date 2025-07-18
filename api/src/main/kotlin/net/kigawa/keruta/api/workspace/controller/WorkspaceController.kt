@@ -24,7 +24,7 @@ class WorkspaceController(
     @PostMapping
     suspend fun createWorkspace(@RequestBody request: CreateWorkspaceRequest): ResponseEntity<WorkspaceResponse> {
         logger.info("Creating workspace: ${request.name} for session: ${request.sessionId}")
-        
+
         val useCaseRequest = net.kigawa.keruta.core.usecase.workspace.CreateWorkspaceRequest(
             name = request.name,
             sessionId = request.sessionId,
@@ -35,7 +35,7 @@ class WorkspaceController(
             automaticUpdates = request.automaticUpdates,
             richParameterValues = request.richParameterValues,
         )
-        
+
         val workspace = workspaceService.createWorkspace(useCaseRequest)
         return ResponseEntity.ok(WorkspaceResponse.fromDomain(workspace))
     }
@@ -45,7 +45,7 @@ class WorkspaceController(
      */
     @GetMapping
     suspend fun getWorkspaces(
-        @RequestParam(required = false) sessionId: String?
+        @RequestParam(required = false) sessionId: String?,
     ): ResponseEntity<List<WorkspaceResponse>> {
         val workspaces = if (sessionId != null) {
             workspaceService.getWorkspacesBySessionId(sessionId)
@@ -53,7 +53,7 @@ class WorkspaceController(
             // TODO: Implement get all workspaces method
             emptyList()
         }
-        
+
         return ResponseEntity.ok(workspaces.map { WorkspaceResponse.fromDomain(it) })
     }
 
@@ -64,7 +64,7 @@ class WorkspaceController(
     suspend fun getWorkspace(@PathVariable id: String): ResponseEntity<WorkspaceResponse> {
         val workspace = workspaceService.getWorkspaceById(id)
             ?: return ResponseEntity.notFound().build()
-        
+
         return ResponseEntity.ok(WorkspaceResponse.fromDomain(workspace))
     }
 
@@ -74,14 +74,14 @@ class WorkspaceController(
     @PutMapping("/{id}/status")
     suspend fun updateWorkspaceStatus(
         @PathVariable id: String,
-        @RequestBody request: Map<String, String>
+        @RequestBody request: Map<String, String>,
     ): ResponseEntity<WorkspaceResponse> {
         val status = request["status"]?.let { WorkspaceStatus.valueOf(it) }
             ?: return ResponseEntity.badRequest().build()
-        
+
         val workspace = workspaceService.updateWorkspaceStatus(id, status)
             ?: return ResponseEntity.notFound().build()
-        
+
         return ResponseEntity.ok(WorkspaceResponse.fromDomain(workspace))
     }
 
@@ -92,7 +92,7 @@ class WorkspaceController(
     suspend fun startWorkspace(@PathVariable id: String): ResponseEntity<WorkspaceResponse> {
         val workspace = workspaceService.startWorkspace(id)
             ?: return ResponseEntity.notFound().build()
-        
+
         return ResponseEntity.ok(WorkspaceResponse.fromDomain(workspace))
     }
 
@@ -103,7 +103,7 @@ class WorkspaceController(
     suspend fun stopWorkspace(@PathVariable id: String): ResponseEntity<WorkspaceResponse> {
         val workspace = workspaceService.stopWorkspace(id)
             ?: return ResponseEntity.notFound().build()
-        
+
         return ResponseEntity.ok(WorkspaceResponse.fromDomain(workspace))
     }
 
@@ -136,7 +136,7 @@ class WorkspaceController(
     suspend fun getWorkspaceTemplate(@PathVariable id: String): ResponseEntity<WorkspaceTemplateResponse> {
         val template = workspaceService.getWorkspaceTemplate(id)
             ?: return ResponseEntity.notFound().build()
-        
+
         return ResponseEntity.ok(WorkspaceTemplateResponse.fromDomain(template))
     }
 
@@ -145,7 +145,7 @@ class WorkspaceController(
      */
     @PostMapping("/templates")
     suspend fun createWorkspaceTemplate(
-        @RequestBody request: CreateWorkspaceTemplateRequest
+        @RequestBody request: CreateWorkspaceTemplateRequest,
     ): ResponseEntity<WorkspaceTemplateResponse> {
         val template = request.toDomain()
         val createdTemplate = workspaceService.createWorkspaceTemplate(template)
@@ -158,7 +158,7 @@ class WorkspaceController(
     @PutMapping("/templates/{id}")
     suspend fun updateWorkspaceTemplate(
         @PathVariable id: String,
-        @RequestBody request: UpdateWorkspaceTemplateRequest
+        @RequestBody request: UpdateWorkspaceTemplateRequest,
     ): ResponseEntity<WorkspaceTemplateResponse> {
         val template = request.toDomain(id)
         val updatedTemplate = workspaceService.updateWorkspaceTemplate(template)

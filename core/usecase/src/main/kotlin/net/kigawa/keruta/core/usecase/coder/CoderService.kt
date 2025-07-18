@@ -1,11 +1,11 @@
 package net.kigawa.keruta.core.usecase.coder
 
 import net.kigawa.keruta.core.domain.model.Workspace
-import net.kigawa.keruta.core.domain.model.WorkspaceTemplate
-import net.kigawa.keruta.core.domain.model.WorkspaceStatus
-import net.kigawa.keruta.core.domain.model.WorkspaceBuildStatus
 import net.kigawa.keruta.core.domain.model.WorkspaceBuildInfo
+import net.kigawa.keruta.core.domain.model.WorkspaceBuildStatus
 import net.kigawa.keruta.core.domain.model.WorkspaceResourceInfo
+import net.kigawa.keruta.core.domain.model.WorkspaceStatus
+import net.kigawa.keruta.core.domain.model.WorkspaceTemplate
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -26,7 +26,7 @@ class CoderService(
      */
     fun createWorkspace(workspace: Workspace, template: WorkspaceTemplate): CoderWorkspaceCreationResult {
         logger.info("Creating workspace in Coder: ${workspace.name}")
-        
+
         val request = CoderCreateWorkspaceRequest(
             name = workspace.name,
             templateId = workspace.templateId ?: coderProperties.defaultTemplateId,
@@ -36,11 +36,11 @@ class CoderService(
             ttlMs = workspace.ttlMs,
             richParameterValues = workspace.richParameterValues.map { (name, value) ->
                 CoderRichParameterValue(name = name, value = value)
-            }
+            },
         )
 
         val response = coderApiClient.createWorkspace(request)
-        
+
         return if (response != null) {
             CoderWorkspaceCreationResult(
                 success = true,
@@ -62,7 +62,7 @@ class CoderService(
      */
     fun startWorkspace(workspace: Workspace): CoderWorkspaceActionResult {
         logger.info("Starting workspace in Coder: ${workspace.name}")
-        
+
         val coderWorkspaceId = workspace.metadata["coderWorkspaceId"]
         if (coderWorkspaceId == null) {
             return CoderWorkspaceActionResult(
@@ -72,7 +72,7 @@ class CoderService(
         }
 
         val response = coderApiClient.startWorkspace(coderWorkspaceId)
-        
+
         return if (response != null) {
             CoderWorkspaceActionResult(
                 success = true,
@@ -91,7 +91,7 @@ class CoderService(
      */
     fun stopWorkspace(workspace: Workspace): CoderWorkspaceActionResult {
         logger.info("Stopping workspace in Coder: ${workspace.name}")
-        
+
         val coderWorkspaceId = workspace.metadata["coderWorkspaceId"]
         if (coderWorkspaceId == null) {
             return CoderWorkspaceActionResult(
@@ -101,7 +101,7 @@ class CoderService(
         }
 
         val response = coderApiClient.stopWorkspace(coderWorkspaceId)
-        
+
         return if (response != null) {
             CoderWorkspaceActionResult(
                 success = true,
@@ -120,7 +120,7 @@ class CoderService(
      */
     fun deleteWorkspace(workspace: Workspace): CoderWorkspaceActionResult {
         logger.info("Deleting workspace in Coder: ${workspace.name}")
-        
+
         val coderWorkspaceId = workspace.metadata["coderWorkspaceId"]
         if (coderWorkspaceId == null) {
             return CoderWorkspaceActionResult(
@@ -130,7 +130,7 @@ class CoderService(
         }
 
         val success = coderApiClient.deleteWorkspace(coderWorkspaceId)
-        
+
         return CoderWorkspaceActionResult(
             success = success,
             error = if (!success) "Failed to delete workspace in Coder" else null,
@@ -150,7 +150,7 @@ class CoderService(
         }
 
         val response = coderApiClient.getWorkspace(coderWorkspaceId)
-        
+
         return if (response != null) {
             CoderWorkspaceStatusResult(
                 success = true,

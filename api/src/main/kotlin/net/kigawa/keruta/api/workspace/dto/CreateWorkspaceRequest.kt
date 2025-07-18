@@ -1,8 +1,8 @@
 package net.kigawa.keruta.api.workspace.dto
 
+import net.kigawa.keruta.core.domain.model.WorkspaceParameterType
 import net.kigawa.keruta.core.domain.model.WorkspaceTemplate
 import net.kigawa.keruta.core.domain.model.WorkspaceTemplateParameter
-import net.kigawa.keruta.core.domain.model.WorkspaceParameterType
 import java.time.LocalDateTime
 import java.util.UUID
 

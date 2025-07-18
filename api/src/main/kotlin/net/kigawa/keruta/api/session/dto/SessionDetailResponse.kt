@@ -59,7 +59,7 @@ data class SessionWorkspaceDetail(
     companion object {
         fun fromDomain(workspace: Workspace): SessionWorkspaceDetail {
             val actions = mutableListOf<String>()
-            
+
             // Determine available actions based on current status
             when (workspace.status) {
                 WorkspaceStatus.PENDING, WorkspaceStatus.FAILED -> {
@@ -85,12 +85,12 @@ data class SessionWorkspaceDetail(
                     actions.add("delete")
                 }
             }
-            
+
             // Generate Coder workspace URL if available
             val coderWorkspaceUrl = workspace.metadata["coderWorkspaceId"]?.let { coderWorkspaceId ->
                 workspace.resourceInfo?.ingressUrl ?: "http://localhost:3000/workspaces/$coderWorkspaceId"
             }
-            
+
             return SessionWorkspaceDetail(
                 id = workspace.id,
                 name = workspace.name,
@@ -149,16 +149,16 @@ data class SessionWorkspaceStats(
     companion object {
         fun fromWorkspaces(workspaces: List<Workspace>): SessionWorkspaceStats {
             val statusCounts = workspaces.groupingBy { it.status }.eachCount()
-            
+
             return SessionWorkspaceStats(
                 total = workspaces.size,
                 running = statusCounts[WorkspaceStatus.RUNNING] ?: 0,
                 stopped = statusCounts[WorkspaceStatus.STOPPED] ?: 0,
-                pending = (statusCounts[WorkspaceStatus.PENDING] ?: 0) + 
-                         (statusCounts[WorkspaceStatus.STARTING] ?: 0),
+                pending = (statusCounts[WorkspaceStatus.PENDING] ?: 0) +
+                    (statusCounts[WorkspaceStatus.STARTING] ?: 0),
                 failed = statusCounts[WorkspaceStatus.FAILED] ?: 0,
-                deleting = (statusCounts[WorkspaceStatus.DELETING] ?: 0) + 
-                          (statusCounts[WorkspaceStatus.DELETED] ?: 0),
+                deleting = (statusCounts[WorkspaceStatus.DELETING] ?: 0) +
+                    (statusCounts[WorkspaceStatus.DELETED] ?: 0),
             )
         }
     }

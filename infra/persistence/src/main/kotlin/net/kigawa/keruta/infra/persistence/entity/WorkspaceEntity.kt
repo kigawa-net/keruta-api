@@ -1,13 +1,12 @@
 package net.kigawa.keruta.infra.persistence.entity
 
 import net.kigawa.keruta.core.domain.model.Workspace
-import net.kigawa.keruta.core.domain.model.WorkspaceStatus
 import net.kigawa.keruta.core.domain.model.WorkspaceBuildInfo
 import net.kigawa.keruta.core.domain.model.WorkspaceBuildStatus
 import net.kigawa.keruta.core.domain.model.WorkspaceResourceInfo
+import net.kigawa.keruta.core.domain.model.WorkspaceStatus
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
-import org.springframework.data.mongodb.core.mapping.Field
 import java.time.LocalDateTime
 
 /**

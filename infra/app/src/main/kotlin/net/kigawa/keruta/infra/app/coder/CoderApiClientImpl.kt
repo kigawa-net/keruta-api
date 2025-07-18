@@ -8,7 +8,7 @@ import org.springframework.web.client.RestTemplate
 @Service
 class CoderApiClientImpl(
     private val restTemplate: RestTemplate,
-    private val coderProperties: CoderProperties
+    private val coderProperties: CoderProperties,
 ) : CoderApiClient {
 
     override fun createWorkspace(request: CoderCreateWorkspaceRequest): CoderWorkspaceResponse? {
@@ -34,7 +34,12 @@ class CoderApiClientImpl(
                 set("Coder-Session-Token", coderProperties.sessionToken)
             }
             val entity = HttpEntity<Any>(headers)
-            val responseDto = restTemplate.exchange(url, HttpMethod.GET, entity, CoderWorkspaceResponseDto::class.java).body
+            val responseDto = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                CoderWorkspaceResponseDto::class.java,
+            ).body
             responseDto?.toUseCase()
         } catch (e: Exception) {
             null
@@ -94,7 +99,12 @@ class CoderApiClientImpl(
                 set("Coder-Session-Token", coderProperties.sessionToken)
             }
             val entity = HttpEntity<Any>(headers)
-            val response = restTemplate.exchange(url, HttpMethod.GET, entity, Array<CoderTemplateResponseDto>::class.java)
+            val response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                Array<CoderTemplateResponseDto>::class.java,
+            )
             response.body?.map { it.toUseCase() } ?: emptyList()
         } catch (e: Exception) {
             emptyList()

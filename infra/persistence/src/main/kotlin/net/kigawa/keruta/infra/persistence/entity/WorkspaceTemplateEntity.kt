@@ -1,8 +1,8 @@
 package net.kigawa.keruta.infra.persistence.entity
 
+import net.kigawa.keruta.core.domain.model.WorkspaceParameterType
 import net.kigawa.keruta.core.domain.model.WorkspaceTemplate
 import net.kigawa.keruta.core.domain.model.WorkspaceTemplateParameter
-import net.kigawa.keruta.core.domain.model.WorkspaceParameterType
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 import java.time.LocalDateTime

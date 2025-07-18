@@ -1,14 +1,14 @@
 package net.kigawa.keruta.core.usecase.workspace
 
 import net.kigawa.keruta.core.domain.model.Workspace
-import net.kigawa.keruta.core.domain.model.WorkspaceStatus
-import net.kigawa.keruta.core.domain.model.WorkspaceTemplate
 import net.kigawa.keruta.core.domain.model.WorkspaceBuildInfo
 import net.kigawa.keruta.core.domain.model.WorkspaceBuildStatus
 import net.kigawa.keruta.core.domain.model.WorkspaceResourceInfo
+import net.kigawa.keruta.core.domain.model.WorkspaceStatus
+import net.kigawa.keruta.core.domain.model.WorkspaceTemplate
+import net.kigawa.keruta.core.usecase.repository.SessionRepository
 import net.kigawa.keruta.core.usecase.repository.WorkspaceRepository
 import net.kigawa.keruta.core.usecase.repository.WorkspaceTemplateRepository
-import net.kigawa.keruta.core.usecase.repository.SessionRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -74,7 +74,7 @@ class WorkspaceServiceImpl(
         )
 
         val savedWorkspace = workspaceRepository.save(workspace)
-        
+
         // Start workspace creation asynchronously
         workspaceOrchestrator.createWorkspaceAsync(savedWorkspace, template)
 
@@ -91,7 +91,7 @@ class WorkspaceServiceImpl(
 
     override suspend fun updateWorkspaceStatus(id: String, status: WorkspaceStatus): Workspace? {
         val workspace = workspaceRepository.findById(id) ?: return null
-        
+
         val updatedWorkspace = workspace.copy(
             status = status,
             updatedAt = LocalDateTime.now(),
@@ -99,13 +99,13 @@ class WorkspaceServiceImpl(
             stoppedAt = if (status == WorkspaceStatus.STOPPED) LocalDateTime.now() else workspace.stoppedAt,
             deletedAt = if (status == WorkspaceStatus.DELETED) LocalDateTime.now() else workspace.deletedAt,
         )
-        
+
         return workspaceRepository.update(updatedWorkspace)
     }
 
     override suspend fun startWorkspace(id: String): Workspace? {
         val workspace = workspaceRepository.findById(id) ?: return null
-        
+
         if (workspace.status != WorkspaceStatus.STOPPED) {
             throw IllegalStateException("Workspace must be stopped to start")
         }
@@ -115,18 +115,18 @@ class WorkspaceServiceImpl(
             updatedAt = LocalDateTime.now(),
             lastUsedAt = LocalDateTime.now(),
         )
-        
+
         val savedWorkspace = workspaceRepository.update(updatedWorkspace)
-        
+
         // Start workspace asynchronously
         workspaceOrchestrator.startWorkspaceAsync(savedWorkspace)
-        
+
         return savedWorkspace
     }
 
     override suspend fun stopWorkspace(id: String): Workspace? {
         val workspace = workspaceRepository.findById(id) ?: return null
-        
+
         if (workspace.status != WorkspaceStatus.RUNNING) {
             throw IllegalStateException("Workspace must be running to stop")
         }
@@ -135,43 +135,43 @@ class WorkspaceServiceImpl(
             status = WorkspaceStatus.STOPPING,
             updatedAt = LocalDateTime.now(),
         )
-        
+
         val savedWorkspace = workspaceRepository.update(updatedWorkspace)
-        
+
         // Stop workspace asynchronously
         workspaceOrchestrator.stopWorkspaceAsync(savedWorkspace)
-        
+
         return savedWorkspace
     }
 
     override suspend fun deleteWorkspace(id: String): Boolean {
         val workspace = workspaceRepository.findById(id) ?: return false
-        
+
         // Stop workspace first if running
         if (workspace.status == WorkspaceStatus.RUNNING) {
             stopWorkspace(id)
         }
-        
+
         val updatedWorkspace = workspace.copy(
             status = WorkspaceStatus.DELETING,
             updatedAt = LocalDateTime.now(),
         )
-        
+
         workspaceRepository.update(updatedWorkspace)
-        
+
         // Delete workspace asynchronously
         workspaceOrchestrator.deleteWorkspaceAsync(updatedWorkspace)
-        
+
         return true
     }
 
     override suspend fun deleteWorkspacesBySessionId(sessionId: String): Boolean {
         val workspaces = workspaceRepository.findBySessionId(sessionId)
-        
+
         workspaces.forEach { workspace ->
             deleteWorkspace(workspace.id)
         }
-        
+
         return true
     }
 
@@ -191,18 +191,18 @@ class WorkspaceServiceImpl(
         if (workspaceTemplateRepository.existsByName(template.name)) {
             throw IllegalArgumentException("Template with name '${template.name}' already exists")
         }
-        
+
         return workspaceTemplateRepository.save(template)
     }
 
     override suspend fun updateWorkspaceTemplate(template: WorkspaceTemplate): WorkspaceTemplate {
         val existing = workspaceTemplateRepository.findById(template.id)
             ?: throw IllegalArgumentException("Template not found: ${template.id}")
-        
+
         val updatedTemplate = template.copy(
             updatedAt = LocalDateTime.now(),
         )
-        
+
         return workspaceTemplateRepository.update(updatedTemplate)
     }
 

@@ -10,19 +10,19 @@ import org.springframework.stereotype.Repository
  */
 @Repository
 interface MongoWorkspaceTemplateRepository : MongoRepository<WorkspaceTemplateEntity, String> {
-    
+
     fun findByName(name: String): WorkspaceTemplateEntity?
-    
+
     fun findByNameContainingIgnoreCase(name: String): List<WorkspaceTemplateEntity>
-    
+
     fun existsByName(name: String): Boolean
-    
+
     @Query("{ 'isDefault': true }")
     fun findDefaultTemplate(): WorkspaceTemplateEntity?
-    
+
     @Query("{ 'version': ?0 }")
     fun findByVersion(version: String): List<WorkspaceTemplateEntity>
-    
+
     @Query("{ 'name': ?0, 'version': ?1 }")
     fun findByNameAndVersion(name: String, version: String): WorkspaceTemplateEntity?
 }

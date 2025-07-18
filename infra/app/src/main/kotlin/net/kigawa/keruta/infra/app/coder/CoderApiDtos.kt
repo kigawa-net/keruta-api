@@ -31,7 +31,7 @@ data class CoderCreateWorkspaceRequestDto(
                 automaticUpdates = request.automaticUpdates,
                 autostartSchedule = request.autostartSchedule,
                 ttlMs = request.ttlMs,
-                richParameterValues = request.richParameterValues.map { CoderRichParameterValueDto.fromUseCase(it) }
+                richParameterValues = request.richParameterValues.map { CoderRichParameterValueDto.fromUseCase(it) },
             )
         }
     }
@@ -104,7 +104,7 @@ data class CoderWorkspaceResponseDto(
             lastUsedAt = lastUsedAt,
             latestBuild = latestBuild.toUseCase(),
             health = health.toUseCase(),
-            automaticUpdates = automaticUpdates
+            automaticUpdates = automaticUpdates,
         )
     }
 }
@@ -149,7 +149,7 @@ data class CoderWorkspaceBuildResponseDto(
             status = status,
             reason = reason,
             transition = transition,
-            resources = resources.map { it.toUseCase() }
+            resources = resources.map { it.toUseCase() },
         )
     }
 }
@@ -172,7 +172,7 @@ data class CoderWorkspaceResourceDto(
             name = name,
             hide = hide,
             icon = icon,
-            agents = agents.map { it.toUseCase() }
+            agents = agents.map { it.toUseCase() },
         )
     }
 }
@@ -205,7 +205,7 @@ data class CoderWorkspaceAgentDto(
             lastConnectedAt = lastConnectedAt,
             disconnectedAt = disconnectedAt,
             version = version,
-            apps = apps.map { it.toUseCase() }
+            apps = apps.map { it.toUseCase() },
         )
     }
 }
@@ -234,7 +234,7 @@ data class CoderWorkspaceAppDto(
             external = external,
             subdomain = subdomain,
             health = health,
-            healthcheck = healthcheck?.toUseCase()
+            healthcheck = healthcheck?.toUseCase(),
         )
     }
 }
@@ -293,7 +293,7 @@ data class CoderTemplateResponseDto(
             organizationId = organizationId,
             provisioner = provisioner,
             activeVersionId = activeVersionId,
-            workspaceCount = workspaceCount
+            workspaceCount = workspaceCount,
         )
     }
 }

@@ -22,14 +22,17 @@ class SessionDetailController(
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     @GetMapping("/{id}/detail")
-    @Operation(summary = "Get session detail", description = "Retrieves detailed information about a session including workspaces")
+    @Operation(
+        summary = "Get session detail",
+        description = "Retrieves detailed information about a session including workspaces",
+    )
     fun getSessionDetail(@PathVariable id: String): ResponseEntity<SessionDetailResponse> {
         return try {
             val session = sessionService.getSessionById(id)
             val workspaces = sessionServiceImpl.getSessionWorkspaces(id)
-            
+
             logger.info("Retrieved session detail: id={}, workspaces={}", id, workspaces.size)
-            
+
             ResponseEntity.ok(SessionDetailResponse.fromDomain(session, workspaces))
         } catch (e: NoSuchElementException) {
             logger.warn("Session not found: id={}", id)

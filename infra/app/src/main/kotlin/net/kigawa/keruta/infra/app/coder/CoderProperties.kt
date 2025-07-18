@@ -11,5 +11,5 @@ data class CoderProperties(
     val defaultTemplateId: String? = null,
     val connectionTimeout: Long = 10000,
     val readTimeout: Long = 30000,
-    val enableSslVerification: Boolean = true
+    val enableSslVerification: Boolean = true,
 )

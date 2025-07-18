@@ -43,7 +43,7 @@ class SessionServiceImpl(
 
     override fun deleteSession(id: String) {
         logger.info("Deleting session and its workspaces: id={}", id)
-        
+
         // Delete all workspaces associated with this session
         try {
             workspaceService.deleteWorkspacesBySessionId(id)
@@ -52,12 +52,12 @@ class SessionServiceImpl(
             logger.error("Failed to delete workspaces for session: id={}", id, e)
             throw e
         }
-        
+
         // Delete the session itself
         if (!sessionRepository.deleteById(id)) {
             throw NoSuchElementException("Session not found with id: $id")
         }
-        
+
         logger.info("Successfully deleted session: id={}", id)
     }
 
@@ -117,16 +117,20 @@ class SessionServiceImpl(
     /**
      * Creates a workspace for a session.
      */
-    fun createSessionWorkspace(sessionId: String, workspaceName: String, templateId: String? = null): net.kigawa.keruta.core.domain.model.Workspace {
+    fun createSessionWorkspace(
+        sessionId: String,
+        workspaceName: String,
+        templateId: String? = null,
+    ): net.kigawa.keruta.core.domain.model.Workspace {
         // Validate session exists
         getSessionById(sessionId)
-        
+
         val request = net.kigawa.keruta.core.usecase.workspace.CreateWorkspaceRequest(
             name = workspaceName,
             sessionId = sessionId,
             templateId = templateId,
         )
-        
+
         return workspaceService.createWorkspace(request)
     }
 

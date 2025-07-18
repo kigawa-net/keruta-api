@@ -26,14 +26,14 @@ class CoderConfig {
         val factory = SimpleClientHttpRequestFactory()
         factory.setConnectTimeout(coderProperties.connectionTimeout.toInt())
         factory.setReadTimeout(coderProperties.readTimeout.toInt())
-        
+
         val restTemplate = RestTemplate(factory)
-        
+
         // Disable SSL verification if configured
         if (!coderProperties.enableSslVerification) {
             disableSslVerification(restTemplate)
         }
-        
+
         return restTemplate
     }
 
