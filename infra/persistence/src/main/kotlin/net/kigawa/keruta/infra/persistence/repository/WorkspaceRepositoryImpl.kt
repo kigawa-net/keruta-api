@@ -14,39 +14,39 @@ class WorkspaceRepositoryImpl(
     private val mongoWorkspaceRepository: MongoWorkspaceRepository,
 ) : WorkspaceRepository {
 
-    override suspend fun findById(id: String): Workspace? {
+    override fun findById(id: String): Workspace? {
         return mongoWorkspaceRepository.findById(id).orElse(null)?.toDomain()
     }
 
-    override suspend fun findBySessionId(sessionId: String): List<Workspace> {
+    override fun findBySessionId(sessionId: String): List<Workspace> {
         return mongoWorkspaceRepository.findBySessionId(sessionId).map { it.toDomain() }
     }
 
-    override suspend fun findByStatus(status: WorkspaceStatus): List<Workspace> {
+    override fun findByStatus(status: WorkspaceStatus): List<Workspace> {
         return mongoWorkspaceRepository.findByStatus(status).map { it.toDomain() }
     }
 
-    override suspend fun findByName(name: String): List<Workspace> {
+    override fun findByName(name: String): List<Workspace> {
         return mongoWorkspaceRepository.findByNameContainingIgnoreCase(name).map { it.toDomain() }
     }
 
-    override suspend fun findAll(): List<Workspace> {
+    override fun findAll(): List<Workspace> {
         return mongoWorkspaceRepository.findAll().map { it.toDomain() }
     }
 
-    override suspend fun save(workspace: Workspace): Workspace {
+    override fun save(workspace: Workspace): Workspace {
         val entity = WorkspaceEntity.fromDomain(workspace)
         val savedEntity = mongoWorkspaceRepository.save(entity)
         return savedEntity.toDomain()
     }
 
-    override suspend fun update(workspace: Workspace): Workspace {
+    override fun update(workspace: Workspace): Workspace {
         val entity = WorkspaceEntity.fromDomain(workspace)
         val updatedEntity = mongoWorkspaceRepository.save(entity)
         return updatedEntity.toDomain()
     }
 
-    override suspend fun delete(id: String): Boolean {
+    override fun delete(id: String): Boolean {
         return if (mongoWorkspaceRepository.existsById(id)) {
             mongoWorkspaceRepository.deleteById(id)
             true
@@ -55,66 +55,66 @@ class WorkspaceRepositoryImpl(
         }
     }
 
-    override suspend fun deleteBySessionId(sessionId: String): Boolean {
+    override fun deleteBySessionId(sessionId: String): Boolean {
         val deletedCount = mongoWorkspaceRepository.deleteBySessionId(sessionId)
         return deletedCount > 0
     }
 
-    override suspend fun existsByName(name: String): Boolean {
+    override fun existsByName(name: String): Boolean {
         return mongoWorkspaceRepository.findByNameContainingIgnoreCase(name).isNotEmpty()
     }
 
-    override suspend fun existsBySessionId(sessionId: String): Boolean {
+    override fun existsBySessionId(sessionId: String): Boolean {
         return mongoWorkspaceRepository.existsBySessionId(sessionId)
     }
 
-    override suspend fun countByStatus(status: WorkspaceStatus): Long {
+    override fun countByStatus(status: WorkspaceStatus): Long {
         return mongoWorkspaceRepository.countByStatus(status)
     }
 
-    override suspend fun countBySessionId(sessionId: String): Long {
+    override fun countBySessionId(sessionId: String): Long {
         return mongoWorkspaceRepository.countBySessionId(sessionId)
     }
 
     /**
      * Finds workspace by session ID and name.
      */
-    suspend fun findBySessionIdAndName(sessionId: String, name: String): Workspace? {
+    fun findBySessionIdAndName(sessionId: String, name: String): Workspace? {
         return mongoWorkspaceRepository.findBySessionIdAndName(sessionId, name)?.toDomain()
     }
 
     /**
      * Checks if workspace exists by session ID and name.
      */
-    suspend fun existsBySessionIdAndName(sessionId: String, name: String): Boolean {
+    fun existsBySessionIdAndName(sessionId: String, name: String): Boolean {
         return mongoWorkspaceRepository.existsBySessionIdAndName(sessionId, name)
     }
 
     /**
      * Finds workspaces by session ID and status list.
      */
-    suspend fun findBySessionIdAndStatusIn(sessionId: String, statuses: List<WorkspaceStatus>): List<Workspace> {
+    fun findBySessionIdAndStatusIn(sessionId: String, statuses: List<WorkspaceStatus>): List<Workspace> {
         return mongoWorkspaceRepository.findBySessionIdAndStatusIn(sessionId, statuses).map { it.toDomain() }
     }
 
     /**
      * Finds workspaces by template ID.
      */
-    suspend fun findByTemplateId(templateId: String): List<Workspace> {
+    fun findByTemplateId(templateId: String): List<Workspace> {
         return mongoWorkspaceRepository.findByTemplateId(templateId).map { it.toDomain() }
     }
 
     /**
      * Finds all active workspaces (not deleted).
      */
-    suspend fun findAllActive(): List<Workspace> {
+    fun findAllActive(): List<Workspace> {
         return mongoWorkspaceRepository.findAllActive().map { it.toDomain() }
     }
 
     /**
      * Finds active workspaces by session ID.
      */
-    suspend fun findActiveBySessionId(sessionId: String): List<Workspace> {
+    fun findActiveBySessionId(sessionId: String): List<Workspace> {
         return mongoWorkspaceRepository.findActiveBySessionId(sessionId).map { it.toDomain() }
     }
 }

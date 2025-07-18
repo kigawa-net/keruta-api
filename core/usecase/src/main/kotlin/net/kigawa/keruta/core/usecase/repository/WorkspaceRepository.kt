@@ -8,31 +8,31 @@ import net.kigawa.keruta.core.domain.model.WorkspaceTemplate
  * Repository interface for workspace operations.
  */
 interface WorkspaceRepository {
-    suspend fun findById(id: String): Workspace?
-    suspend fun findBySessionId(sessionId: String): List<Workspace>
-    suspend fun findByStatus(status: WorkspaceStatus): List<Workspace>
-    suspend fun findByName(name: String): List<Workspace>
-    suspend fun findAll(): List<Workspace>
-    suspend fun save(workspace: Workspace): Workspace
-    suspend fun update(workspace: Workspace): Workspace
-    suspend fun delete(id: String): Boolean
-    suspend fun deleteBySessionId(sessionId: String): Boolean
-    suspend fun existsByName(name: String): Boolean
-    suspend fun existsBySessionId(sessionId: String): Boolean
-    suspend fun countByStatus(status: WorkspaceStatus): Long
-    suspend fun countBySessionId(sessionId: String): Long
+    fun findById(id: String): Workspace?
+    fun findBySessionId(sessionId: String): List<Workspace>
+    fun findByStatus(status: WorkspaceStatus): List<Workspace>
+    fun findByName(name: String): List<Workspace>
+    fun findAll(): List<Workspace>
+    fun save(workspace: Workspace): Workspace
+    fun update(workspace: Workspace): Workspace
+    fun delete(id: String): Boolean
+    fun deleteBySessionId(sessionId: String): Boolean
+    fun existsByName(name: String): Boolean
+    fun existsBySessionId(sessionId: String): Boolean
+    fun countByStatus(status: WorkspaceStatus): Long
+    fun countBySessionId(sessionId: String): Long
 }
 
 /**
  * Repository interface for workspace template operations.
  */
 interface WorkspaceTemplateRepository {
-    suspend fun findById(id: String): WorkspaceTemplate?
-    suspend fun findByName(name: String): WorkspaceTemplate?
-    suspend fun findAll(): List<WorkspaceTemplate>
-    suspend fun findDefaultTemplate(): WorkspaceTemplate?
-    suspend fun save(template: WorkspaceTemplate): WorkspaceTemplate
-    suspend fun update(template: WorkspaceTemplate): WorkspaceTemplate
-    suspend fun delete(id: String): Boolean
-    suspend fun existsByName(name: String): Boolean
+    fun findById(id: String): WorkspaceTemplate?
+    fun findByName(name: String): WorkspaceTemplate?
+    fun findAll(): List<WorkspaceTemplate>
+    fun findDefaultTemplate(): WorkspaceTemplate?
+    fun save(template: WorkspaceTemplate): WorkspaceTemplate
+    fun update(template: WorkspaceTemplate): WorkspaceTemplate
+    fun delete(id: String): Boolean
+    fun existsByName(name: String): Boolean
 }
