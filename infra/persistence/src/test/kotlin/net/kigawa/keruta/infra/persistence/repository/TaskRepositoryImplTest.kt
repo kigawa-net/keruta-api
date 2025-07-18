@@ -267,6 +267,7 @@ class TaskRepositoryImplTest {
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now(),
             namespace = "test-namespace",
+            session = "test-session",
         )
     }
 }

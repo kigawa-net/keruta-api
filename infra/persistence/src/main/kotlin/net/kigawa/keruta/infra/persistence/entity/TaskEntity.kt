@@ -91,7 +91,7 @@ data class TaskEntity(
             logs = logs,
             agentId = agentId,
             parentId = parentId,
-            session = session,
+            session = session ?: "",
             storageClass = storageClass,
             pvcName = pvcName,
             kubernetesManifest = kubernetesManifest,

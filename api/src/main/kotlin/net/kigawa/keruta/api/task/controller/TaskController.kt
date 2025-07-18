@@ -26,10 +26,19 @@ class TaskController(
     fun createTask(@RequestBody request: CreateTaskRequest): ResponseEntity<TaskResponse> {
         logger.info("Creating new task: {}", request)
         try {
+            // Validate session is not empty
+            if (request.session.isBlank()) {
+                logger.error("Session is required but was empty")
+                return ResponseEntity.badRequest().build()
+            }
+
             val task = request.toDomain()
             val createdTask = taskService.createTask(task)
             logger.info("Task created successfully: id={}", createdTask.id)
             return ResponseEntity.ok(TaskResponse.fromDomain(createdTask))
+        } catch (e: IllegalArgumentException) {
+            logger.error("Invalid request: {}", e.message)
+            return ResponseEntity.badRequest().build()
         } catch (e: Exception) {
             logger.error("Failed to create task", e)
             return ResponseEntity.internalServerError().build()
