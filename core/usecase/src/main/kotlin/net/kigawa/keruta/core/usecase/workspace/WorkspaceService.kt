@@ -8,20 +8,20 @@ import net.kigawa.keruta.core.domain.model.WorkspaceTemplate
  * Service interface for workspace operations.
  */
 interface WorkspaceService {
-    fun createWorkspace(request: CreateWorkspaceRequest): Workspace
-    fun getWorkspaceById(id: String): Workspace?
-    fun getWorkspacesBySessionId(sessionId: String): List<Workspace>
-    fun updateWorkspaceStatus(id: String, status: WorkspaceStatus): Workspace?
-    fun startWorkspace(id: String): Workspace?
-    fun stopWorkspace(id: String): Workspace?
-    fun deleteWorkspace(id: String): Boolean
-    fun deleteWorkspacesBySessionId(sessionId: String): Boolean
-    fun getWorkspaceTemplates(): List<WorkspaceTemplate>
-    fun getWorkspaceTemplate(id: String): WorkspaceTemplate?
-    fun getDefaultWorkspaceTemplate(): WorkspaceTemplate?
-    fun createWorkspaceTemplate(template: WorkspaceTemplate): WorkspaceTemplate
-    fun updateWorkspaceTemplate(template: WorkspaceTemplate): WorkspaceTemplate
-    fun deleteWorkspaceTemplate(id: String): Boolean
+    suspend fun createWorkspace(request: CreateWorkspaceRequest): Workspace
+    suspend fun getWorkspaceById(id: String): Workspace?
+    suspend fun getWorkspacesBySessionId(sessionId: String): List<Workspace>
+    suspend fun updateWorkspaceStatus(id: String, status: WorkspaceStatus): Workspace?
+    suspend fun startWorkspace(id: String): Workspace?
+    suspend fun stopWorkspace(id: String): Workspace?
+    suspend fun deleteWorkspace(id: String): Boolean
+    suspend fun deleteWorkspacesBySessionId(sessionId: String): Boolean
+    suspend fun getWorkspaceTemplates(): List<WorkspaceTemplate>
+    suspend fun getWorkspaceTemplate(id: String): WorkspaceTemplate?
+    suspend fun getDefaultWorkspaceTemplate(): WorkspaceTemplate?
+    suspend fun createWorkspaceTemplate(template: WorkspaceTemplate): WorkspaceTemplate
+    suspend fun updateWorkspaceTemplate(template: WorkspaceTemplate): WorkspaceTemplate
+    suspend fun deleteWorkspaceTemplate(id: String): Boolean
 }
 
 /**

@@ -12,7 +12,7 @@ interface SessionRepository {
      *
      * @return List of all sessions
      */
-    fun findAll(): List<Session>
+    suspend fun findAll(): List<Session>
 
     /**
      * Finds a session by its ID.
@@ -20,7 +20,7 @@ interface SessionRepository {
      * @param id The ID of the session to find
      * @return The session if found, null otherwise
      */
-    fun findById(id: String): Session?
+    suspend fun findById(id: String): Session?
 
     /**
      * Saves a session to the repository.
@@ -28,7 +28,7 @@ interface SessionRepository {
      * @param session The session to save
      * @return The saved session with generated ID if it was a new session
      */
-    fun save(session: Session): Session
+    suspend fun save(session: Session): Session
 
     /**
      * Deletes a session by its ID.
@@ -36,7 +36,7 @@ interface SessionRepository {
      * @param id The ID of the session to delete
      * @return true if the session was deleted, false otherwise
      */
-    fun deleteById(id: String): Boolean
+    suspend fun deleteById(id: String): Boolean
 
     /**
      * Finds sessions by their status.
@@ -44,7 +44,7 @@ interface SessionRepository {
      * @param status The status to filter by
      * @return List of sessions with the specified status
      */
-    fun findByStatus(status: SessionStatus): List<Session>
+    suspend fun findByStatus(status: SessionStatus): List<Session>
 
     /**
      * Finds sessions by name containing the specified string.
@@ -52,7 +52,7 @@ interface SessionRepository {
      * @param name The name pattern to search for
      * @return List of sessions with names containing the specified string
      */
-    fun findByNameContaining(name: String): List<Session>
+    suspend fun findByNameContaining(name: String): List<Session>
 
     /**
      * Finds sessions by tag.
@@ -60,5 +60,5 @@ interface SessionRepository {
      * @param tag The tag to filter by
      * @return List of sessions with the specified tag
      */
-    fun findByTag(tag: String): List<Session>
+    suspend fun findByTag(tag: String): List<Session>
 }

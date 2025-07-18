@@ -19,19 +19,19 @@ class SessionServiceImpl(
 
     private val logger = LoggerFactory.getLogger(SessionServiceImpl::class.java)
 
-    override fun getAllSessions(): List<Session> {
+    override suspend fun getAllSessions(): List<Session> {
         return sessionRepository.findAll()
     }
 
-    override fun getSessionById(id: String): Session {
+    override suspend fun getSessionById(id: String): Session {
         return sessionRepository.findById(id) ?: throw NoSuchElementException("Session not found with id: $id")
     }
 
-    override fun createSession(session: Session): Session {
+    override suspend fun createSession(session: Session): Session {
         return sessionRepository.save(session)
     }
 
-    override fun updateSession(id: String, session: Session): Session {
+    override suspend fun updateSession(id: String, session: Session): Session {
         val existingSession = getSessionById(id)
         val updatedSession = session.copy(
             id = existingSession.id,
@@ -41,7 +41,7 @@ class SessionServiceImpl(
         return sessionRepository.save(updatedSession)
     }
 
-    override fun deleteSession(id: String) {
+    override suspend fun deleteSession(id: String) {
         logger.info("Deleting session and its workspaces: id={}", id)
 
         // Delete all workspaces associated with this session
@@ -61,19 +61,19 @@ class SessionServiceImpl(
         logger.info("Successfully deleted session: id={}", id)
     }
 
-    override fun getSessionsByStatus(status: SessionStatus): List<Session> {
+    override suspend fun getSessionsByStatus(status: SessionStatus): List<Session> {
         return sessionRepository.findByStatus(status)
     }
 
-    override fun searchSessionsByName(name: String): List<Session> {
+    override suspend fun searchSessionsByName(name: String): List<Session> {
         return sessionRepository.findByNameContaining(name)
     }
 
-    override fun getSessionsByTag(tag: String): List<Session> {
+    override suspend fun getSessionsByTag(tag: String): List<Session> {
         return sessionRepository.findByTag(tag)
     }
 
-    override fun updateSessionStatus(id: String, status: SessionStatus): Session {
+    override suspend fun updateSessionStatus(id: String, status: SessionStatus): Session {
         logger.info("Updating session status: id={} status={}", id, status)
         try {
             val existingSession = getSessionById(id)
@@ -93,7 +93,7 @@ class SessionServiceImpl(
         }
     }
 
-    override fun addTagToSession(id: String, tag: String): Session {
+    override suspend fun addTagToSession(id: String, tag: String): Session {
         val existingSession = getSessionById(id)
         val updatedTags = if (tag in existingSession.tags) {
             existingSession.tags
@@ -110,14 +110,14 @@ class SessionServiceImpl(
     /**
      * Gets all workspaces associated with a session.
      */
-    fun getSessionWorkspaces(sessionId: String): List<net.kigawa.keruta.core.domain.model.Workspace> {
+    suspend fun getSessionWorkspaces(sessionId: String): List<net.kigawa.keruta.core.domain.model.Workspace> {
         return workspaceService.getWorkspacesBySessionId(sessionId)
     }
 
     /**
      * Creates a workspace for a session.
      */
-    fun createSessionWorkspace(
+    suspend fun createSessionWorkspace(
         sessionId: String,
         workspaceName: String,
         templateId: String? = null,
@@ -134,7 +134,7 @@ class SessionServiceImpl(
         return workspaceService.createWorkspace(request)
     }
 
-    override fun removeTagFromSession(id: String, tag: String): Session {
+    override suspend fun removeTagFromSession(id: String, tag: String): Session {
         val existingSession = getSessionById(id)
         val updatedTags = existingSession.tags.filter { it != tag }
         val updatedSession = existingSession.copy(

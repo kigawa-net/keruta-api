@@ -26,7 +26,7 @@ class WorkspaceOrchestrator(
      * Creates a workspace asynchronously.
      */
     @Async("infraTaskExecutor")
-    fun createWorkspaceAsync(workspace: Workspace, template: WorkspaceTemplate): CompletableFuture<Workspace> {
+    suspend fun createWorkspaceAsync(workspace: Workspace, template: WorkspaceTemplate): CompletableFuture<Workspace> {
         val future = CompletableFuture<Workspace>()
 
         try {
@@ -111,7 +111,7 @@ class WorkspaceOrchestrator(
      * Starts a workspace asynchronously.
      */
     @Async("infraTaskExecutor")
-    fun startWorkspaceAsync(workspace: Workspace): CompletableFuture<Workspace> {
+    suspend fun startWorkspaceAsync(workspace: Workspace): CompletableFuture<Workspace> {
         val future = CompletableFuture<Workspace>()
 
         try {
@@ -150,7 +150,7 @@ class WorkspaceOrchestrator(
      * Stops a workspace asynchronously.
      */
     @Async("infraTaskExecutor")
-    fun stopWorkspaceAsync(workspace: Workspace): CompletableFuture<Workspace> {
+    suspend fun stopWorkspaceAsync(workspace: Workspace): CompletableFuture<Workspace> {
         val future = CompletableFuture<Workspace>()
 
         try {
@@ -189,7 +189,7 @@ class WorkspaceOrchestrator(
      * Deletes a workspace asynchronously.
      */
     @Async("infraTaskExecutor")
-    fun deleteWorkspaceAsync(workspace: Workspace): CompletableFuture<Boolean> {
+    suspend fun deleteWorkspaceAsync(workspace: Workspace): CompletableFuture<Boolean> {
         val future = CompletableFuture<Boolean>()
 
         try {

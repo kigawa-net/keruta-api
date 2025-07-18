@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component
 class SessionRepositoryImpl(private val mongoSessionRepository: MongoSessionRepository) : SessionRepository {
     private val logger = LoggerFactory.getLogger(SessionRepositoryImpl::class.java)
 
-    override fun findAll(): List<Session> {
+    override suspend fun findAll(): List<Session> {
         logger.debug("Finding all sessions")
         try {
             val entities = mongoSessionRepository.findAll()
@@ -37,7 +37,7 @@ class SessionRepositoryImpl(private val mongoSessionRepository: MongoSessionRepo
         }
     }
 
-    override fun findById(id: String): Session? {
+    override suspend fun findById(id: String): Session? {
         logger.debug("Finding session by id: {}", id)
         try {
             val entity = mongoSessionRepository.findById(id).orElse(null)
@@ -60,7 +60,7 @@ class SessionRepositoryImpl(private val mongoSessionRepository: MongoSessionRepo
         }
     }
 
-    override fun save(session: Session): Session {
+    override suspend fun save(session: Session): Session {
         logger.debug("Saving session: {}", session.id)
         try {
             val entity = SessionEntity.fromDomain(session)
@@ -88,7 +88,7 @@ class SessionRepositoryImpl(private val mongoSessionRepository: MongoSessionRepo
         }
     }
 
-    override fun deleteById(id: String): Boolean {
+    override suspend fun deleteById(id: String): Boolean {
         return if (mongoSessionRepository.existsById(id)) {
             mongoSessionRepository.deleteById(id)
             true
@@ -97,15 +97,15 @@ class SessionRepositoryImpl(private val mongoSessionRepository: MongoSessionRepo
         }
     }
 
-    override fun findByStatus(status: SessionStatus): List<Session> {
+    override suspend fun findByStatus(status: SessionStatus): List<Session> {
         return mongoSessionRepository.findByStatus(status.name).map { it.toDomain() }
     }
 
-    override fun findByNameContaining(name: String): List<Session> {
+    override suspend fun findByNameContaining(name: String): List<Session> {
         return mongoSessionRepository.findByNameContainingIgnoreCase(name).map { it.toDomain() }
     }
 
-    override fun findByTag(tag: String): List<Session> {
+    override suspend fun findByTag(tag: String): List<Session> {
         return mongoSessionRepository.findByTagsContaining(tag).map { it.toDomain() }
     }
 }

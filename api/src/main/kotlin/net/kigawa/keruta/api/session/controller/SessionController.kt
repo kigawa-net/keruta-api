@@ -24,7 +24,7 @@ class SessionController(
 
     @PostMapping
     @Operation(summary = "Create a new session", description = "Creates a new session in the system")
-    fun createSession(@RequestBody request: CreateSessionRequest): ResponseEntity<SessionResponse> {
+    suspend fun createSession(@RequestBody request: CreateSessionRequest): ResponseEntity<SessionResponse> {
         logger.info("Creating new session: {}", request)
         try {
             val session = request.toDomain()
@@ -39,13 +39,13 @@ class SessionController(
 
     @GetMapping
     @Operation(summary = "Get all sessions", description = "Retrieves all sessions in the system")
-    fun getAllSessions(): List<SessionResponse> {
+    suspend fun getAllSessions(): List<SessionResponse> {
         return sessionService.getAllSessions().map { SessionResponse.fromDomain(it) }
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get session by ID", description = "Retrieves a specific session by its ID")
-    fun getSessionById(@PathVariable id: String): ResponseEntity<SessionResponse> {
+    suspend fun getSessionById(@PathVariable id: String): ResponseEntity<SessionResponse> {
         return try {
             val session = sessionService.getSessionById(id)
             val workspaces = sessionServiceImpl.getSessionWorkspaces(id)
@@ -57,7 +57,7 @@ class SessionController(
 
     @PutMapping("/{id}")
     @Operation(summary = "Update session", description = "Updates an existing session")
-    fun updateSession(
+    suspend fun updateSession(
         @PathVariable id: String,
         @RequestBody request: UpdateSessionRequest,
     ): ResponseEntity<SessionResponse> {
@@ -75,7 +75,7 @@ class SessionController(
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete session", description = "Deletes a specific session")
-    fun deleteSession(@PathVariable id: String): ResponseEntity<Void> {
+    suspend fun deleteSession(@PathVariable id: String): ResponseEntity<Void> {
         return try {
             sessionService.deleteSession(id)
             ResponseEntity.noContent().build()
@@ -86,7 +86,7 @@ class SessionController(
 
     @GetMapping("/status/{status}")
     @Operation(summary = "Get sessions by status", description = "Retrieves all sessions with a specific status")
-    fun getSessionsByStatus(@PathVariable status: String): List<SessionResponse> {
+    suspend fun getSessionsByStatus(@PathVariable status: String): List<SessionResponse> {
         val sessionStatus = try {
             net.kigawa.keruta.core.domain.model.SessionStatus.valueOf(status.uppercase())
         } catch (e: IllegalArgumentException) {
@@ -97,19 +97,19 @@ class SessionController(
 
     @GetMapping("/search")
     @Operation(summary = "Search sessions by name", description = "Searches sessions by name pattern")
-    fun searchSessionsByName(@RequestParam name: String): List<SessionResponse> {
+    suspend fun searchSessionsByName(@RequestParam name: String): List<SessionResponse> {
         return sessionService.searchSessionsByName(name).map { SessionResponse.fromDomain(it) }
     }
 
     @GetMapping("/tag/{tag}")
     @Operation(summary = "Get sessions by tag", description = "Retrieves all sessions with a specific tag")
-    fun getSessionsByTag(@PathVariable tag: String): List<SessionResponse> {
+    suspend fun getSessionsByTag(@PathVariable tag: String): List<SessionResponse> {
         return sessionService.getSessionsByTag(tag).map { SessionResponse.fromDomain(it) }
     }
 
     @PutMapping("/{id}/status")
     @Operation(summary = "Update session status", description = "Updates the status of a specific session")
-    fun updateSessionStatus(
+    suspend fun updateSessionStatus(
         @PathVariable id: String,
         @RequestBody statusRequest: Map<String, String>,
     ): ResponseEntity<SessionResponse> {
@@ -144,7 +144,7 @@ class SessionController(
 
     @PostMapping("/{id}/tags")
     @Operation(summary = "Add tag to session", description = "Adds a tag to a specific session")
-    fun addTagToSession(
+    suspend fun addTagToSession(
         @PathVariable id: String,
         @RequestBody tagRequest: Map<String, String>,
     ): ResponseEntity<SessionResponse> {
@@ -159,7 +159,7 @@ class SessionController(
 
     @DeleteMapping("/{id}/tags/{tag}")
     @Operation(summary = "Remove tag from session", description = "Removes a tag from a specific session")
-    fun removeTagFromSession(
+    suspend fun removeTagFromSession(
         @PathVariable id: String,
         @PathVariable tag: String,
     ): ResponseEntity<SessionResponse> {
@@ -173,7 +173,7 @@ class SessionController(
 
     @GetMapping("/{id}/workspaces")
     @Operation(summary = "Get session workspaces", description = "Gets all workspaces for a specific session")
-    fun getSessionWorkspaces(@PathVariable id: String): ResponseEntity<List<WorkspaceResponse>> {
+    suspend fun getSessionWorkspaces(@PathVariable id: String): ResponseEntity<List<WorkspaceResponse>> {
         return try {
             val workspaces = sessionServiceImpl.getSessionWorkspaces(id)
             ResponseEntity.ok(workspaces.map { WorkspaceResponse.fromDomain(it) })
@@ -184,7 +184,7 @@ class SessionController(
 
     @PostMapping("/{id}/workspaces")
     @Operation(summary = "Create session workspace", description = "Creates a workspace for a specific session")
-    fun createSessionWorkspace(
+    suspend fun createSessionWorkspace(
         @PathVariable id: String,
         @RequestBody request: CreateWorkspaceRequest,
     ): ResponseEntity<WorkspaceResponse> {

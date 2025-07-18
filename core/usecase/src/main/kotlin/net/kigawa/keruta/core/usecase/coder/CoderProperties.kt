@@ -1,13 +1,11 @@
 package net.kigawa.keruta.core.usecase.coder
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
 
 /**
  * Configuration properties for Coder REST API.
  */
 @ConfigurationProperties(prefix = "coder")
-@ConstructorBinding
 data class CoderProperties(
     /**
      * Base URL of the Coder instance.

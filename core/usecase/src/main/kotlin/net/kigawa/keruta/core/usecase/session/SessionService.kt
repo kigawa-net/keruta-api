@@ -12,7 +12,7 @@ interface SessionService {
      *
      * @return List of all sessions
      */
-    fun getAllSessions(): List<Session>
+    suspend fun getAllSessions(): List<Session>
 
     /**
      * Gets a session by its ID.
@@ -21,7 +21,7 @@ interface SessionService {
      * @return The session if found
      * @throws NoSuchElementException if the session is not found
      */
-    fun getSessionById(id: String): Session
+    suspend fun getSessionById(id: String): Session
 
     /**
      * Creates a new session.
@@ -29,7 +29,7 @@ interface SessionService {
      * @param session The session to create
      * @return The created session with generated ID
      */
-    fun createSession(session: Session): Session
+    suspend fun createSession(session: Session): Session
 
     /**
      * Updates an existing session.
@@ -39,7 +39,7 @@ interface SessionService {
      * @return The updated session
      * @throws NoSuchElementException if the session is not found
      */
-    fun updateSession(id: String, session: Session): Session
+    suspend fun updateSession(id: String, session: Session): Session
 
     /**
      * Deletes a session by its ID.
@@ -47,7 +47,7 @@ interface SessionService {
      * @param id The ID of the session to delete
      * @throws NoSuchElementException if the session is not found
      */
-    fun deleteSession(id: String)
+    suspend fun deleteSession(id: String)
 
     /**
      * Gets sessions by status.
@@ -55,7 +55,7 @@ interface SessionService {
      * @param status The status to filter by
      * @return List of sessions with the specified status
      */
-    fun getSessionsByStatus(status: SessionStatus): List<Session>
+    suspend fun getSessionsByStatus(status: SessionStatus): List<Session>
 
     /**
      * Searches sessions by name.
@@ -63,7 +63,7 @@ interface SessionService {
      * @param name The name pattern to search for
      * @return List of sessions with names containing the specified string
      */
-    fun searchSessionsByName(name: String): List<Session>
+    suspend fun searchSessionsByName(name: String): List<Session>
 
     /**
      * Gets sessions by tag.
@@ -71,7 +71,7 @@ interface SessionService {
      * @param tag The tag to filter by
      * @return List of sessions with the specified tag
      */
-    fun getSessionsByTag(tag: String): List<Session>
+    suspend fun getSessionsByTag(tag: String): List<Session>
 
     /**
      * Updates the status of a session.
@@ -81,7 +81,7 @@ interface SessionService {
      * @return The updated session
      * @throws NoSuchElementException if the session is not found
      */
-    fun updateSessionStatus(id: String, status: SessionStatus): Session
+    suspend fun updateSessionStatus(id: String, status: SessionStatus): Session
 
     /**
      * Adds a tag to a session.
@@ -91,7 +91,7 @@ interface SessionService {
      * @return The updated session
      * @throws NoSuchElementException if the session is not found
      */
-    fun addTagToSession(id: String, tag: String): Session
+    suspend fun addTagToSession(id: String, tag: String): Session
 
     /**
      * Removes a tag from a session.
@@ -101,5 +101,5 @@ interface SessionService {
      * @return The updated session
      * @throws NoSuchElementException if the session is not found
      */
-    fun removeTagFromSession(id: String, tag: String): Session
+    suspend fun removeTagFromSession(id: String, tag: String): Session
 }
