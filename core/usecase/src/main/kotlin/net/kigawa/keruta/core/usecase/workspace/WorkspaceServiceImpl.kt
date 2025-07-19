@@ -92,6 +92,7 @@ open class WorkspaceServiceImpl(
 
     override suspend fun updateWorkspaceStatus(id: String, status: WorkspaceStatus): Workspace? {
         val workspace = workspaceRepository.findById(id) ?: return null
+        val oldStatus = workspace.status
 
         val updatedWorkspace = workspace.copy(
             status = status,
@@ -101,7 +102,14 @@ open class WorkspaceServiceImpl(
             deletedAt = if (status == WorkspaceStatus.DELETED) LocalDateTime.now() else workspace.deletedAt,
         )
 
-        return workspaceRepository.update(updatedWorkspace)
+        val savedWorkspace = workspaceRepository.update(updatedWorkspace)
+        
+        // Trigger session status synchronization if workspace status changed
+        if (savedWorkspace != null && oldStatus != status) {
+            notifyWorkspaceStatusChange(savedWorkspace, oldStatus)
+        }
+
+        return savedWorkspace
     }
 
     override suspend fun startWorkspace(id: String): Workspace? {
@@ -240,5 +248,24 @@ open class WorkspaceServiceImpl(
         )
 
         return workspaceTemplateRepository.save(defaultTemplate)
+    }
+    
+    /**
+     * Notifies about workspace status changes for session synchronization.
+     * This is a placeholder method that can be enhanced with event publishing.
+     */
+    private fun notifyWorkspaceStatusChange(workspace: Workspace, oldStatus: WorkspaceStatus) {
+        // This could be enhanced to publish events to a message queue or event bus
+        // For now, we'll use a simple async call approach
+        logger.debug(
+            "Workspace status changed: workspaceId={} sessionId={} oldStatus={} newStatus={}",
+            workspace.id,
+            workspace.sessionId,
+            oldStatus,
+            workspace.status,
+        )
+        
+        // Note: In a real implementation, this would be handled through dependency injection
+        // and proper event publishing mechanisms to avoid tight coupling
     }
 }

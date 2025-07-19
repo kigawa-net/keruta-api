@@ -9,6 +9,8 @@ import net.kigawa.keruta.api.workspace.dto.CreateWorkspaceRequest
 import net.kigawa.keruta.api.workspace.dto.WorkspaceResponse
 import net.kigawa.keruta.core.usecase.session.SessionService
 import net.kigawa.keruta.core.usecase.session.SessionServiceImpl
+import net.kigawa.keruta.core.usecase.session.SessionWorkspaceStatusSyncService
+import net.kigawa.keruta.core.usecase.session.CoderWorkspaceMonitoringService
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -19,6 +21,8 @@ import org.springframework.web.bind.annotation.*
 class SessionController(
     private val sessionService: SessionService,
     private val sessionServiceImpl: SessionServiceImpl,
+    private val sessionWorkspaceStatusSyncService: SessionWorkspaceStatusSyncService,
+    private val coderWorkspaceMonitoringService: CoderWorkspaceMonitoringService,
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -201,6 +205,41 @@ class SessionController(
             ResponseEntity.badRequest().build()
         } catch (e: Exception) {
             logger.error("Failed to create workspace for session", e)
+            ResponseEntity.internalServerError().build()
+        }
+    }
+
+    @PostMapping("/{id}/sync-status")
+    @Operation(summary = "Sync session status", description = "Synchronizes session status with workspace states")
+    suspend fun syncSessionStatus(@PathVariable id: String): ResponseEntity<SessionResponse> {
+        return try {
+            val success = sessionWorkspaceStatusSyncService.forceSyncSessionStatus(id)
+            if (success) {
+                val session = sessionService.getSessionById(id)
+                ResponseEntity.ok(SessionResponse.fromDomain(session))
+            } else {
+                ResponseEntity.internalServerError().build()
+            }
+        } catch (e: NoSuchElementException) {
+            ResponseEntity.notFound().build()
+        } catch (e: Exception) {
+            logger.error("Failed to sync session status", e)
+            ResponseEntity.internalServerError().build()
+        }
+    }
+
+    @PostMapping("/{id}/monitor-workspaces")
+    @Operation(summary = "Monitor session workspaces", description = "Forces monitoring of all workspaces in a session from Coder")
+    suspend fun monitorSessionWorkspaces(@PathVariable id: String): ResponseEntity<Void> {
+        return try {
+            val success = coderWorkspaceMonitoringService.forceMonitorSessionWorkspaces(id)
+            if (success) {
+                ResponseEntity.ok().build()
+            } else {
+                ResponseEntity.internalServerError().build()
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to monitor session workspaces", e)
             ResponseEntity.internalServerError().build()
         }
     }

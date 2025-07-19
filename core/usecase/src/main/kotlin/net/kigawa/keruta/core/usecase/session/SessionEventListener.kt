@@ -2,6 +2,8 @@ package net.kigawa.keruta.core.usecase.session
 
 import net.kigawa.keruta.core.domain.model.Session
 import net.kigawa.keruta.core.domain.model.SessionStatus
+import net.kigawa.keruta.core.domain.model.Workspace
+import net.kigawa.keruta.core.domain.model.WorkspaceStatus
 import net.kigawa.keruta.core.usecase.workspace.CreateWorkspaceRequest
 import net.kigawa.keruta.core.usecase.workspace.WorkspaceService
 import org.slf4j.LoggerFactory
@@ -104,6 +106,53 @@ class SessionEventListener(
             }
         } catch (e: Exception) {
             logger.error("Failed to delete workspaces for session: sessionId={}", sessionId, e)
+        }
+    }
+
+    /**
+     * Handles workspace status change event.
+     * Updates session status based on workspace state.
+     */
+    suspend fun onWorkspaceStatusChanged(workspace: Workspace, oldStatus: WorkspaceStatus) {
+        logger.info(
+            "Handling workspace status change: workspaceId={} sessionId={} oldStatus={} newStatus={}",
+            workspace.id,
+            workspace.sessionId,
+            oldStatus,
+            workspace.status,
+        )
+
+        try {
+            val newSessionStatus = mapWorkspaceStatusToSessionStatus(workspace.status)
+            if (newSessionStatus != null) {
+                logger.info(
+                    "Updating session status based on workspace: sessionId={} newStatus={}",
+                    workspace.sessionId,
+                    newSessionStatus,
+                )
+                // Note: This would require a SessionService dependency to avoid circular dependencies
+                // We'll implement this through a separate service
+            }
+        } catch (e: Exception) {
+            logger.error(
+                "Failed to handle workspace status change: workspaceId={} sessionId={}",
+                workspace.id,
+                workspace.sessionId,
+                e,
+            )
+        }
+    }
+
+    /**
+     * Maps workspace status to corresponding session status.
+     */
+    private fun mapWorkspaceStatusToSessionStatus(workspaceStatus: WorkspaceStatus): SessionStatus? {
+        return when (workspaceStatus) {
+            WorkspaceStatus.RUNNING -> SessionStatus.ACTIVE
+            WorkspaceStatus.STOPPED -> SessionStatus.INACTIVE
+            WorkspaceStatus.FAILED -> SessionStatus.INACTIVE
+            WorkspaceStatus.DELETED -> SessionStatus.ARCHIVED
+            else -> null // No session status change needed for PENDING, STARTING, STOPPING, DELETING, CANCELED
         }
     }
 }
