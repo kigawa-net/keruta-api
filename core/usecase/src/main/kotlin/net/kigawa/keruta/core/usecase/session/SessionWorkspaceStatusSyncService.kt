@@ -16,7 +16,7 @@ import java.time.LocalDateTime
  * This service handles the automatic updating of session status when workspace states change.
  */
 @Service
-class SessionWorkspaceStatusSyncService(
+open class SessionWorkspaceStatusSyncService(
     private val sessionRepository: SessionRepository,
     private val workspaceService: WorkspaceService,
 ) {
