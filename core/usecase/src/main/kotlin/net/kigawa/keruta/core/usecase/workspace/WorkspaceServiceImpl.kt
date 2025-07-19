@@ -46,7 +46,7 @@ open class WorkspaceServiceImpl(
                 ?: throw IllegalArgumentException("Template not found: ${request.templateId}")
         } else {
             workspaceTemplateRepository.findDefaultTemplate()
-                ?: throw IllegalArgumentException("No default template found")
+                ?: createDefaultTemplate()
         }
 
         // Create workspace
@@ -210,5 +210,23 @@ open class WorkspaceServiceImpl(
 
     override suspend fun deleteWorkspaceTemplate(id: String): Boolean {
         return workspaceTemplateRepository.delete(id)
+    }
+
+    private suspend fun createDefaultTemplate(): WorkspaceTemplate {
+        logger.info("Creating default workspace template")
+
+        val defaultTemplate = WorkspaceTemplate(
+            id = UUID.randomUUID().toString(),
+            name = "default",
+            description = "Default workspace template for Keruta",
+            version = "1.0.0",
+            icon = null,
+            isDefault = true,
+            parameters = emptyList(),
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now(),
+        )
+
+        return workspaceTemplateRepository.save(defaultTemplate)
     }
 }
