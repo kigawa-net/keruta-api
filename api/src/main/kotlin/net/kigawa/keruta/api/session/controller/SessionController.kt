@@ -175,39 +175,21 @@ class SessionController(
         }
     }
 
-    @GetMapping("/{id}/workspaces")
-    @Operation(summary = "Get session workspaces", description = "Gets all workspaces for a specific session")
-    suspend fun getSessionWorkspaces(@PathVariable id: String): ResponseEntity<List<WorkspaceResponse>> {
+    @GetMapping("/{id}/workspace")
+    @Operation(summary = "Get session workspace", description = "Gets the single workspace for a specific session")
+    suspend fun getSessionWorkspace(@PathVariable id: String): ResponseEntity<WorkspaceResponse> {
         return try {
-            val workspaces = sessionServiceImpl.getSessionWorkspaces(id)
-            ResponseEntity.ok(workspaces.map { WorkspaceResponse.fromDomain(it) })
+            val workspace = sessionServiceImpl.getSessionWorkspace(id)
+            if (workspace != null) {
+                ResponseEntity.ok(WorkspaceResponse.fromDomain(workspace))
+            } else {
+                ResponseEntity.notFound().build()
+            }
         } catch (e: NoSuchElementException) {
             ResponseEntity.notFound().build()
         }
     }
 
-    @PostMapping("/{id}/workspaces")
-    @Operation(summary = "Create session workspace", description = "Creates a workspace for a specific session")
-    suspend fun createSessionWorkspace(
-        @PathVariable id: String,
-        @RequestBody request: CreateWorkspaceRequest,
-    ): ResponseEntity<WorkspaceResponse> {
-        return try {
-            val workspace = sessionServiceImpl.createSessionWorkspace(
-                sessionId = id,
-                workspaceName = request.name,
-                templateId = request.templateId,
-            )
-            ResponseEntity.ok(WorkspaceResponse.fromDomain(workspace))
-        } catch (e: NoSuchElementException) {
-            ResponseEntity.notFound().build()
-        } catch (e: IllegalArgumentException) {
-            ResponseEntity.badRequest().build()
-        } catch (e: Exception) {
-            logger.error("Failed to create workspace for session", e)
-            ResponseEntity.internalServerError().build()
-        }
-    }
 
     @PostMapping("/{id}/sync-status")
     @Operation(summary = "Sync session status", description = "Synchronizes session status with workspace states")

@@ -129,31 +129,32 @@ class SessionServiceImpl(
     }
 
     /**
-     * Gets all workspaces associated with a session.
+     * Gets the single workspace associated with a session.
+     * Since each session has exactly one workspace, this returns the workspace if it exists.
      */
-    suspend fun getSessionWorkspaces(sessionId: String): List<net.kigawa.keruta.core.domain.model.Workspace> {
-        return workspaceService.getWorkspacesBySessionId(sessionId)
+    suspend fun getSessionWorkspace(sessionId: String): net.kigawa.keruta.core.domain.model.Workspace? {
+        val workspaces = workspaceService.getWorkspacesBySessionId(sessionId)
+        
+        if (workspaces.isEmpty()) {
+            return null
+        }
+        
+        if (workspaces.size > 1) {
+            logger.warn("Multiple workspaces found for session (expected 1): sessionId={} count={}", sessionId, workspaces.size)
+        }
+        
+        return workspaces.first()
     }
 
     /**
-     * Creates a workspace for a session.
+     * Gets workspaces for session (backward compatibility).
+     * Returns a list containing the single workspace.
      */
-    suspend fun createSessionWorkspace(
-        sessionId: String,
-        workspaceName: String,
-        templateId: String? = null,
-    ): net.kigawa.keruta.core.domain.model.Workspace {
-        // Validate session exists
-        getSessionById(sessionId)
-
-        val request = net.kigawa.keruta.core.usecase.workspace.CreateWorkspaceRequest(
-            name = workspaceName,
-            sessionId = sessionId,
-            templateId = templateId,
-        )
-
-        return workspaceService.createWorkspace(request)
+    suspend fun getSessionWorkspaces(sessionId: String): List<net.kigawa.keruta.core.domain.model.Workspace> {
+        val workspace = getSessionWorkspace(sessionId)
+        return if (workspace != null) listOf(workspace) else emptyList()
     }
+
 
     override suspend fun removeTagFromSession(id: String, tag: String): Session {
         val existingSession = getSessionById(id)

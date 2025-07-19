@@ -30,21 +30,19 @@ class CoderWorkspaceMonitoringService(
         logger.debug("Starting Coder workspace monitoring cycle")
 
         try {
-            // Get all workspaces from Keruta
-            val sessions = getAllSessionsWithWorkspaces()
+            // Get all sessions with their single workspace from Keruta
+            val sessionsWithWorkspaces = getAllSessionsWithWorkspaces()
             
-            for ((sessionId, workspaces) in sessions) {
-                for (workspace in workspaces) {
-                    try {
-                        monitorSingleWorkspace(workspace)
-                    } catch (e: Exception) {
-                        logger.error(
-                            "Failed to monitor workspace: workspaceId={} sessionId={}",
-                            workspace.id,
-                            sessionId,
-                            e,
-                        )
-                    }
+            for ((sessionId, workspace) in sessionsWithWorkspaces) {
+                try {
+                    monitorSingleWorkspace(workspace)
+                } catch (e: Exception) {
+                    logger.error(
+                        "Failed to monitor workspace: workspaceId={} sessionId={}",
+                        workspace.id,
+                        sessionId,
+                        e,
+                    )
                 }
             }
             
@@ -133,23 +131,21 @@ class CoderWorkspaceMonitoringService(
     }
 
     /**
-     * Gets all sessions with their associated workspaces.
+     * Gets all sessions with their single associated workspace.
+     * Since each session has exactly one workspace, this returns a map of sessionId to workspace.
      */
-    private suspend fun getAllSessionsWithWorkspaces(): Map<String, List<net.kigawa.keruta.core.domain.model.Workspace>> {
-        val result = mutableMapOf<String, List<net.kigawa.keruta.core.domain.model.Workspace>>()
+    private suspend fun getAllSessionsWithWorkspaces(): Map<String, net.kigawa.keruta.core.domain.model.Workspace> {
+        val result = mutableMapOf<String, net.kigawa.keruta.core.domain.model.Workspace>()
         
         try {
             // This is a simplified approach - in a real implementation,
-            // you might want to query sessions and workspaces more efficiently
-            val allWorkspaces = mutableListOf<net.kigawa.keruta.core.domain.model.Workspace>()
+            // you would query all sessions and their workspaces more efficiently
+            // For now, we'll use the workspace service to get workspaces by session
             
-            // Get all workspaces (this is a placeholder - you'd need to implement this query)
-            // For now, we'll skip this and focus on the monitoring logic structure
+            // Note: This is a placeholder implementation
+            // In a real system, you'd have a more efficient way to get all session-workspace pairs
+            logger.debug("Getting all sessions with workspaces for monitoring")
             
-            // Group workspaces by session ID
-            allWorkspaces.groupBy { it.sessionId }.forEach { (sessionId, workspaces) ->
-                result[sessionId] = workspaces
-            }
         } catch (e: Exception) {
             logger.error("Failed to get sessions with workspaces", e)
         }
@@ -158,7 +154,7 @@ class CoderWorkspaceMonitoringService(
     }
 
     /**
-     * Forces immediate monitoring of all workspaces for a specific session.
+     * Forces immediate monitoring of the single workspace for a specific session.
      */
     suspend fun forceMonitorSessionWorkspaces(sessionId: String): Boolean {
         logger.info("Forcing workspace monitoring for session: sessionId={}", sessionId)
@@ -166,11 +162,20 @@ class CoderWorkspaceMonitoringService(
         try {
             val workspaces = workspaceService.getWorkspacesBySessionId(sessionId)
             
-            for (workspace in workspaces) {
-                monitorSingleWorkspace(workspace)
+            if (workspaces.isEmpty()) {
+                logger.warn("No workspace found for session: sessionId={}", sessionId)
+                return false
             }
             
-            logger.info("Completed forced workspace monitoring for session: sessionId={}", sessionId)
+            if (workspaces.size > 1) {
+                logger.warn("Multiple workspaces found for session (expected 1): sessionId={} count={}", sessionId, workspaces.size)
+            }
+            
+            // Monitor the single workspace
+            val workspace = workspaces.first()
+            monitorSingleWorkspace(workspace)
+            
+            logger.info("Completed forced workspace monitoring for session: sessionId={} workspaceId={}", sessionId, workspace.id)
             return true
         } catch (e: Exception) {
             logger.error("Failed to force monitor session workspaces: sessionId={}", sessionId, e)

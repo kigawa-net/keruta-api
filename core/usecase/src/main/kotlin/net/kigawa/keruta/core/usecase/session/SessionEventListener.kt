@@ -20,15 +20,23 @@ class SessionEventListener(
 
     /**
      * Handles session creation event.
-     * Automatically creates a workspace for the new session.
+     * Automatically creates a single workspace for the new session.
+     * Each session has exactly one workspace.
      */
     suspend fun onSessionCreated(session: Session) {
         logger.info("Handling session created event: sessionId={}", session.id)
 
         try {
-            // Create workspace for the new session
+            // Check if workspace already exists for this session
+            val existingWorkspaces = workspaceService.getWorkspacesBySessionId(session.id)
+            if (existingWorkspaces.isNotEmpty()) {
+                logger.info("Workspace already exists for session: sessionId={} workspaceId={}", session.id, existingWorkspaces.first().id)
+                return
+            }
+
+            // Create single workspace for the new session
             val workspaceRequest = CreateWorkspaceRequest(
-                name = "${session.name}-workspace",
+                name = session.name, // Use session name directly for 1:1 relationship
                 sessionId = session.id,
                 templateId = null, // Use default template
                 automaticUpdates = true,
@@ -49,7 +57,7 @@ class SessionEventListener(
 
     /**
      * Handles session status change event.
-     * Starts or stops workspace based on session status.
+     * Starts or stops the single workspace based on session status.
      */
     suspend fun onSessionStatusChanged(session: Session, oldStatus: SessionStatus) {
         logger.info(
@@ -61,28 +69,37 @@ class SessionEventListener(
 
         try {
             val workspaces = workspaceService.getWorkspacesBySessionId(session.id)
+            
+            if (workspaces.isEmpty()) {
+                logger.warn("No workspace found for session: sessionId={}", session.id)
+                return
+            }
+            
+            if (workspaces.size > 1) {
+                logger.warn("Multiple workspaces found for session (expected 1): sessionId={} count={}", session.id, workspaces.size)
+            }
 
-            for (workspace in workspaces) {
-                when (session.status) {
-                    SessionStatus.ACTIVE -> {
-                        logger.info(
-                            "Starting workspace for active session: sessionId={} workspaceId={}",
-                            session.id,
-                            workspace.id,
-                        )
-                        workspaceService.startWorkspace(workspace.id)
-                    }
-                    SessionStatus.INACTIVE -> {
-                        logger.info(
-                            "Stopping workspace for inactive session: sessionId={} workspaceId={}",
-                            session.id,
-                            workspace.id,
-                        )
-                        workspaceService.stopWorkspace(workspace.id)
-                    }
-                    else -> {
-                        logger.debug("No workspace action needed for session status: {}", session.status)
-                    }
+            val workspace = workspaces.first() // Use the first (and should be only) workspace
+
+            when (session.status) {
+                SessionStatus.ACTIVE -> {
+                    logger.info(
+                        "Starting workspace for active session: sessionId={} workspaceId={}",
+                        session.id,
+                        workspace.id,
+                    )
+                    workspaceService.startWorkspace(workspace.id)
+                }
+                SessionStatus.INACTIVE -> {
+                    logger.info(
+                        "Stopping workspace for inactive session: sessionId={} workspaceId={}",
+                        session.id,
+                        workspace.id,
+                    )
+                    workspaceService.stopWorkspace(workspace.id)
+                }
+                else -> {
+                    logger.debug("No workspace action needed for session status: {}", session.status)
                 }
             }
         } catch (e: Exception) {

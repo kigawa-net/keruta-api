@@ -34,10 +34,10 @@ open class WorkspaceServiceImpl(
         val session = sessionRepository.findById(request.sessionId)
             ?: throw IllegalArgumentException("Session not found: ${request.sessionId}")
 
-        // Validate workspace name is unique within session
+        // Validate that session doesn't already have a workspace (1:1 relationship)
         val existingWorkspaces = workspaceRepository.findBySessionId(request.sessionId)
-        if (existingWorkspaces.any { it.name == request.name }) {
-            throw IllegalArgumentException("Workspace with name '${request.name}' already exists in session")
+        if (existingWorkspaces.isNotEmpty()) {
+            throw IllegalArgumentException("Session already has a workspace. Each session can have only one workspace. SessionId: ${request.sessionId}, existing workspace: ${existingWorkspaces.first().id}")
         }
 
         // Determine template

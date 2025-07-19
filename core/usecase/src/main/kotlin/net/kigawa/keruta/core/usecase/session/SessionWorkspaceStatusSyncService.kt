@@ -112,36 +112,34 @@ class SessionWorkspaceStatusSyncService(
     }
 
     /**
-     * Determines the appropriate session status based on all workspaces in the session.
+     * Determines the appropriate session status based on the single workspace in the session.
+     * Since each session has exactly one workspace, the mapping is straightforward.
      */
     private suspend fun determineSessionStatusFromWorkspaces(sessionId: String): SessionStatus? {
         val workspaces = workspaceService.getWorkspacesBySessionId(sessionId)
         
         if (workspaces.isEmpty()) {
-            // No workspaces, keep current session status
+            // No workspace, keep current session status
             return null
         }
 
-        val workspaceStatuses = workspaces.map { it.status }
+        if (workspaces.size > 1) {
+            logger.warn("Multiple workspaces found for session (expected 1): sessionId={} count={}", sessionId, workspaces.size)
+        }
+
+        // Use the first (and should be only) workspace
+        val workspace = workspaces.first()
         
-        return when {
-            // If any workspace is running, session should be active
-            workspaceStatuses.any { it == WorkspaceStatus.RUNNING } -> SessionStatus.ACTIVE
-            
-            // If any workspace is starting, session should be active
-            workspaceStatuses.any { it == WorkspaceStatus.STARTING } -> SessionStatus.ACTIVE
-            
-            // If all workspaces are deleted, session should be archived
-            workspaceStatuses.all { it == WorkspaceStatus.DELETED } -> SessionStatus.ARCHIVED
-            
-            // If all workspaces are stopped or failed, session should be inactive
-            workspaceStatuses.all { it == WorkspaceStatus.STOPPED || it == WorkspaceStatus.FAILED } -> SessionStatus.INACTIVE
-            
-            // If workspaces are in mixed transitional states, session should be active
-            workspaceStatuses.any { it == WorkspaceStatus.STOPPING || it == WorkspaceStatus.DELETING } -> SessionStatus.ACTIVE
-            
-            // For other cases (PENDING, CANCELED), keep current status
-            else -> null
+        return when (workspace.status) {
+            WorkspaceStatus.RUNNING -> SessionStatus.ACTIVE
+            WorkspaceStatus.STARTING -> SessionStatus.ACTIVE
+            WorkspaceStatus.STOPPING -> SessionStatus.ACTIVE // Transitional state
+            WorkspaceStatus.STOPPED -> SessionStatus.INACTIVE
+            WorkspaceStatus.FAILED -> SessionStatus.INACTIVE
+            WorkspaceStatus.DELETED -> SessionStatus.ARCHIVED
+            WorkspaceStatus.DELETING -> SessionStatus.ARCHIVED // Transitional to deleted
+            WorkspaceStatus.PENDING -> null // Keep current status during initialization
+            WorkspaceStatus.CANCELED -> SessionStatus.INACTIVE
         }
     }
 
