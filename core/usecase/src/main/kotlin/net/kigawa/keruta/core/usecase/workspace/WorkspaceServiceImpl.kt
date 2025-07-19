@@ -107,8 +107,8 @@ open class WorkspaceServiceImpl(
     override suspend fun startWorkspace(id: String): Workspace? {
         val workspace = workspaceRepository.findById(id) ?: return null
 
-        if (workspace.status != WorkspaceStatus.STOPPED) {
-            throw IllegalStateException("Workspace must be stopped to start")
+        if (workspace.status != WorkspaceStatus.STOPPED && workspace.status != WorkspaceStatus.PENDING) {
+            throw IllegalStateException("Workspace must be stopped or pending to start. Current status: ${workspace.status}")
         }
 
         val updatedWorkspace = workspace.copy(
