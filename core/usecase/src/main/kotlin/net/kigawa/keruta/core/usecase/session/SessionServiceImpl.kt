@@ -30,7 +30,7 @@ class SessionServiceImpl(
 
     override suspend fun createSession(session: Session): Session {
         val createdSession = sessionRepository.save(session)
-        
+
         // Trigger workspace creation event
         try {
             sessionEventListener.onSessionCreated(createdSession)
@@ -38,7 +38,7 @@ class SessionServiceImpl(
             logger.error("Failed to handle session creation event for session: {}", createdSession.id, e)
             // Don't fail the session creation if workspace creation fails
         }
-        
+
         return createdSession
     }
 
@@ -93,7 +93,7 @@ class SessionServiceImpl(
                 updatedAt = LocalDateTime.now(),
             )
             val savedSession = sessionRepository.save(updatedSession)
-            
+
             // Trigger status change event if status actually changed
             if (oldStatus != status) {
                 try {
@@ -102,7 +102,7 @@ class SessionServiceImpl(
                     logger.error("Failed to handle session status change event for session: {}", id, e)
                 }
             }
-            
+
             logger.info("Session status updated successfully: id={} status={}", id, status)
             return savedSession
         } catch (e: NoSuchElementException) {

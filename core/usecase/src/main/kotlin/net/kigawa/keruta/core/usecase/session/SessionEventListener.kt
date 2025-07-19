@@ -22,7 +22,7 @@ class SessionEventListener(
      */
     suspend fun onSessionCreated(session: Session) {
         logger.info("Handling session created event: sessionId={}", session.id)
-        
+
         try {
             // Create workspace for the new session
             val workspaceRequest = CreateWorkspaceRequest(
@@ -32,11 +32,13 @@ class SessionEventListener(
                 automaticUpdates = true,
                 ttlMs = 3600000, // 1 hour default TTL
             )
-            
+
             val workspace = workspaceService.createWorkspace(workspaceRequest)
-            logger.info("Successfully created workspace for session: sessionId={} workspaceId={}", 
-                       session.id, workspace.id)
-            
+            logger.info(
+                "Successfully created workspace for session: sessionId={} workspaceId={}",
+                session.id,
+                workspace.id,
+            )
         } catch (e: Exception) {
             logger.error("Failed to create workspace for session: sessionId={}", session.id, e)
             throw e
@@ -48,22 +50,32 @@ class SessionEventListener(
      * Starts or stops workspace based on session status.
      */
     suspend fun onSessionStatusChanged(session: Session, oldStatus: SessionStatus) {
-        logger.info("Handling session status change: sessionId={} oldStatus={} newStatus={}", 
-                   session.id, oldStatus, session.status)
-        
+        logger.info(
+            "Handling session status change: sessionId={} oldStatus={} newStatus={}",
+            session.id,
+            oldStatus,
+            session.status,
+        )
+
         try {
             val workspaces = workspaceService.getWorkspacesBySessionId(session.id)
-            
+
             for (workspace in workspaces) {
                 when (session.status) {
                     SessionStatus.ACTIVE -> {
-                        logger.info("Starting workspace for active session: sessionId={} workspaceId={}", 
-                                   session.id, workspace.id)
+                        logger.info(
+                            "Starting workspace for active session: sessionId={} workspaceId={}",
+                            session.id,
+                            workspace.id,
+                        )
                         workspaceService.startWorkspace(workspace.id)
                     }
                     SessionStatus.INACTIVE -> {
-                        logger.info("Stopping workspace for inactive session: sessionId={} workspaceId={}", 
-                                   session.id, workspace.id)
+                        logger.info(
+                            "Stopping workspace for inactive session: sessionId={} workspaceId={}",
+                            session.id,
+                            workspace.id,
+                        )
                         workspaceService.stopWorkspace(workspace.id)
                     }
                     else -> {
@@ -71,7 +83,6 @@ class SessionEventListener(
                     }
                 }
             }
-            
         } catch (e: Exception) {
             logger.error("Failed to handle session status change: sessionId={}", session.id, e)
         }
@@ -83,7 +94,7 @@ class SessionEventListener(
      */
     suspend fun onSessionDeleted(sessionId: String) {
         logger.info("Handling session deleted event: sessionId={}", sessionId)
-        
+
         try {
             val deleted = workspaceService.deleteWorkspacesBySessionId(sessionId)
             if (deleted) {
@@ -91,7 +102,6 @@ class SessionEventListener(
             } else {
                 logger.warn("No workspaces found to delete for session: sessionId={}", sessionId)
             }
-            
         } catch (e: Exception) {
             logger.error("Failed to delete workspaces for session: sessionId={}", sessionId, e)
         }
