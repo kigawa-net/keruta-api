@@ -19,7 +19,6 @@ class KubernetesGitContainerHandlerTest {
     fun `createGitCloneContainer should create a container with correct properties`() {
         // Given
         val repository = createRepository("test-repo", "https://github.com/test/repo.git")
-        val volumeName = "test-volume"
         val mountPath = "/workspace"
 
         // When
