@@ -15,9 +15,45 @@ open class CoderApiClientImpl(
 
     private val logger = LoggerFactory.getLogger(CoderApiClientImpl::class.java)
 
+    // Cache the current user info to avoid repeated API calls
+    @Volatile
+    private var currentUser: CoderUserInfo? = null
+
+    private fun getCurrentUser(): CoderUserInfo? {
+        if (currentUser != null) {
+            return currentUser
+        }
+
+        return try {
+            val url = "${coderProperties.baseUrl}/api/v2/users/me"
+            val headers = HttpHeaders().apply {
+                set("Coder-Session-Token", coderProperties.sessionToken)
+            }
+            val entity = HttpEntity<Any>(headers)
+            val response = restTemplate.exchange(url, HttpMethod.GET, entity, CoderUserInfoDto::class.java)
+            val user = response.body?.let { CoderUserInfo(it.id, it.username) }
+            currentUser = user
+            logger.info("Retrieved current user: ${user?.username} (${user?.id})")
+            user
+        } catch (e: Exception) {
+            logger.error("Failed to get current user from Coder API", e)
+            // Fallback: try to use the configured user as username
+            val fallbackUser = CoderUserInfo(coderProperties.user, coderProperties.user)
+            logger.warn("Using fallback user: ${fallbackUser.username}")
+            currentUser = fallbackUser
+            fallbackUser
+        }
+    }
+
     override fun createWorkspace(request: CoderCreateWorkspaceRequest): CoderWorkspaceResponse? {
         return try {
-            val url = "${coderProperties.baseUrl}/api/v2/organizations/${coderProperties.organization}/members/${coderProperties.user}/workspaces"
+            val user = getCurrentUser()
+            if (user == null) {
+                logger.error("Cannot create workspace: no valid user found")
+                return null
+            }
+
+            val url = "${coderProperties.baseUrl}/api/v2/organizations/${coderProperties.organization}/members/${user.id}/workspaces"
             val headers = HttpHeaders().apply {
                 set("Coder-Session-Token", coderProperties.sessionToken)
                 contentType = MediaType.APPLICATION_JSON
@@ -28,7 +64,7 @@ open class CoderApiClientImpl(
             responseDto?.toUseCase()
         } catch (e: Exception) {
             logger.error(
-                "Failed to create workspace via Coder API. URL: ${coderProperties.baseUrl}, Organization: ${coderProperties.organization}, User: ${coderProperties.user}",
+                "Failed to create workspace via Coder API. URL: ${coderProperties.baseUrl}, Organization: ${coderProperties.organization}, User: ${getCurrentUser()?.username ?: coderProperties.user}",
                 e,
             )
             null
@@ -139,3 +175,24 @@ open class CoderApiClientImpl(
         }
     }
 }
+
+/**
+ * Data class to hold user information from Coder.
+ */
+data class CoderUserInfo(
+    val id: String,
+    val username: String,
+)
+
+/**
+ * DTO for Coder user API response.
+ */
+data class CoderUserInfoDto(
+    val id: String,
+    val username: String,
+    val email: String? = null,
+    val created_at: String? = null,
+    val updated_at: String? = null,
+    val status: String? = null,
+    val organization_ids: List<String>? = null,
+)
