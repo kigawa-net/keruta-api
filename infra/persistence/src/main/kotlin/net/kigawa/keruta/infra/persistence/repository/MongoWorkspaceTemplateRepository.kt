@@ -18,7 +18,9 @@ interface MongoWorkspaceTemplateRepository : MongoRepository<WorkspaceTemplateEn
     fun existsByName(name: String): Boolean
 
     @Query("{ 'isDefault': true }")
-    fun findDefaultTemplate(): WorkspaceTemplateEntity?
+    fun findDefaultTemplates(): List<WorkspaceTemplateEntity>
+    
+    fun findFirstByIsDefaultTrue(): WorkspaceTemplateEntity?
 
     @Query("{ 'version': ?0 }")
     fun findByVersion(version: String): List<WorkspaceTemplateEntity>

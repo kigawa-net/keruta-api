@@ -237,6 +237,25 @@ open class WorkspaceServiceImpl(
     private suspend fun createDefaultTemplate(): WorkspaceTemplate {
         logger.info("Creating default workspace template")
 
+        // First check if there are any existing default templates
+        val existingDefault = workspaceTemplateRepository.findDefaultTemplate()
+        if (existingDefault != null) {
+            logger.info("Default template already exists: {}", existingDefault.id)
+            return existingDefault
+        }
+
+        // Check if there's a template named "default" that isn't marked as default
+        val namedDefaultTemplate = workspaceTemplateRepository.findByName("default")
+        if (namedDefaultTemplate != null) {
+            logger.info("Found existing 'default' template, marking it as default: {}", namedDefaultTemplate.id)
+            val updatedTemplate = namedDefaultTemplate.copy(
+                isDefault = true,
+                updatedAt = LocalDateTime.now()
+            )
+            return workspaceTemplateRepository.update(updatedTemplate)
+        }
+
+        // Create new default template
         val defaultTemplate = WorkspaceTemplate(
             id = UUID.randomUUID().toString(),
             name = "default",
@@ -249,6 +268,7 @@ open class WorkspaceServiceImpl(
             updatedAt = LocalDateTime.now(),
         )
 
+        logger.info("Creating new default template")
         return workspaceTemplateRepository.save(defaultTemplate)
     }
 
