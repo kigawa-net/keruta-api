@@ -40,7 +40,7 @@ open class SessionEventListener(
 
             // Create single workspace for the new session
             val workspaceRequest = CreateWorkspaceRequest(
-                name = session.name, // Use session name directly for 1:1 relationship
+                name = normalizeWorkspaceName(session.name), // Normalize session name for Coder compatibility
                 sessionId = session.id,
                 templateId = null, // Use default template
                 automaticUpdates = true,
@@ -213,5 +213,51 @@ open class SessionEventListener(
             WorkspaceStatus.DELETED -> SessionStatus.ARCHIVED
             else -> null // No session status change needed for PENDING, STARTING, STOPPING, DELETING, CANCELED
         }
+    }
+
+    /**
+     * Normalizes session name to be compatible with Coder workspace naming rules.
+     * Coder workspace names must:
+     * - Start with a-z, A-Z, or 0-9
+     * - Contain only a-z, A-Z, 0-9, and hyphens (-)
+     * - Be 32 characters or less
+     * - Not end with a hyphen
+     */
+    private fun normalizeWorkspaceName(sessionName: String): String {
+        // Replace non-alphanumeric characters with hyphens
+        var normalized = sessionName
+            .replace(Regex("[^a-zA-Z0-9-]"), "-")
+            .lowercase()
+
+        // Ensure it starts with alphanumeric character
+        if (normalized.isNotEmpty() && !normalized[0].isLetterOrDigit()) {
+            normalized = "workspace-$normalized"
+        }
+
+        // Remove consecutive hyphens
+        normalized = normalized.replace(Regex("-+"), "-")
+
+        // Remove leading and trailing hyphens
+        normalized = normalized.trim('-')
+
+        // If empty or only non-alphanumeric, use default name
+        if (normalized.isEmpty() || normalized.all { !it.isLetterOrDigit() }) {
+            normalized = "workspace"
+        }
+
+        // Truncate to 32 characters
+        if (normalized.length > 32) {
+            normalized = normalized.substring(0, 32).trimEnd('-')
+        }
+
+        // Ensure it doesn't end with hyphen
+        normalized = normalized.trimEnd('-')
+
+        // Final fallback if somehow we end up with empty string
+        if (normalized.isEmpty()) {
+            normalized = "workspace"
+        }
+
+        return normalized
     }
 }
