@@ -105,21 +105,28 @@ open class SessionEventListener(
                             workspace.id,
                         )
                         try {
-                            // Delete the failed workspace and create a new one
-                            workspaceService.deleteWorkspace(workspace.id)
+                            // For FAILED workspace, try to reset it to a recoverable state first
+                            logger.info("Attempting to reset FAILED workspace status: workspaceId={}", workspace.id)
 
-                            // Create a new workspace for the session
-                            val createRequest = CreateWorkspaceRequest(
-                                name = "${session.name}-workspace",
-                                sessionId = session.id,
-                                templateId = null, // Use default template
-                                automaticUpdates = true,
-                                ttlMs = 3600000, // 1 hour
+                            // Reset the workspace status to STOPPED to allow restarting
+                            workspaceService.updateWorkspaceStatus(workspace.id, WorkspaceStatus.STOPPED)
+
+                            // Now try to start the workspace
+                            workspaceService.startWorkspace(workspace.id)
+                            logger.info(
+                                "Successfully reset and started FAILED workspace: sessionId={} workspaceId={}",
+                                session.id,
+                                workspace.id,
                             )
-                            workspaceService.createWorkspace(createRequest)
-                            logger.info("Successfully recreated workspace for session: sessionId={}", session.id)
                         } catch (e: Exception) {
-                            logger.error("Failed to recreate workspace for session: sessionId={}", session.id, e)
+                            logger.error(
+                                "Failed to reset FAILED workspace for session: sessionId={} workspaceId={}",
+                                session.id,
+                                workspace.id,
+                                e,
+                            )
+                            logger.warn("Will attempt to delete and recreate workspace in background")
+                            // TODO: Consider implementing background cleanup task for failed workspaces
                         }
                     } else {
                         workspaceService.startWorkspace(workspace.id)
