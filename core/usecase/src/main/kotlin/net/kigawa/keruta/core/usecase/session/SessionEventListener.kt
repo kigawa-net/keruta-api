@@ -96,7 +96,34 @@ open class SessionEventListener(
                         session.id,
                         workspace.id,
                     )
-                    workspaceService.startWorkspace(workspace.id)
+
+                    // Handle FAILED workspace by trying to recreate it
+                    if (workspace.status == WorkspaceStatus.FAILED) {
+                        logger.warn(
+                            "Workspace is in FAILED state, attempting to recreate: sessionId={} workspaceId={}",
+                            session.id,
+                            workspace.id,
+                        )
+                        try {
+                            // Delete the failed workspace and create a new one
+                            workspaceService.deleteWorkspace(workspace.id)
+
+                            // Create a new workspace for the session
+                            val createRequest = CreateWorkspaceRequest(
+                                name = "${session.name}-workspace",
+                                sessionId = session.id,
+                                templateId = null, // Use default template
+                                automaticUpdates = true,
+                                ttlMs = 3600000, // 1 hour
+                            )
+                            workspaceService.createWorkspace(createRequest)
+                            logger.info("Successfully recreated workspace for session: sessionId={}", session.id)
+                        } catch (e: Exception) {
+                            logger.error("Failed to recreate workspace for session: sessionId={}", session.id, e)
+                        }
+                    } else {
+                        workspaceService.startWorkspace(workspace.id)
+                    }
                 }
                 SessionStatus.INACTIVE -> {
                     logger.info(

@@ -128,9 +128,17 @@ open class WorkspaceServiceImpl(
             return workspace
         }
 
-        // Only allow starting from STOPPED or PENDING states
-        if (workspace.status != WorkspaceStatus.STOPPED && workspace.status != WorkspaceStatus.PENDING) {
+        // Allow starting from STOPPED, PENDING, or FAILED states
+        if (workspace.status != WorkspaceStatus.STOPPED &&
+            workspace.status != WorkspaceStatus.PENDING &&
+            workspace.status != WorkspaceStatus.FAILED
+        ) {
             throw IllegalStateException("Workspace cannot be started from current status: ${workspace.status}")
+        }
+
+        // Log special handling for FAILED state
+        if (workspace.status == WorkspaceStatus.FAILED) {
+            logger.warn("Starting workspace from FAILED state: {}", id)
         }
 
         val updatedWorkspace = workspace.copy(
