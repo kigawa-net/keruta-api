@@ -14,7 +14,7 @@ data class CoderCreateWorkspaceRequestDto(
     @JsonProperty("template_version_id")
     val templateVersionId: String? = null,
     @JsonProperty("automatic_updates")
-    val automaticUpdates: Boolean = true,
+    val automaticUpdates: String = "always",
     @JsonProperty("autostart_schedule")
     val autostartSchedule: String? = null,
     @JsonProperty("ttl_ms")
@@ -28,7 +28,7 @@ data class CoderCreateWorkspaceRequestDto(
                 name = request.name,
                 templateId = request.templateId,
                 templateVersionId = request.templateVersionId,
-                automaticUpdates = request.automaticUpdates,
+                automaticUpdates = if (request.automaticUpdates) "always" else "never",
                 autostartSchedule = request.autostartSchedule,
                 ttlMs = request.ttlMs,
                 richParameterValues = request.richParameterValues.map { CoderRichParameterValueDto.fromUseCase(it) },
@@ -84,7 +84,7 @@ data class CoderWorkspaceResponseDto(
     @JsonProperty("health")
     val health: CoderWorkspaceHealthDto,
     @JsonProperty("automatic_updates")
-    val automaticUpdates: Boolean,
+    val automaticUpdates: String,
 ) {
     fun toUseCase(): CoderWorkspaceResponse {
         return CoderWorkspaceResponse(
@@ -104,7 +104,7 @@ data class CoderWorkspaceResponseDto(
             lastUsedAt = lastUsedAt,
             latestBuild = latestBuild.toUseCase(),
             health = health.toUseCase(),
-            automaticUpdates = automaticUpdates,
+            automaticUpdates = automaticUpdates == "always",
         )
     }
 }
