@@ -19,10 +19,10 @@ import java.util.UUID
  */
 @Service
 open class WorkspaceServiceImpl(
-    private val workspaceRepository: WorkspaceRepository,
-    private val workspaceTemplateRepository: WorkspaceTemplateRepository,
-    private val sessionRepository: SessionRepository,
-    private val workspaceOrchestrator: WorkspaceOrchestrator,
+    open val workspaceRepository: WorkspaceRepository,
+    open val workspaceTemplateRepository: WorkspaceTemplateRepository,
+    open val sessionRepository: SessionRepository,
+    open val workspaceOrchestrator: WorkspaceOrchestrator,
 ) : WorkspaceService {
     open val logger = LoggerFactory.getLogger(WorkspaceServiceImpl::class.java)
 

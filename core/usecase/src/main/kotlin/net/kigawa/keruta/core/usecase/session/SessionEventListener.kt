@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component
  */
 @Component
 open class SessionEventListener(
-    private val workspaceService: WorkspaceService,
+    open val workspaceService: WorkspaceService,
 ) {
     open val logger = LoggerFactory.getLogger(SessionEventListener::class.java)
 

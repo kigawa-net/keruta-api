@@ -13,9 +13,9 @@ import java.time.LocalDateTime
 
 @Service
 open class SessionServiceImpl(
-    private val sessionRepository: SessionRepository,
-    private val workspaceService: WorkspaceService,
-    private val sessionEventListener: SessionEventListener,
+    open val sessionRepository: SessionRepository,
+    open val workspaceService: WorkspaceService,
+    open val sessionEventListener: SessionEventListener,
 ) : SessionService {
 
     open val logger = LoggerFactory.getLogger(SessionServiceImpl::class.java)

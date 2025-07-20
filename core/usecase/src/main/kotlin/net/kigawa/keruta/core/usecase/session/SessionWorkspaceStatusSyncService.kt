@@ -17,8 +17,8 @@ import java.time.LocalDateTime
  */
 @Service
 open class SessionWorkspaceStatusSyncService(
-    private val sessionRepository: SessionRepository,
-    private val workspaceService: WorkspaceService,
+    open val sessionRepository: SessionRepository,
+    open val workspaceService: WorkspaceService,
 ) {
     open val logger = LoggerFactory.getLogger(SessionWorkspaceStatusSyncService::class.java)
 

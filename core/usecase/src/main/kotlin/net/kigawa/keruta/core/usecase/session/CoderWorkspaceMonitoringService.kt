@@ -14,9 +14,9 @@ import org.springframework.stereotype.Service
  */
 @Service
 open class CoderWorkspaceMonitoringService(
-    private val coderApiClient: CoderApiClient,
-    private val workspaceService: WorkspaceService,
-    private val sessionWorkspaceStatusSyncService: SessionWorkspaceStatusSyncService,
+    open val coderApiClient: CoderApiClient,
+    open val workspaceService: WorkspaceService,
+    open val sessionWorkspaceStatusSyncService: SessionWorkspaceStatusSyncService,
 ) {
     open val logger = LoggerFactory.getLogger(CoderWorkspaceMonitoringService::class.java)
 
