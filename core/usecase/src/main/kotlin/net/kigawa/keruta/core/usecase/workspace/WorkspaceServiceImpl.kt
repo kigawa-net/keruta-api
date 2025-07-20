@@ -24,7 +24,7 @@ open class WorkspaceServiceImpl(
     private val sessionRepository: SessionRepository,
     private val workspaceOrchestrator: WorkspaceOrchestrator,
 ) : WorkspaceService {
-    private val logger = LoggerFactory.getLogger(WorkspaceServiceImpl::class.java)
+    open val logger = LoggerFactory.getLogger(WorkspaceServiceImpl::class.java)
 
     override suspend fun createWorkspace(request: CreateWorkspaceRequest): Workspace {
         logger.info("Creating workspace: ${request.name} for session: ${request.sessionId}")

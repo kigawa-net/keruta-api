@@ -20,7 +20,7 @@ open class SessionWorkspaceStatusSyncService(
     private val sessionRepository: SessionRepository,
     private val workspaceService: WorkspaceService,
 ) {
-    private val logger = LoggerFactory.getLogger(SessionWorkspaceStatusSyncService::class.java)
+    open val logger = LoggerFactory.getLogger(SessionWorkspaceStatusSyncService::class.java)
 
     /**
      * Handles workspace status change and updates corresponding session status.

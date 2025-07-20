@@ -18,7 +18,7 @@ open class SessionServiceImpl(
     private val sessionEventListener: SessionEventListener,
 ) : SessionService {
 
-    private val logger = LoggerFactory.getLogger(SessionServiceImpl::class.java)
+    open val logger = LoggerFactory.getLogger(SessionServiceImpl::class.java)
 
     override suspend fun getAllSessions(): List<Session> {
         return sessionRepository.findAll()

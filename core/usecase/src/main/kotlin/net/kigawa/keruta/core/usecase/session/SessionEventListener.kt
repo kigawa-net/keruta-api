@@ -13,10 +13,10 @@ import org.springframework.stereotype.Component
  * Event listener for session lifecycle events.
  */
 @Component
-class SessionEventListener(
+open class SessionEventListener(
     private val workspaceService: WorkspaceService,
 ) {
-    private val logger = LoggerFactory.getLogger(SessionEventListener::class.java)
+    open val logger = LoggerFactory.getLogger(SessionEventListener::class.java)
 
     /**
      * Handles session creation event.

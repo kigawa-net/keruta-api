@@ -18,7 +18,7 @@ open class CoderWorkspaceMonitoringService(
     private val workspaceService: WorkspaceService,
     private val sessionWorkspaceStatusSyncService: SessionWorkspaceStatusSyncService,
 ) {
-    private val logger = LoggerFactory.getLogger(CoderWorkspaceMonitoringService::class.java)
+    open val logger = LoggerFactory.getLogger(CoderWorkspaceMonitoringService::class.java)
 
     /**
      * Periodically checks Coder workspace states and updates Keruta workspace states.
