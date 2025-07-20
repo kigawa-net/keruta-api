@@ -1,18 +1,19 @@
 package net.kigawa.keruta.core.usecase.workspace
 
 import kotlinx.coroutines.runBlocking
-import net.kigawa.keruta.infra.persistence.repository.WorkspaceTemplateRepositoryImpl
+import net.kigawa.keruta.core.usecase.repository.WorkspaceTemplateRepository
 import org.slf4j.LoggerFactory
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
 
 /**
  * Initializes workspace templates on application startup.
- * Fixes any duplicate default templates that may exist.
+ * Validates workspace template configuration.
  */
 @Component
+@org.springframework.core.annotation.Order(2) // Run after DatabaseInitializer
 class WorkspaceTemplateInitializer(
-    private val workspaceTemplateRepositoryImpl: WorkspaceTemplateRepositoryImpl,
+    private val workspaceTemplateRepository: WorkspaceTemplateRepository,
 ) : CommandLineRunner {
 
     private val logger = LoggerFactory.getLogger(WorkspaceTemplateInitializer::class.java)
@@ -20,22 +21,18 @@ class WorkspaceTemplateInitializer(
     override fun run(vararg args: String?) {
         runBlocking {
             try {
-                logger.info("Initializing workspace templates...")
+                logger.info("Validating workspace template configuration...")
 
-                // Check for duplicate default templates
-                val defaultTemplates = workspaceTemplateRepositoryImpl.findAllDefaultTemplates()
-
-                if (defaultTemplates.size > 1) {
-                    logger.warn("Found {} default templates, fixing duplicates...", defaultTemplates.size)
-                    val fixed = workspaceTemplateRepositoryImpl.fixDuplicateDefaultTemplates()
-                    logger.info("Fixed {} duplicate default templates", fixed)
+                val defaultTemplate = workspaceTemplateRepository.findDefaultTemplate()
+                if (defaultTemplate != null) {
+                    logger.info("Default template is properly configured: {}", defaultTemplate.id)
                 } else {
-                    logger.info("Default templates are properly configured (count: {})", defaultTemplates.size)
+                    logger.info("No default template found, one will be created when needed")
                 }
 
-                logger.info("Workspace template initialization completed")
+                logger.info("Workspace template validation completed")
             } catch (e: Exception) {
-                logger.error("Failed to initialize workspace templates", e)
+                logger.error("Failed to validate workspace templates", e)
             }
         }
     }

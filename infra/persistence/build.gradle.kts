@@ -9,6 +9,7 @@ dependencies {
 
     implementation(Dependencies.kotlinStdlib)
     implementation(Dependencies.kotlinReflect)
+    implementation(Dependencies.kotlinxCoroutinesCore)
     implementation(Dependencies.springBootStarter)
     implementation(Dependencies.springBootStarterData)
     implementation(Dependencies.mongodbDriver)
