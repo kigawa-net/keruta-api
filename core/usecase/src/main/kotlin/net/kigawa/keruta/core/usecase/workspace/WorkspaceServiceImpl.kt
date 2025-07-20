@@ -250,7 +250,7 @@ open class WorkspaceServiceImpl(
             logger.info("Found existing 'default' template, marking it as default: {}", namedDefaultTemplate.id)
             val updatedTemplate = namedDefaultTemplate.copy(
                 isDefault = true,
-                updatedAt = LocalDateTime.now()
+                updatedAt = LocalDateTime.now(),
             )
             return workspaceTemplateRepository.update(updatedTemplate)
         }

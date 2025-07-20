@@ -14,17 +14,17 @@ import org.springframework.stereotype.Component
 class WorkspaceTemplateInitializer(
     private val workspaceTemplateRepositoryImpl: WorkspaceTemplateRepositoryImpl,
 ) : CommandLineRunner {
-    
+
     private val logger = LoggerFactory.getLogger(WorkspaceTemplateInitializer::class.java)
 
     override fun run(vararg args: String?) {
         runBlocking {
             try {
                 logger.info("Initializing workspace templates...")
-                
+
                 // Check for duplicate default templates
                 val defaultTemplates = workspaceTemplateRepositoryImpl.findAllDefaultTemplates()
-                
+
                 if (defaultTemplates.size > 1) {
                     logger.warn("Found {} default templates, fixing duplicates...", defaultTemplates.size)
                     val fixed = workspaceTemplateRepositoryImpl.fixDuplicateDefaultTemplates()
@@ -32,7 +32,7 @@ class WorkspaceTemplateInitializer(
                 } else {
                     logger.info("Default templates are properly configured (count: {})", defaultTemplates.size)
                 }
-                
+
                 logger.info("Workspace template initialization completed")
             } catch (e: Exception) {
                 logger.error("Failed to initialize workspace templates", e)

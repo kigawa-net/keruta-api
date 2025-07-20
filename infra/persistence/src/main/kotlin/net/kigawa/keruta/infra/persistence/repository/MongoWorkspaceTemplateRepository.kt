@@ -19,7 +19,7 @@ interface MongoWorkspaceTemplateRepository : MongoRepository<WorkspaceTemplateEn
 
     @Query("{ 'isDefault': true }")
     fun findDefaultTemplates(): List<WorkspaceTemplateEntity>
-    
+
     fun findFirstByIsDefaultTrue(): WorkspaceTemplateEntity?
 
     @Query("{ 'version': ?0 }")

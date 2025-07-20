@@ -87,19 +87,19 @@ class WorkspaceTemplateRepositoryImpl(
      */
     suspend fun fixDuplicateDefaultTemplates(): Int {
         val defaultTemplates = mongoWorkspaceTemplateRepository.findDefaultTemplates()
-        
+
         if (defaultTemplates.size <= 1) {
             return 0 // No duplicates
         }
 
         // Keep the first one as default, mark others as non-default
         val templatesToUpdate = defaultTemplates.drop(1)
-        
+
         templatesToUpdate.forEach { template ->
             val updatedTemplate = template.copy(isDefault = false)
             mongoWorkspaceTemplateRepository.save(updatedTemplate)
         }
-        
+
         return templatesToUpdate.size
     }
 }
