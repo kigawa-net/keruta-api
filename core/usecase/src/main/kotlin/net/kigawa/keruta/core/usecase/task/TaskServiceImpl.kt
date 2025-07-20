@@ -15,7 +15,7 @@ import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 
 @Service
-class TaskServiceImpl(
+open class TaskServiceImpl(
     private val taskRepository: TaskRepository,
     private val kubernetesService: KubernetesService,
     private val gitRepositoryService: GitRepositoryService,

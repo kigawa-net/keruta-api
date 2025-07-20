@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-class SessionServiceImpl(
+open class SessionServiceImpl(
     private val sessionRepository: SessionRepository,
     private val workspaceService: WorkspaceService,
     private val sessionEventListener: SessionEventListener,
@@ -134,15 +134,19 @@ class SessionServiceImpl(
      */
     suspend fun getSessionWorkspace(sessionId: String): net.kigawa.keruta.core.domain.model.Workspace? {
         val workspaces = workspaceService.getWorkspacesBySessionId(sessionId)
-        
+
         if (workspaces.isEmpty()) {
             return null
         }
-        
+
         if (workspaces.size > 1) {
-            logger.warn("Multiple workspaces found for session (expected 1): sessionId={} count={}", sessionId, workspaces.size)
+            logger.warn(
+                "Multiple workspaces found for session (expected 1): sessionId={} count={}",
+                sessionId,
+                workspaces.size,
+            )
         }
-        
+
         return workspaces.first()
     }
 
@@ -154,7 +158,6 @@ class SessionServiceImpl(
         val workspace = getSessionWorkspace(sessionId)
         return if (workspace != null) listOf(workspace) else emptyList()
     }
-
 
     override suspend fun removeTagFromSession(id: String, tag: String): Session {
         val existingSession = getSessionById(id)

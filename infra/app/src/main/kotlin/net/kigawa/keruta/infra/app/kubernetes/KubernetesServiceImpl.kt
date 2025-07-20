@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service
  * for client management, job creation, job monitoring, and repository handling.
  */
 @Service
-class KubernetesServiceImpl(
+open class KubernetesServiceImpl(
     private val clientProvider: KubernetesClientProvider,
     private val jobCreator: KubernetesJobCreator,
     private val jobMonitor: KubernetesJobMonitor,

@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter
  * Service for interacting with Coder REST API.
  */
 @Service
-class CoderService(
+open class CoderService(
     private val coderApiClient: CoderApiClient,
     private val coderProperties: CoderProperties,
 ) {

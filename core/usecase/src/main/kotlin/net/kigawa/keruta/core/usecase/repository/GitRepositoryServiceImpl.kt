@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-class GitRepositoryServiceImpl(private val gitRepositoryRepository: GitRepositoryRepository) : GitRepositoryService {
+open class GitRepositoryServiceImpl(
+    private val gitRepositoryRepository: GitRepositoryRepository,
+) : GitRepositoryService {
 
     companion object {
         private const val DEFAULT_SETUP_SCRIPT = """#!/bin/sh

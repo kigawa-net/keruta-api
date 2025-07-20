@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-class DocumentServiceImpl(private val documentRepository: DocumentRepository) : DocumentService {
+open class DocumentServiceImpl(private val documentRepository: DocumentRepository) : DocumentService {
 
     override fun getAllDocuments(): List<Document> {
         return documentRepository.findAll()

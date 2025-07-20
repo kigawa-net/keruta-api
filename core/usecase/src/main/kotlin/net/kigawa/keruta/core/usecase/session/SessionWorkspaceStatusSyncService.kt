@@ -38,20 +38,24 @@ open class SessionWorkspaceStatusSyncService(
         try {
             val session = sessionRepository.findById(workspace.sessionId)
             if (session == null) {
-                logger.warn("Session not found for workspace: sessionId={} workspaceId={}", workspace.sessionId, workspace.id)
+                logger.warn(
+                    "Session not found for workspace: sessionId={} workspaceId={}",
+                    workspace.sessionId,
+                    workspace.id,
+                )
                 return
             }
 
             val newSessionStatus = determineSessionStatusFromWorkspaces(workspace.sessionId)
-            
+
             if (newSessionStatus != null && newSessionStatus != session.status) {
                 val updatedSession = session.copy(
                     status = newSessionStatus,
                     updatedAt = LocalDateTime.now(),
                 )
-                
+
                 sessionRepository.save(updatedSession)
-                
+
                 logger.info(
                     "Updated session status based on workspace: sessionId={} oldStatus={} newStatus={}",
                     workspace.sessionId,
@@ -80,19 +84,19 @@ open class SessionWorkspaceStatusSyncService(
 
         try {
             val sessions = sessionRepository.findAll()
-            
+
             for (session in sessions) {
                 try {
                     val expectedStatus = determineSessionStatusFromWorkspaces(session.id)
-                    
+
                     if (expectedStatus != null && expectedStatus != session.status) {
                         val updatedSession = session.copy(
                             status = expectedStatus,
                             updatedAt = LocalDateTime.now(),
                         )
-                        
+
                         sessionRepository.save(updatedSession)
-                        
+
                         logger.info(
                             "Synchronized session status during periodic sync: sessionId={} oldStatus={} newStatus={}",
                             session.id,
@@ -104,7 +108,7 @@ open class SessionWorkspaceStatusSyncService(
                     logger.error("Failed to sync status for session: sessionId={}", session.id, e)
                 }
             }
-            
+
             logger.debug("Completed periodic session status synchronization")
         } catch (e: Exception) {
             logger.error("Failed to perform periodic session status synchronization", e)
@@ -117,19 +121,23 @@ open class SessionWorkspaceStatusSyncService(
      */
     private suspend fun determineSessionStatusFromWorkspaces(sessionId: String): SessionStatus? {
         val workspaces = workspaceService.getWorkspacesBySessionId(sessionId)
-        
+
         if (workspaces.isEmpty()) {
             // No workspace, keep current session status
             return null
         }
 
         if (workspaces.size > 1) {
-            logger.warn("Multiple workspaces found for session (expected 1): sessionId={} count={}", sessionId, workspaces.size)
+            logger.warn(
+                "Multiple workspaces found for session (expected 1): sessionId={} count={}",
+                sessionId,
+                workspaces.size,
+            )
         }
 
         // Use the first (and should be only) workspace
         val workspace = workspaces.first()
-        
+
         return when (workspace.status) {
             WorkspaceStatus.RUNNING -> SessionStatus.ACTIVE
             WorkspaceStatus.STARTING -> SessionStatus.ACTIVE
@@ -148,7 +156,7 @@ open class SessionWorkspaceStatusSyncService(
      */
     suspend fun forceSyncSessionStatus(sessionId: String): Boolean {
         logger.info("Forcing session status synchronization: sessionId={}", sessionId)
-        
+
         try {
             val session = sessionRepository.findById(sessionId)
             if (session == null) {
@@ -157,15 +165,15 @@ open class SessionWorkspaceStatusSyncService(
             }
 
             val expectedStatus = determineSessionStatusFromWorkspaces(sessionId)
-            
+
             if (expectedStatus != null && expectedStatus != session.status) {
                 val updatedSession = session.copy(
                     status = expectedStatus,
                     updatedAt = LocalDateTime.now(),
                 )
-                
+
                 sessionRepository.save(updatedSession)
-                
+
                 logger.info(
                     "Forced session status sync completed: sessionId={} oldStatus={} newStatus={}",
                     sessionId,
@@ -174,7 +182,7 @@ open class SessionWorkspaceStatusSyncService(
                 )
                 return true
             }
-            
+
             logger.debug("No session status change needed for forced sync: sessionId={}", sessionId)
             return true
         } catch (e: Exception) {

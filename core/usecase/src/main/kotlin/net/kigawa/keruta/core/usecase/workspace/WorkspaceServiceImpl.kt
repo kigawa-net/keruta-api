@@ -37,7 +37,9 @@ open class WorkspaceServiceImpl(
         // Validate that session doesn't already have a workspace (1:1 relationship)
         val existingWorkspaces = workspaceRepository.findBySessionId(request.sessionId)
         if (existingWorkspaces.isNotEmpty()) {
-            throw IllegalArgumentException("Session already has a workspace. Each session can have only one workspace. SessionId: ${request.sessionId}, existing workspace: ${existingWorkspaces.first().id}")
+            throw IllegalArgumentException(
+                "Session already has a workspace. Each session can have only one workspace. SessionId: ${request.sessionId}, existing workspace: ${existingWorkspaces.first().id}",
+            )
         }
 
         // Determine template
@@ -103,7 +105,7 @@ open class WorkspaceServiceImpl(
         )
 
         val savedWorkspace = workspaceRepository.update(updatedWorkspace)
-        
+
         // Trigger session status synchronization if workspace status changed
         if (savedWorkspace != null && oldStatus != status) {
             notifyWorkspaceStatusChange(savedWorkspace, oldStatus)
@@ -249,7 +251,7 @@ open class WorkspaceServiceImpl(
 
         return workspaceTemplateRepository.save(defaultTemplate)
     }
-    
+
     /**
      * Notifies about workspace status changes for session synchronization.
      * This is a placeholder method that can be enhanced with event publishing.
@@ -264,7 +266,7 @@ open class WorkspaceServiceImpl(
             oldStatus,
             workspace.status,
         )
-        
+
         // Note: In a real implementation, this would be handled through dependency injection
         // and proper event publishing mechanisms to avoid tight coupling
     }

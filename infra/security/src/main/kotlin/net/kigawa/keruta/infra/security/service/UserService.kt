@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service
  * Service for user management.
  */
 @Service
-class UserService(
+open class UserService(
     private val passwordEncoder: PasswordEncoder,
 ) : UserDetailsService {
 

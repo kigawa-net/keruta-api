@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service
  * Uses a SupervisorJob to ensure that failures in one coroutine don't affect others.
  */
 @Service
-class CoroutineServiceImpl : CoroutineService {
+open class CoroutineServiceImpl : CoroutineService {
     private val logger = LoggerFactory.getLogger(CoroutineServiceImpl::class.java)
 
     // Create a CoroutineScope with a SupervisorJob and Dispatchers.Default

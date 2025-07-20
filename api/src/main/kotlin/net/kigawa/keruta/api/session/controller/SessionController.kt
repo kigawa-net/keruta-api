@@ -5,12 +5,11 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import net.kigawa.keruta.api.session.dto.CreateSessionRequest
 import net.kigawa.keruta.api.session.dto.SessionResponse
 import net.kigawa.keruta.api.session.dto.UpdateSessionRequest
-import net.kigawa.keruta.api.workspace.dto.CreateWorkspaceRequest
 import net.kigawa.keruta.api.workspace.dto.WorkspaceResponse
+import net.kigawa.keruta.core.usecase.session.CoderWorkspaceMonitoringService
 import net.kigawa.keruta.core.usecase.session.SessionService
 import net.kigawa.keruta.core.usecase.session.SessionServiceImpl
 import net.kigawa.keruta.core.usecase.session.SessionWorkspaceStatusSyncService
-import net.kigawa.keruta.core.usecase.session.CoderWorkspaceMonitoringService
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -190,7 +189,6 @@ class SessionController(
         }
     }
 
-
     @PostMapping("/{id}/sync-status")
     @Operation(summary = "Sync session status", description = "Synchronizes session status with workspace states")
     suspend fun syncSessionStatus(@PathVariable id: String): ResponseEntity<SessionResponse> {
@@ -211,7 +209,10 @@ class SessionController(
     }
 
     @PostMapping("/{id}/monitor-workspaces")
-    @Operation(summary = "Monitor session workspaces", description = "Forces monitoring of all workspaces in a session from Coder")
+    @Operation(
+        summary = "Monitor session workspaces",
+        description = "Forces monitoring of all workspaces in a session from Coder",
+    )
     suspend fun monitorSessionWorkspaces(@PathVariable id: String): ResponseEntity<Void> {
         return try {
             val success = coderWorkspaceMonitoringService.forceMonitorSessionWorkspaces(id)

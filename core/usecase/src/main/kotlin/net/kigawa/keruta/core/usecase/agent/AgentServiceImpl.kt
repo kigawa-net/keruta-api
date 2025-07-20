@@ -12,7 +12,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 @Service
-class AgentServiceImpl(
+open class AgentServiceImpl(
     private val agentRepository: AgentRepository,
 ) : AgentService {
 

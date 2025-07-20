@@ -17,7 +17,7 @@ import org.springframework.web.client.RestTemplate
 import java.net.URI
 
 @Service
-class KerutaAgentServiceImpl : KerutaAgentService {
+open class KerutaAgentServiceImpl : KerutaAgentService {
     private val logger = LoggerFactory.getLogger(KerutaAgentServiceImpl::class.java)
     private val restTemplate = RestTemplate()
     private val objectMapper = ObjectMapper()

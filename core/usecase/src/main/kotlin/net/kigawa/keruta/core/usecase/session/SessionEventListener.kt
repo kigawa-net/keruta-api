@@ -30,7 +30,11 @@ class SessionEventListener(
             // Check if workspace already exists for this session
             val existingWorkspaces = workspaceService.getWorkspacesBySessionId(session.id)
             if (existingWorkspaces.isNotEmpty()) {
-                logger.info("Workspace already exists for session: sessionId={} workspaceId={}", session.id, existingWorkspaces.first().id)
+                logger.info(
+                    "Workspace already exists for session: sessionId={} workspaceId={}",
+                    session.id,
+                    existingWorkspaces.first().id,
+                )
                 return
             }
 
@@ -69,14 +73,18 @@ class SessionEventListener(
 
         try {
             val workspaces = workspaceService.getWorkspacesBySessionId(session.id)
-            
+
             if (workspaces.isEmpty()) {
                 logger.warn("No workspace found for session: sessionId={}", session.id)
                 return
             }
-            
+
             if (workspaces.size > 1) {
-                logger.warn("Multiple workspaces found for session (expected 1): sessionId={} count={}", session.id, workspaces.size)
+                logger.warn(
+                    "Multiple workspaces found for session (expected 1): sessionId={} count={}",
+                    session.id,
+                    workspaces.size,
+                )
             }
 
             val workspace = workspaces.first() // Use the first (and should be only) workspace
