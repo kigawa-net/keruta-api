@@ -1,5 +1,6 @@
 package net.kigawa.keruta.infra.app.coder
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import net.kigawa.keruta.core.usecase.coder.*
 import org.slf4j.LoggerFactory
 import org.springframework.http.*
@@ -187,6 +188,7 @@ data class CoderUserInfo(
 /**
  * DTO for Coder user API response.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class CoderUserInfoDto(
     val id: String,
     val username: String,
@@ -195,4 +197,5 @@ data class CoderUserInfoDto(
     val updated_at: String? = null,
     val status: String? = null,
     val organization_ids: List<String>? = null,
+    val last_seen_at: String? = null,
 )
