@@ -17,10 +17,10 @@ import java.util.concurrent.CompletableFuture
  */
 @Component
 open class WorkspaceOrchestrator(
-    private val workspaceRepository: WorkspaceRepository,
-    private val workspaceKubernetesHandler: WorkspaceKubernetesHandler,
+    open val workspaceRepository: WorkspaceRepository,
+    open val workspaceKubernetesHandler: WorkspaceKubernetesHandler,
 ) {
-    private val logger = LoggerFactory.getLogger(WorkspaceOrchestrator::class.java)
+    open val logger = LoggerFactory.getLogger(WorkspaceOrchestrator::class.java)
 
     /**
      * Creates a workspace asynchronously.
