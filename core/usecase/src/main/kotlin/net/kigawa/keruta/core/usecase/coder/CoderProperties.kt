@@ -46,4 +46,9 @@ data class CoderProperties(
      * Whether to enable SSL verification.
      */
     val enableSslVerification: Boolean = true,
+
+    /**
+     * Preferred template keywords for template selection.
+     */
+    val preferredTemplateKeywords: List<String> = emptyList(),
 )

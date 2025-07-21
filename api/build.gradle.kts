@@ -25,9 +25,6 @@ dependencies {
     // Swagger/OpenAPI
     implementation(Dependencies.springdocOpenApi)
 
-    // Thymeleaf
-    implementation(Dependencies.springBootStarterThymeleaf)
-
     // MongoDB
     implementation(Dependencies.springBootStarterData)
     implementation(Dependencies.mongodbDriver)

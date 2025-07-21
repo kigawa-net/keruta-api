@@ -30,7 +30,6 @@ open class WorkspaceServiceImpl(
         logger.info("Creating workspace: ${request.name} for session: ${request.sessionId}")
 
         // Validate session exists
-        @Suppress("UNUSED_VARIABLE")
         val session = sessionRepository.findById(request.sessionId)
             ?: throw IllegalArgumentException("Session not found: ${request.sessionId}")
 
@@ -79,8 +78,7 @@ open class WorkspaceServiceImpl(
         val savedWorkspace = workspaceRepository.save(workspace)
 
         // Get session template configuration
-        val session = sessionRepository.findById(request.sessionId)
-        val sessionTemplateConfig = session?.templateConfig
+        val sessionTemplateConfig = session.templateConfig
 
         // Start workspace creation asynchronously with session template configuration
         workspaceOrchestrator.createWorkspaceAsync(savedWorkspace, template, sessionTemplateConfig)
