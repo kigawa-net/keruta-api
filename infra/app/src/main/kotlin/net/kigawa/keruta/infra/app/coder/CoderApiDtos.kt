@@ -2,7 +2,7 @@ package net.kigawa.keruta.infra.app.coder
 
 /**
  * Infrastructure layer DTOs with Jackson annotations for Coder API communication.
- * 
+ *
  * This file serves as a central import point for all Coder API DTOs.
  * The actual DTO classes have been separated into logical modules in the dto package.
  */

@@ -27,11 +27,12 @@ open class CoderService(
     fun createWorkspace(
         workspace: Workspace,
         @Suppress("UNUSED_PARAMETER") template: WorkspaceTemplate,
+        sessionTemplateConfig: net.kigawa.keruta.core.domain.model.SessionTemplateConfig? = null,
     ): CoderWorkspaceCreationResult {
         logger.info("Creating workspace in Coder: ${workspace.name}")
 
         // Get the template ID to use, with validation
-        val templateIdToUse = getValidTemplateId(workspace.templateId)
+        val templateIdToUse = getValidTemplateId(workspace.templateId, sessionTemplateConfig)
         if (templateIdToUse == null) {
             return CoderWorkspaceCreationResult(
                 success = false,
@@ -201,9 +202,11 @@ open class CoderService(
      * Gets a valid template ID, checking existence in Coder.
      * Returns the first available template if the specified one doesn't exist.
      */
-    private fun getValidTemplateId(requestedTemplateId: String?): String? {
+    private fun getValidTemplateId(
+        requestedTemplateId: String?,
+        sessionTemplateConfig: net.kigawa.keruta.core.domain.model.SessionTemplateConfig? = null,
+    ): String? {
         val availableTemplates = coderApiClient.getTemplates()
-        
         if (availableTemplates.isEmpty()) {
             logger.error("No templates available in Coder")
             return null
@@ -220,6 +223,51 @@ open class CoderService(
             }
         }
 
+        // Second try session-specific template configuration
+        if (sessionTemplateConfig != null) {
+            // Try session-specific template ID
+            if (sessionTemplateConfig.templateId != null) {
+                val sessionTemplateExists = availableTemplates.any { it.id == sessionTemplateConfig.templateId }
+                if (sessionTemplateExists) {
+                    logger.info("Using session-specific template: ${sessionTemplateConfig.templateId}")
+                    return sessionTemplateConfig.templateId
+                } else {
+                    logger.warn("Session-specific template not found in Coder: ${sessionTemplateConfig.templateId}")
+                }
+            }
+
+            // Try session-specific template name
+            if (sessionTemplateConfig.templateName != null) {
+                val sessionTemplateByName = availableTemplates.find {
+                    it.name.equals(sessionTemplateConfig.templateName, ignoreCase = true) ||
+                        it.displayName.equals(sessionTemplateConfig.templateName, ignoreCase = true)
+                }
+                if (sessionTemplateByName != null) {
+                    logger.info(
+                        "Using session template by name: ${sessionTemplateByName.id} (${sessionTemplateByName.name})",
+                    )
+                    return sessionTemplateByName.id
+                } else {
+                    logger.warn("Session template not found by name: ${sessionTemplateConfig.templateName}")
+                }
+            }
+
+            // Try session-specific preferred keywords
+            if (sessionTemplateConfig.preferredKeywords.isNotEmpty()) {
+                val sessionPreferredTemplate =
+                    findPreferredTemplate(
+                        availableTemplates,
+                        sessionTemplateConfig.preferredKeywords,
+                    )
+                if (sessionPreferredTemplate != null) {
+                    logger.info(
+                        "Using session preferred template: ${sessionPreferredTemplate.id} (${sessionPreferredTemplate.name})",
+                    )
+                    return sessionPreferredTemplate.id
+                }
+            }
+        }
+
         // Then try the configured default template ID
         val configuredDefaultId = coderProperties.defaultTemplateId
         if (!configuredDefaultId.isNullOrEmpty()) {
@@ -232,10 +280,71 @@ open class CoderService(
             }
         }
 
+        // Try to find preferred templates based on global keywords
+        val preferredTemplate = findPreferredTemplate(availableTemplates, coderProperties.preferredTemplateKeywords)
+        if (preferredTemplate != null) {
+            logger.info("Using preferred template: ${preferredTemplate.id} (${preferredTemplate.name})")
+            return preferredTemplate.id
+        }
+
         // Finally, use the first available template as fallback
         val fallbackTemplate = availableTemplates.first()
         logger.info("Using fallback template: ${fallbackTemplate.id} (${fallbackTemplate.name})")
         return fallbackTemplate.id
+    }
+
+    /**
+     * Finds preferred templates from available templates based on configured keywords.
+     * Prioritizes templates matching the configured keywords in order.
+     */
+    private fun findPreferredTemplate(
+        templates: List<CoderTemplateResponse>,
+        keywords: List<String> = coderProperties.preferredTemplateKeywords,
+    ): CoderTemplateResponse? {
+        if (keywords.isEmpty()) {
+            logger.debug("No preferred template keywords provided")
+            return null
+        }
+
+        // For each keyword, try to find matching templates
+        for (keyword in keywords) {
+            logger.debug("Searching for templates with keyword: '$keyword'")
+            // First priority: exact name match
+            val exactNameMatch = templates.find {
+                it.name.equals(keyword, ignoreCase = true) ||
+                    it.displayName.equals(keyword, ignoreCase = true)
+            }
+            if (exactNameMatch != null) {
+                logger.info(
+                    "Found exact name match for keyword '$keyword': ${exactNameMatch.name} (${exactNameMatch.id})",
+                )
+                return exactNameMatch
+            }
+
+            // Second priority: name contains keyword
+            val nameMatches = templates.filter {
+                it.name.contains(keyword, ignoreCase = true) ||
+                    it.displayName.contains(keyword, ignoreCase = true)
+            }
+            if (nameMatches.isNotEmpty()) {
+                val match = nameMatches.first()
+                logger.info("Found name match for keyword '$keyword': ${match.name} (${match.id})")
+                return match
+            }
+
+            // Third priority: description contains keyword
+            val descriptionMatches = templates.filter {
+                it.description.contains(keyword, ignoreCase = true)
+            }
+            if (descriptionMatches.isNotEmpty()) {
+                val match = descriptionMatches.first()
+                logger.info("Found description match for keyword '$keyword': ${match.name} (${match.id})")
+                return match
+            }
+        }
+
+        logger.debug("No templates found matching preferred keywords: $keywords")
+        return null
     }
 
     private fun mapBuildInfo(build: CoderWorkspaceBuildResponse): WorkspaceBuildInfo {

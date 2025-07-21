@@ -11,6 +11,7 @@ data class CreateSessionRequest(
     val status: String = SessionStatus.ACTIVE.name,
     val tags: List<String> = emptyList(),
     val metadata: Map<String, String> = emptyMap(),
+    val templateConfig: SessionTemplateConfigRequest? = null,
 ) {
     fun toDomain(): Session {
         val sessionStatus = try {
@@ -26,6 +27,7 @@ data class CreateSessionRequest(
             status = sessionStatus,
             tags = tags,
             metadata = metadata,
+            templateConfig = templateConfig?.toDomain(),
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now(),
         )

@@ -1,5 +1,6 @@
 package net.kigawa.keruta.core.usecase.workspace
 
+import net.kigawa.keruta.core.domain.model.SessionTemplateConfig
 import net.kigawa.keruta.core.domain.model.Workspace
 import net.kigawa.keruta.core.domain.model.WorkspaceTemplate
 import net.kigawa.keruta.core.usecase.coder.CoderService
@@ -20,12 +21,16 @@ open class WorkspaceKubernetesHandler(
     /**
      * Creates Kubernetes resources for a workspace.
      */
-    fun createWorkspaceResources(workspace: Workspace, template: WorkspaceTemplate): WorkspaceKubernetesResult {
+    fun createWorkspaceResources(
+        workspace: Workspace,
+        template: WorkspaceTemplate,
+        sessionTemplateConfig: SessionTemplateConfig? = null,
+    ): WorkspaceKubernetesResult {
         logger.info("Creating workspace resources using Coder API for workspace: ${workspace.id}")
 
         try {
-            // Create workspace in Coder
-            val coderResult = coderService.createWorkspace(workspace, template)
+            // Create workspace in Coder with session-specific template configuration
+            val coderResult = coderService.createWorkspace(workspace, template, sessionTemplateConfig)
 
             if (coderResult.success) {
                 logger.info("Successfully created workspace in Coder: ${workspace.id}")

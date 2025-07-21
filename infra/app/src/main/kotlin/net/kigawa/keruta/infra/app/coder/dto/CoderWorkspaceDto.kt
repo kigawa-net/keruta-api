@@ -74,8 +74,8 @@ data class CoderWorkspaceHealthDto(
 ) {
     fun toUseCase(): net.kigawa.keruta.core.usecase.coder.CoderWorkspaceHealth {
         return net.kigawa.keruta.core.usecase.coder.CoderWorkspaceHealth(
-            healthy = healthy, 
-            failing_agents = failing_agents
+            healthy = healthy,
+            failing_agents = failing_agents,
         )
     }
 }

@@ -42,7 +42,7 @@ open class SessionEventListener(
             val workspaceRequest = CreateWorkspaceRequest(
                 name = normalizeWorkspaceName(session.name), // Normalize session name for Coder compatibility
                 sessionId = session.id,
-                templateId = null, // Use default template
+                templateId = session.templateConfig?.templateId, // Use session-specific template if configured
                 automaticUpdates = true,
                 ttlMs = 3600000, // 1 hour default TTL
             )

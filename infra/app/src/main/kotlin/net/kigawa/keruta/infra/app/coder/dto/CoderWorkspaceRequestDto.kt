@@ -31,7 +31,9 @@ data class CoderCreateWorkspaceRequestDto(
                 automaticUpdates = if (request.automaticUpdates) "always" else "never",
                 autostartSchedule = request.autostartSchedule,
                 ttlMs = request.ttlMs,
-                richParameterValues = request.richParameterValues.map { net.kigawa.keruta.infra.app.coder.dto.CoderRichParameterValueDto.fromUseCase(it) },
+                richParameterValues = request.richParameterValues.map {
+                    net.kigawa.keruta.infra.app.coder.dto.CoderRichParameterValueDto.fromUseCase(it)
+                },
             )
         }
     }

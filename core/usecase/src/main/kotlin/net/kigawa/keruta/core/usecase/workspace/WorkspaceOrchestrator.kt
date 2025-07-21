@@ -1,5 +1,6 @@
 package net.kigawa.keruta.core.usecase.workspace
 
+import net.kigawa.keruta.core.domain.model.SessionTemplateConfig
 import net.kigawa.keruta.core.domain.model.Workspace
 import net.kigawa.keruta.core.domain.model.WorkspaceBuildStatus
 import net.kigawa.keruta.core.domain.model.WorkspaceStatus
@@ -26,7 +27,11 @@ open class WorkspaceOrchestrator(
      * Creates a workspace asynchronously.
      */
     @Async("infraTaskExecutor")
-    suspend fun createWorkspaceAsync(workspace: Workspace, template: WorkspaceTemplate): CompletableFuture<Workspace> {
+    suspend fun createWorkspaceAsync(
+        workspace: Workspace,
+        template: WorkspaceTemplate,
+        sessionTemplateConfig: SessionTemplateConfig? = null,
+    ): CompletableFuture<Workspace> {
         val future = CompletableFuture<Workspace>()
 
         try {
@@ -43,8 +48,12 @@ open class WorkspaceOrchestrator(
             )
             workspaceRepository.update(updatedWorkspace)
 
-            // Create Kubernetes resources
-            val kubernetesResult = workspaceKubernetesHandler.createWorkspaceResources(updatedWorkspace, template)
+            // Create Kubernetes resources with session template configuration
+            val kubernetesResult = workspaceKubernetesHandler.createWorkspaceResources(
+                updatedWorkspace,
+                template,
+                sessionTemplateConfig,
+            )
 
             if (kubernetesResult.success) {
                 // Update workspace with successful creation
