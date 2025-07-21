@@ -30,9 +30,18 @@ open class CoderService(
     ): CoderWorkspaceCreationResult {
         logger.info("Creating workspace in Coder: ${workspace.name}")
 
+        // Get the template ID to use, with validation
+        val templateIdToUse = getValidTemplateId(workspace.templateId)
+        if (templateIdToUse == null) {
+            return CoderWorkspaceCreationResult(
+                success = false,
+                error = "No valid template available in Coder",
+            )
+        }
+
         val request = CoderCreateWorkspaceRequest(
             name = workspace.name,
-            templateId = workspace.templateId ?: coderProperties.defaultTemplateId,
+            templateId = templateIdToUse,
             templateVersionId = workspace.templateVersionId,
             automaticUpdates = workspace.automaticUpdates,
             autostartSchedule = workspace.autoStartSchedule,
@@ -186,6 +195,47 @@ open class CoderService(
                 workspaceCount = template.workspaceCount,
             )
         }
+    }
+
+    /**
+     * Gets a valid template ID, checking existence in Coder.
+     * Returns the first available template if the specified one doesn't exist.
+     */
+    private fun getValidTemplateId(requestedTemplateId: String?): String? {
+        val availableTemplates = coderApiClient.getTemplates()
+        
+        if (availableTemplates.isEmpty()) {
+            logger.error("No templates available in Coder")
+            return null
+        }
+
+        // First try the requested template ID
+        if (requestedTemplateId != null) {
+            val requestedExists = availableTemplates.any { it.id == requestedTemplateId }
+            if (requestedExists) {
+                logger.info("Using requested template: $requestedTemplateId")
+                return requestedTemplateId
+            } else {
+                logger.warn("Requested template not found in Coder: $requestedTemplateId")
+            }
+        }
+
+        // Then try the configured default template ID
+        val configuredDefaultId = coderProperties.defaultTemplateId
+        if (!configuredDefaultId.isNullOrEmpty()) {
+            val defaultExists = availableTemplates.any { it.id == configuredDefaultId }
+            if (defaultExists) {
+                logger.info("Using configured default template: $configuredDefaultId")
+                return configuredDefaultId
+            } else {
+                logger.warn("Configured default template not found in Coder: $configuredDefaultId")
+            }
+        }
+
+        // Finally, use the first available template as fallback
+        val fallbackTemplate = availableTemplates.first()
+        logger.info("Using fallback template: ${fallbackTemplate.id} (${fallbackTemplate.name})")
+        return fallbackTemplate.id
     }
 
     private fun mapBuildInfo(build: CoderWorkspaceBuildResponse): WorkspaceBuildInfo {
