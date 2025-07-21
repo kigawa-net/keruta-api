@@ -24,9 +24,9 @@ data class CoderWorkspaceBuildResponseDto(
     @JsonProperty("workspace_owner_name")
     val workspaceOwnerName: String,
     @JsonProperty("template_version_id")
-    val templateVersionId: String,
+    val templateVersionId: String? = null,
     @JsonProperty("template_version_name")
-    val templateVersionName: String,
+    val templateVersionName: String? = null,
     @JsonProperty("build_number")
     val buildNumber: Int,
     val status: String,

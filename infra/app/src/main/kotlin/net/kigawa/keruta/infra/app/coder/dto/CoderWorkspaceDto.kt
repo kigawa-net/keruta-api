@@ -24,13 +24,13 @@ data class CoderWorkspaceResponseDto(
     @JsonProperty("organization_id")
     val organizationId: String,
     @JsonProperty("template_id")
-    val templateId: String,
+    val templateId: String? = null,
     @JsonProperty("template_name")
-    val templateName: String,
+    val templateName: String? = null,
     @JsonProperty("template_version_id")
-    val templateVersionId: String,
+    val templateVersionId: String? = null,
     @JsonProperty("template_version_name")
-    val templateVersionName: String,
+    val templateVersionName: String? = null,
     @JsonProperty("autostart_schedule")
     val autostartSchedule: String? = null,
     @JsonProperty("ttl_ms")
