@@ -22,23 +22,25 @@ class MongoConfig : AbstractMongoClientConfiguration() {
     @Value("\${spring.data.mongodb.database}")
     private lateinit var database: String
 
-    @Value("\${spring.data.mongodb.username}")
-    private lateinit var username: String
+    @Value("\${spring.data.mongodb.username:}")
+    private var username: String = ""
 
-    @Value("\${spring.data.mongodb.password}")
-    private lateinit var password: String
+    @Value("\${spring.data.mongodb.password:}")
+    private var password: String = ""
 
-    @Value("\${spring.data.mongodb.authentication-database}")
-    private lateinit var authSource: String
+    @Value("\${spring.data.mongodb.authentication-database:}")
+    private var authSource: String = ""
 
     override fun getDatabaseName(): String {
         return database
     }
 
     override fun mongoClient(): MongoClient {
-        val connectionString = ConnectionString(
-            "mongodb://$username:$password@$host:$port/$database?authSource=$authSource",
-        )
+        val connectionString = if (username.isNotEmpty() && password.isNotEmpty()) {
+            ConnectionString("mongodb://$username:$password@$host:$port/$database?authSource=$authSource")
+        } else {
+            ConnectionString("mongodb://$host:$port/$database")
+        }
 
         val clientSettings = MongoClientSettings.builder()
             .applyConnectionString(connectionString)
