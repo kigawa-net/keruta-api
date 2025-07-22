@@ -10,9 +10,11 @@ import org.springframework.scheduling.annotation.ScheduledAnnotationBeanPostProc
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.testcontainers.containers.*
+import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
+import java.time.Duration
 
 @SpringBootTest
 @Testcontainers
@@ -58,6 +60,8 @@ class KerutaApplicationTest {
             .withEnv("KC_HOSTNAME_PORT") { "8080" }
             .withEnv("KEYCLOAK_EXTRA_ARGS") { "--import-realm" }
             .withEnv("KC_HTTP_ENABLED") { "true" }
+            .withStartupTimeout(Duration.ofMinutes(3))
+            .waitingFor(Wait.forHttp("/health/ready").forPort(8080).withStartupTimeout(Duration.ofMinutes(3)))
             .withFileSystemBind(
                 "../data/keycloak.default.realm.json",
                 "/opt/bitnami/keycloak/data/import/keycloak.default.realm.json",
