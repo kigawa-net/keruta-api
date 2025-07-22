@@ -27,6 +27,9 @@ WORKDIR /app
 # Copy the built jar file from the builder stage
 COPY --from=builder /app/api/build/libs/*.jar app.jar
 
+# Copy terraform templates
+COPY ./terraform-templates ./terraform-templates
+
 # Set environment variables
 ENV SPRING_PROFILES_ACTIVE=prod
 
