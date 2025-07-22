@@ -47,6 +47,18 @@ class TemplateController {
         val warnings: List<String> = emptyList(),
     )
 
+    data class TemplateContentResponse(
+        val content: String,
+    )
+
+    data class UpdateTemplateContentRequest(
+        val content: String,
+    )
+
+    data class UpdateTemplateContentResponse(
+        val success: Boolean,
+    )
+
     private val templatesBasePath = "./terraform-templates"
 
     @GetMapping
@@ -242,6 +254,57 @@ class TemplateController {
                 "message" to "テンプレートの登録機能は未実装です",
             ),
         )
+    }
+
+    @GetMapping("/content")
+    @Operation(summary = "Get template content by path", description = "Retrieves template content by file path")
+    fun getTemplateContent(@RequestParam path: String): ResponseEntity<TemplateContentResponse> {
+        return try {
+            val file = File(path)
+            if (!file.exists() || !file.isFile) {
+                return ResponseEntity.notFound().build()
+            }
+
+            // セキュリティチェック: テンプレートベースパス配下のファイルのみ許可
+            val canonicalPath = file.canonicalPath
+            val basePath = File(templatesBasePath).canonicalPath
+            if (!canonicalPath.startsWith(basePath)) {
+                return ResponseEntity.badRequest().build()
+            }
+
+            val content = file.readText()
+            ResponseEntity.ok(TemplateContentResponse(content))
+        } catch (e: Exception) {
+            println("Error reading template content: ${e.message}")
+            ResponseEntity.internalServerError().build()
+        }
+    }
+
+    @PutMapping("/content")
+    @Operation(summary = "Update template content by path", description = "Updates template content by file path")
+    fun updateTemplateContent(
+        @RequestParam path: String,
+        @RequestBody request: UpdateTemplateContentRequest,
+    ): ResponseEntity<UpdateTemplateContentResponse> {
+        return try {
+            val file = File(path)
+
+            // セキュリティチェック: テンプレートベースパス配下のファイルのみ許可
+            val canonicalPath = file.canonicalPath
+            val basePath = File(templatesBasePath).canonicalPath
+            if (!canonicalPath.startsWith(basePath)) {
+                return ResponseEntity.badRequest().build()
+            }
+
+            // ディレクトリが存在しない場合は作成
+            file.parentFile?.mkdirs()
+
+            file.writeText(request.content)
+            ResponseEntity.ok(UpdateTemplateContentResponse(success = true))
+        } catch (e: Exception) {
+            println("Error updating template content: ${e.message}")
+            ResponseEntity.internalServerError().build()
+        }
     }
 
     private fun extractDescription(content: String): String {
