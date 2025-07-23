@@ -43,13 +43,55 @@ open class SessionServiceImpl(
     }
 
     override suspend fun updateSession(id: String, session: Session): Session {
+        logger.info("Updating session: id={}", id)
         val existingSession = getSessionById(id)
+
+        // Check if template configuration has changed
+        val templateConfigChanged = hasTemplateConfigChanged(existingSession, session)
+
         val updatedSession = session.copy(
             id = existingSession.id,
             createdAt = existingSession.createdAt,
             updatedAt = LocalDateTime.now(),
         )
-        return sessionRepository.save(updatedSession)
+
+        val savedSession = sessionRepository.save(updatedSession)
+
+        // Create new workspace if template configuration changed
+        if (templateConfigChanged) {
+            logger.info("Template configuration changed for session: id={}, creating new workspace", id)
+            try {
+                sessionEventListener.onSessionTemplateChanged(savedSession, existingSession)
+            } catch (e: Exception) {
+                logger.error("Failed to handle session template change event for session: {}", id, e)
+            }
+        }
+
+        logger.info("Session updated successfully: id={}", id)
+        return savedSession
+    }
+
+    /**
+     * Checks if the template configuration has changed between two sessions.
+     * This includes template path and parameters.
+     */
+    private fun hasTemplateConfigChanged(existingSession: Session, newSession: Session): Boolean {
+        val existingConfig = existingSession.templateConfig
+        val newConfig = newSession.templateConfig
+
+        // If one is null and the other is not, it's a change
+        if (existingConfig == null && newConfig != null) return true
+        if (existingConfig != null && newConfig == null) return true
+        if (existingConfig == null && newConfig == null) return false
+
+        // Both are non-null, compare their contents
+        return existingConfig!!.templateId != newConfig!!.templateId ||
+            existingConfig.templateName != newConfig.templateName ||
+            existingConfig.repositoryUrl != newConfig.repositoryUrl ||
+            existingConfig.repositoryRef != newConfig.repositoryRef ||
+            existingConfig.templatePath != newConfig.templatePath ||
+            existingConfig.preferredKeywords != newConfig.preferredKeywords ||
+            existingConfig.parameters != newConfig.parameters
     }
 
     override suspend fun deleteSession(id: String) {

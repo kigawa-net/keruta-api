@@ -150,6 +150,68 @@ open class SessionEventListener(
     }
 
     /**
+     * Handles session template change event.
+     * Creates a new workspace with the updated template configuration.
+     */
+    suspend fun onSessionTemplateChanged(newSession: Session, oldSession: Session) {
+        logger.info("Handling session template change event: sessionId={}", newSession.id)
+
+        try {
+            // Get existing workspaces for this session
+            val existingWorkspaces = workspaceService.getWorkspacesBySessionId(newSession.id)
+
+            // Stop and mark old workspaces as archived
+            for (workspace in existingWorkspaces) {
+                logger.info(
+                    "Stopping and archiving old workspace due to template change: sessionId={} workspaceId={}",
+                    newSession.id,
+                    workspace.id,
+                )
+                try {
+                    // Stop the workspace gracefully
+                    workspaceService.stopWorkspace(workspace.id)
+                    // Mark it as archived so it won't be used anymore
+                    workspaceService.updateWorkspaceStatus(workspace.id, WorkspaceStatus.DELETED)
+                } catch (e: Exception) {
+                    logger.warn(
+                        "Failed to stop old workspace, continuing with new workspace creation: workspaceId={}",
+                        workspace.id,
+                        e,
+                    )
+                }
+            }
+
+            // Create new workspace with updated template configuration
+            val workspaceRequest = CreateWorkspaceRequest(
+                name = "${normalizeWorkspaceName(
+                    newSession.name,
+                )}-v${System.currentTimeMillis() / 1000}", // Add timestamp to ensure uniqueness
+                sessionId = newSession.id,
+                templateId = newSession.templateConfig?.templateId,
+                automaticUpdates = true,
+                ttlMs = 3600000, // 1 hour default TTL
+            )
+
+            val newWorkspace = workspaceService.createWorkspace(workspaceRequest)
+            logger.info(
+                "Successfully created new workspace for template change: sessionId={} oldWorkspaceCount={} newWorkspaceId={}",
+                newSession.id,
+                existingWorkspaces.size,
+                newWorkspace.id,
+            )
+
+            // If session is currently active, start the new workspace
+            if (newSession.status == SessionStatus.ACTIVE) {
+                logger.info("Starting new workspace as session is active: workspaceId={}", newWorkspace.id)
+                workspaceService.startWorkspace(newWorkspace.id)
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to handle session template change: sessionId={}", newSession.id, e)
+            throw e
+        }
+    }
+
+    /**
      * Handles session deletion event.
      * Cleans up associated workspaces.
      */
