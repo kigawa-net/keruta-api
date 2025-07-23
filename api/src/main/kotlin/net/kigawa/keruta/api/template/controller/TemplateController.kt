@@ -260,7 +260,18 @@ class TemplateController {
     @Operation(summary = "Get template content by path", description = "Retrieves template content by file path")
     fun getTemplateContent(@RequestParam path: String): ResponseEntity<TemplateContentResponse> {
         return try {
-            val file = File(path)
+            // パス正規化: 絶対パスが渡された場合は相対パスに変換
+            val normalizedPath = if (path.startsWith("/")) {
+                // 絶対パスの場合、先頭の / を除去して相対パスとして扱う
+                ".$path"
+            } else if (!path.startsWith("./")) {
+                // 相対パスの場合、./ プレフィックスを追加
+                "./$path"
+            } else {
+                path
+            }
+
+            val file = File(normalizedPath)
             if (!file.exists() || !file.isFile) {
                 return ResponseEntity.notFound().build()
             }
@@ -287,7 +298,18 @@ class TemplateController {
         @RequestBody request: UpdateTemplateContentRequest,
     ): ResponseEntity<UpdateTemplateContentResponse> {
         return try {
-            val file = File(path)
+            // パス正規化: 絶対パスが渡された場合は相対パスに変換
+            val normalizedPath = if (path.startsWith("/")) {
+                // 絶対パスの場合、先頭の / を除去して相対パスとして扱う
+                ".$path"
+            } else if (!path.startsWith("./")) {
+                // 相対パスの場合、./ プレフィックスを追加
+                "./$path"
+            } else {
+                path
+            }
+
+            val file = File(normalizedPath)
 
             // セキュリティチェック: テンプレートベースパス配下のファイルのみ許可
             val canonicalPath = file.canonicalPath
