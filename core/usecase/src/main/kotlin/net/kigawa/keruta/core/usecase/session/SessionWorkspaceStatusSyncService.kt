@@ -26,7 +26,7 @@ open class SessionWorkspaceStatusSyncService(
      * Handles workspace status change and updates corresponding session status.
      */
     @Async
-    suspend fun handleWorkspaceStatusChange(workspace: Workspace, oldStatus: WorkspaceStatus) {
+    open suspend fun handleWorkspaceStatusChange(workspace: Workspace, oldStatus: WorkspaceStatus) {
         logger.info(
             "Synchronizing session status for workspace change: workspaceId={} sessionId={} oldStatus={} newStatus={}",
             workspace.id,
@@ -79,7 +79,7 @@ open class SessionWorkspaceStatusSyncService(
      */
     @Scheduled(fixedRate = 300000) // 5 minutes
     @Async
-    suspend fun periodicSessionStatusSync() {
+    open suspend fun periodicSessionStatusSync() {
         logger.debug("Starting periodic session status synchronization")
 
         try {

@@ -26,7 +26,7 @@ open class CoderWorkspaceMonitoringService(
      */
     @Scheduled(fixedRate = 120000) // 2 minutes
     @Async
-    suspend fun monitorCoderWorkspaces() {
+    open suspend fun monitorCoderWorkspaces() {
         logger.debug("Starting Coder workspace monitoring cycle")
 
         try {
@@ -68,7 +68,7 @@ open class CoderWorkspaceMonitoringService(
             }
 
             // Map Coder workspace status to Keruta workspace status
-            val expectedStatus = mapCoderStatusToKerutaStatus(coderWorkspace.latestBuild?.status)
+            val expectedStatus = mapCoderStatusToKerutaStatus(coderWorkspace.latestBuild.status)
 
             if (expectedStatus != null && expectedStatus != workspace.status) {
                 logger.info(
@@ -138,13 +138,31 @@ open class CoderWorkspaceMonitoringService(
         val result = mutableMapOf<String, net.kigawa.keruta.core.domain.model.Workspace>()
 
         try {
-            // This is a simplified approach - in a real implementation,
-            // you would query all sessions and their workspaces more efficiently
-            // For now, we'll use the workspace service to get workspaces by session
+            // Get all sessions from the system
+            val sessionRepository = this.sessionWorkspaceStatusSyncService.sessionRepository
+            val sessions = sessionRepository.findAll()
 
-            // Note: This is a placeholder implementation
-            // In a real system, you'd have a more efficient way to get all session-workspace pairs
-            logger.debug("Getting all sessions with workspaces for monitoring")
+            for (session in sessions) {
+                try {
+                    // Get the single workspace for each session
+                    val workspaces = workspaceService.getWorkspacesBySessionId(session.id)
+                    if (workspaces.isNotEmpty()) {
+                        // Use the first workspace (should be the only one)
+                        result[session.id] = workspaces.first()
+                        if (workspaces.size > 1) {
+                            logger.warn(
+                                "Multiple workspaces found for session (expected 1): sessionId={} count={}",
+                                session.id,
+                                workspaces.size,
+                            )
+                        }
+                    }
+                } catch (e: Exception) {
+                    logger.error("Failed to get workspace for session: sessionId={}", session.id, e)
+                }
+            }
+
+            logger.debug("Found {} sessions with workspaces for monitoring", result.size)
         } catch (e: Exception) {
             logger.error("Failed to get sessions with workspaces", e)
         }
