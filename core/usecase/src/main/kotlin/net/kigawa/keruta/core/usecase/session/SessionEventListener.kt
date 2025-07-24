@@ -87,7 +87,35 @@ open class SessionEventListener(
                 )
             }
 
-            val workspace = workspaces.first() // Use the first (and should be only) workspace
+            // Filter out DELETED workspaces and get the first active one
+            val activeWorkspaces = workspaces.filter { it.status != WorkspaceStatus.DELETED }
+            if (activeWorkspaces.isEmpty()) {
+                logger.warn("No active workspace found for session, all are DELETED: sessionId={}", session.id)
+                // Create a new workspace if all are deleted
+                if (session.status == SessionStatus.ACTIVE) {
+                    logger.info(
+                        "Creating new workspace for active session with no active workspaces: sessionId={}",
+                        session.id,
+                    )
+                    val workspaceRequest = CreateWorkspaceRequest(
+                        name = normalizeWorkspaceName(session.name),
+                        sessionId = session.id,
+                        templateId = session.templateConfig?.templateId,
+                        automaticUpdates = true,
+                        ttlMs = 3600000, // 1 hour default TTL
+                    )
+                    val newWorkspace = workspaceService.createWorkspace(workspaceRequest)
+                    workspaceService.startWorkspace(newWorkspace.id)
+                    logger.info(
+                        "Successfully created and started new workspace: sessionId={} workspaceId={}",
+                        session.id,
+                        newWorkspace.id,
+                    )
+                }
+                return
+            }
+
+            val workspace = activeWorkspaces.first() // Use the first active workspace
 
             when (session.status) {
                 SessionStatus.ACTIVE -> {
@@ -133,12 +161,21 @@ open class SessionEventListener(
                     }
                 }
                 SessionStatus.INACTIVE -> {
-                    logger.info(
-                        "Stopping workspace for inactive session: sessionId={} workspaceId={}",
-                        session.id,
-                        workspace.id,
-                    )
-                    workspaceService.stopWorkspace(workspace.id)
+                    // Only stop if workspace is not already DELETED
+                    if (workspace.status != WorkspaceStatus.DELETED) {
+                        logger.info(
+                            "Stopping workspace for inactive session: sessionId={} workspaceId={}",
+                            session.id,
+                            workspace.id,
+                        )
+                        workspaceService.stopWorkspace(workspace.id)
+                    } else {
+                        logger.info(
+                            "Workspace is already DELETED, no action needed for inactive session: sessionId={} workspaceId={}",
+                            session.id,
+                            workspace.id,
+                        )
+                    }
                 }
                 else -> {
                     logger.debug("No workspace action needed for session status: {}", session.status)
