@@ -216,17 +216,20 @@ open class SessionEventListener(
      * Cleans up associated workspaces.
      */
     suspend fun onSessionDeleted(sessionId: String) {
-        logger.info("Handling session deleted event: sessionId={}", sessionId)
+        logger.info("Handling session deletion event: sessionId={}", sessionId)
 
         try {
+            // Delete all workspaces associated with this session
             val deleted = workspaceService.deleteWorkspacesBySessionId(sessionId)
             if (deleted) {
-                logger.info("Successfully deleted workspaces for session: sessionId={}", sessionId)
+                logger.info("Successfully initiated workspace deletion for session: sessionId={}", sessionId)
             } else {
-                logger.warn("No workspaces found to delete for session: sessionId={}", sessionId)
+                logger.info("No workspaces found to delete for session: sessionId={}", sessionId)
             }
         } catch (e: Exception) {
             logger.error("Failed to delete workspaces for session: sessionId={}", sessionId, e)
+            // Don't rethrow the exception to avoid failing the session deletion process
+            // The session deletion should proceed even if workspace cleanup fails
         }
     }
 

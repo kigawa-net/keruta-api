@@ -97,12 +97,18 @@ open class SessionServiceImpl(
     override suspend fun deleteSession(id: String) {
         logger.info("Deleting session and its workspaces: id={}", id)
 
-        // Trigger session deletion event
+        // Verify session exists before deletion
+        val session = getSessionById(id)
+        logger.info("Found session to delete: id={} name={} status={}", id, session.name, session.status)
+
+        // Trigger session deletion event to clean up associated workspaces
         try {
+            logger.info("Initiating workspace cleanup for session: id={}", id)
             sessionEventListener.onSessionDeleted(id)
         } catch (e: Exception) {
             logger.error("Failed to handle session deletion event for session: {}", id, e)
-            // Continue with deletion even if event handling fails
+            // Continue with session deletion even if workspace cleanup fails
+            // This ensures the session can still be deleted from the database
         }
 
         // Delete the session itself
@@ -110,7 +116,7 @@ open class SessionServiceImpl(
             throw NoSuchElementException("Session not found with id: $id")
         }
 
-        logger.info("Successfully deleted session: id={}", id)
+        logger.info("Successfully deleted session: id={} name={}", id, session.name)
     }
 
     override suspend fun getSessionsByStatus(status: SessionStatus): List<Session> {

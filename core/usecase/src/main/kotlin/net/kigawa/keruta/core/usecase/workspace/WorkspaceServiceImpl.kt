@@ -199,13 +199,57 @@ open class WorkspaceServiceImpl(
     }
 
     override suspend fun deleteWorkspacesBySessionId(sessionId: String): Boolean {
+        logger.info("Deleting all workspaces for session: sessionId={}", sessionId)
+
         val workspaces = workspaceRepository.findBySessionId(sessionId)
 
-        workspaces.forEach { workspace ->
-            deleteWorkspace(workspace.id)
+        if (workspaces.isEmpty()) {
+            logger.info("No workspaces found for session: sessionId={}", sessionId)
+            return false
         }
 
-        return true
+        logger.info("Found {} workspace(s) to delete for session: sessionId={}", workspaces.size, sessionId)
+
+        var successCount = 0
+        var failureCount = 0
+
+        workspaces.forEach { workspace ->
+            try {
+                logger.info(
+                    "Deleting workspace: workspaceId={} name={} status={} for session={}",
+                    workspace.id,
+                    workspace.name,
+                    workspace.status,
+                    sessionId,
+                )
+
+                val deleted = deleteWorkspace(workspace.id)
+                if (deleted) {
+                    successCount++
+                    logger.info("Successfully initiated deletion for workspace: workspaceId={}", workspace.id)
+                } else {
+                    failureCount++
+                    logger.warn("Failed to delete workspace: workspaceId={}", workspace.id)
+                }
+            } catch (e: Exception) {
+                failureCount++
+                logger.error(
+                    "Exception occurred while deleting workspace: workspaceId={} for session={}",
+                    workspace.id,
+                    sessionId,
+                    e,
+                )
+            }
+        }
+
+        logger.info(
+            "Workspace deletion summary for session {}: {} successful, {} failed",
+            sessionId,
+            successCount,
+            failureCount,
+        )
+
+        return successCount > 0
     }
 
     override suspend fun getWorkspaceTemplates(): List<WorkspaceTemplate> {
