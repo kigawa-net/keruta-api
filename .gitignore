@@ -3,3 +3,4 @@
 /error.log
 **/.kotlin/
 /hs_err_pid*.log
+/app.log

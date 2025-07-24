@@ -2,6 +2,7 @@ package net.kigawa.keruta.infra.persistence.entity
 
 import net.kigawa.keruta.core.domain.model.Session
 import net.kigawa.keruta.core.domain.model.SessionStatus
+import net.kigawa.keruta.core.domain.model.SessionTemplateConfig
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 import java.time.LocalDateTime
@@ -15,6 +16,7 @@ data class SessionEntity(
     val status: String = SessionStatus.ACTIVE.name,
     val tags: List<String> = emptyList(),
     val metadata: Map<String, String> = emptyMap(),
+    val templateConfig: SessionTemplateConfig? = null,
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val updatedAt: LocalDateTime = LocalDateTime.now(),
 ) {
@@ -27,6 +29,7 @@ data class SessionEntity(
                 status = session.status.name,
                 tags = session.tags,
                 metadata = session.metadata,
+                templateConfig = session.templateConfig,
                 createdAt = session.createdAt,
                 updatedAt = session.updatedAt,
             )
@@ -48,6 +51,7 @@ data class SessionEntity(
             status = sessionStatus,
             tags = tags,
             metadata = metadata,
+            templateConfig = templateConfig,
             createdAt = createdAt,
             updatedAt = updatedAt,
         )
