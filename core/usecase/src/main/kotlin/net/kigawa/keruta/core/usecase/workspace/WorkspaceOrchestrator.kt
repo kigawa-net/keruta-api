@@ -2,7 +2,6 @@ package net.kigawa.keruta.core.usecase.workspace
 
 import net.kigawa.keruta.core.domain.model.SessionTemplateConfig
 import net.kigawa.keruta.core.domain.model.Workspace
-import net.kigawa.keruta.core.domain.model.WorkspaceBuildStatus
 import net.kigawa.keruta.core.domain.model.WorkspaceStatus
 import net.kigawa.keruta.core.domain.model.WorkspaceTemplate
 import net.kigawa.keruta.core.usecase.repository.WorkspaceRepository
@@ -15,16 +14,19 @@ import java.util.concurrent.CompletableFuture
 /**
  * Orchestrator for workspace lifecycle management.
  * Handles the asynchronous creation, starting, stopping, and deletion of workspaces.
+ *
+ * Note: Coder-specific functionality has been moved to keruta-executor.
+ * This now serves as a stub for future workspace orchestration implementations.
  */
 @Component
 open class WorkspaceOrchestrator(
     open val workspaceRepository: WorkspaceRepository,
-    open val workspaceKubernetesHandler: WorkspaceKubernetesHandler,
 ) {
     open val logger = LoggerFactory.getLogger(WorkspaceOrchestrator::class.java)
 
     /**
      * Creates a workspace asynchronously.
+     * Note: This is now a stub implementation. Actual workspace creation should be handled by keruta-executor.
      */
     @Async("infraTaskExecutor")
     suspend fun createWorkspaceAsync(
@@ -35,81 +37,17 @@ open class WorkspaceOrchestrator(
         val future = CompletableFuture<Workspace>()
 
         try {
-            logger.info("Starting async workspace creation for: ${workspace.id}")
+            logger.info("Stub: Creating workspace ${workspace.id} - actual implementation moved to keruta-executor")
 
-            // Update build status to running
-            val updatedWorkspace = workspace.copy(
-                status = WorkspaceStatus.STARTING,
-                buildInfo = workspace.buildInfo?.copy(
-                    buildStatus = WorkspaceBuildStatus.RUNNING,
-                    buildStartedAt = LocalDateTime.now(),
-                ),
+            // Update workspace to pending state - actual creation will be handled by keruta-executor
+            val pendingWorkspace = workspace.copy(
+                status = WorkspaceStatus.PENDING,
                 updatedAt = LocalDateTime.now(),
             )
-            workspaceRepository.update(updatedWorkspace)
-
-            // Create Kubernetes resources with session template configuration
-            val kubernetesResult = workspaceKubernetesHandler.createWorkspaceResources(
-                updatedWorkspace,
-                template,
-                sessionTemplateConfig,
-            )
-
-            if (kubernetesResult.success) {
-                // Update workspace with successful creation
-                val successWorkspace = updatedWorkspace.copy(
-                    status = WorkspaceStatus.RUNNING,
-                    buildInfo = updatedWorkspace.buildInfo?.copy(
-                        buildStatus = WorkspaceBuildStatus.SUCCEEDED,
-                        buildCompletedAt = LocalDateTime.now(),
-                    ),
-                    resourceInfo = updatedWorkspace.resourceInfo?.copy(
-                        podName = kubernetesResult.podName,
-                        serviceName = kubernetesResult.serviceName,
-                        ingressUrl = kubernetesResult.ingressUrl,
-                    ),
-                    startedAt = LocalDateTime.now(),
-                    updatedAt = LocalDateTime.now(),
-                    metadata = updatedWorkspace.metadata + kubernetesResult.metadata,
-                )
-
-                val finalWorkspace = workspaceRepository.update(successWorkspace)
-                future.complete(finalWorkspace)
-            } else {
-                // Update workspace with failed creation
-                val failedWorkspace = updatedWorkspace.copy(
-                    status = WorkspaceStatus.FAILED,
-                    buildInfo = updatedWorkspace.buildInfo?.copy(
-                        buildStatus = WorkspaceBuildStatus.FAILED,
-                        buildCompletedAt = LocalDateTime.now(),
-                        buildLog = kubernetesResult.error,
-                    ),
-                    updatedAt = LocalDateTime.now(),
-                )
-
-                val finalWorkspace = workspaceRepository.update(failedWorkspace)
-                future.complete(finalWorkspace)
-            }
+            val updatedWorkspace = workspaceRepository.update(pendingWorkspace)
+            future.complete(updatedWorkspace)
         } catch (e: Exception) {
-            logger.error("Failed to create workspace asynchronously: ${workspace.id}", e)
-
-            // Update workspace with failed creation
-            val failedWorkspace = workspace.copy(
-                status = WorkspaceStatus.FAILED,
-                buildInfo = workspace.buildInfo?.copy(
-                    buildStatus = WorkspaceBuildStatus.FAILED,
-                    buildCompletedAt = LocalDateTime.now(),
-                    buildLog = e.message ?: "Unknown error",
-                ),
-                updatedAt = LocalDateTime.now(),
-            )
-
-            try {
-                workspaceRepository.update(failedWorkspace)
-            } catch (dbE: Exception) {
-                logger.error("Failed to update workspace status to failed", dbE)
-            }
-
+            logger.error("Failed to update workspace status: ${workspace.id}", e)
             future.completeExceptionally(e)
         }
 
@@ -118,37 +56,24 @@ open class WorkspaceOrchestrator(
 
     /**
      * Starts a workspace asynchronously.
+     * Note: This is now a stub implementation. Actual workspace starting should be handled by keruta-executor.
      */
     @Async("infraTaskExecutor")
     suspend fun startWorkspaceAsync(workspace: Workspace): CompletableFuture<Workspace> {
         val future = CompletableFuture<Workspace>()
 
         try {
-            logger.info("Starting async workspace start for: ${workspace.id}")
+            logger.info("Stub: Starting workspace ${workspace.id} - actual implementation moved to keruta-executor")
 
-            // Start Kubernetes resources
-            val kubernetesResult = workspaceKubernetesHandler.startWorkspaceResources(workspace)
-
-            if (kubernetesResult.success) {
-                val successWorkspace = workspace.copy(
-                    status = WorkspaceStatus.RUNNING,
-                    startedAt = LocalDateTime.now(),
-                    updatedAt = LocalDateTime.now(),
-                )
-
-                val finalWorkspace = workspaceRepository.update(successWorkspace)
-                future.complete(finalWorkspace)
-            } else {
-                val failedWorkspace = workspace.copy(
-                    status = WorkspaceStatus.FAILED,
-                    updatedAt = LocalDateTime.now(),
-                )
-
-                val finalWorkspace = workspaceRepository.update(failedWorkspace)
-                future.complete(finalWorkspace)
-            }
+            // Update workspace to starting state - actual start will be handled by keruta-executor
+            val startingWorkspace = workspace.copy(
+                status = WorkspaceStatus.STARTING,
+                updatedAt = LocalDateTime.now(),
+            )
+            val updatedWorkspace = workspaceRepository.update(startingWorkspace)
+            future.complete(updatedWorkspace)
         } catch (e: Exception) {
-            logger.error("Failed to start workspace asynchronously: ${workspace.id}", e)
+            logger.error("Failed to update workspace status: ${workspace.id}", e)
             future.completeExceptionally(e)
         }
 
@@ -157,37 +82,24 @@ open class WorkspaceOrchestrator(
 
     /**
      * Stops a workspace asynchronously.
+     * Note: This is now a stub implementation. Actual workspace stopping should be handled by keruta-executor.
      */
     @Async("infraTaskExecutor")
     suspend fun stopWorkspaceAsync(workspace: Workspace): CompletableFuture<Workspace> {
         val future = CompletableFuture<Workspace>()
 
         try {
-            logger.info("Starting async workspace stop for: ${workspace.id}")
+            logger.info("Stub: Stopping workspace ${workspace.id} - actual implementation moved to keruta-executor")
 
-            // Stop Kubernetes resources
-            val kubernetesResult = workspaceKubernetesHandler.stopWorkspaceResources(workspace)
-
-            if (kubernetesResult.success) {
-                val stoppedWorkspace = workspace.copy(
-                    status = WorkspaceStatus.STOPPED,
-                    stoppedAt = LocalDateTime.now(),
-                    updatedAt = LocalDateTime.now(),
-                )
-
-                val finalWorkspace = workspaceRepository.update(stoppedWorkspace)
-                future.complete(finalWorkspace)
-            } else {
-                val failedWorkspace = workspace.copy(
-                    status = WorkspaceStatus.FAILED,
-                    updatedAt = LocalDateTime.now(),
-                )
-
-                val finalWorkspace = workspaceRepository.update(failedWorkspace)
-                future.complete(finalWorkspace)
-            }
+            // Update workspace to stopping state - actual stop will be handled by keruta-executor
+            val stoppingWorkspace = workspace.copy(
+                status = WorkspaceStatus.STOPPING,
+                updatedAt = LocalDateTime.now(),
+            )
+            val updatedWorkspace = workspaceRepository.update(stoppingWorkspace)
+            future.complete(updatedWorkspace)
         } catch (e: Exception) {
-            logger.error("Failed to stop workspace asynchronously: ${workspace.id}", e)
+            logger.error("Failed to update workspace status: ${workspace.id}", e)
             future.completeExceptionally(e)
         }
 
@@ -196,53 +108,27 @@ open class WorkspaceOrchestrator(
 
     /**
      * Deletes a workspace asynchronously.
+     * Note: This is now a stub implementation. Actual workspace deletion should be handled by keruta-executor.
      */
     @Async("infraTaskExecutor")
     suspend fun deleteWorkspaceAsync(workspace: Workspace): CompletableFuture<Boolean> {
         val future = CompletableFuture<Boolean>()
 
         try {
-            logger.info("Starting async workspace deletion for: ${workspace.id}")
+            logger.info("Stub: Deleting workspace ${workspace.id} - actual implementation moved to keruta-executor")
 
-            // Delete Kubernetes resources
-            val kubernetesResult = workspaceKubernetesHandler.deleteWorkspaceResources(workspace)
-
-            if (kubernetesResult.success) {
-                // Mark workspace as deleted
-                val deletedWorkspace = workspace.copy(
-                    status = WorkspaceStatus.DELETED,
-                    deletedAt = LocalDateTime.now(),
-                    updatedAt = LocalDateTime.now(),
-                )
-
-                workspaceRepository.update(deletedWorkspace)
-                future.complete(true)
-            } else {
-                val failedWorkspace = workspace.copy(
-                    status = WorkspaceStatus.FAILED,
-                    updatedAt = LocalDateTime.now(),
-                )
-
-                workspaceRepository.update(failedWorkspace)
-                future.complete(false)
-            }
+            // Update workspace to deleting state - actual deletion will be handled by keruta-executor
+            val deletingWorkspace = workspace.copy(
+                status = WorkspaceStatus.DELETING,
+                updatedAt = LocalDateTime.now(),
+            )
+            workspaceRepository.update(deletingWorkspace)
+            future.complete(true)
         } catch (e: Exception) {
-            logger.error("Failed to delete workspace asynchronously: ${workspace.id}", e)
+            logger.error("Failed to update workspace status: ${workspace.id}", e)
             future.completeExceptionally(e)
         }
 
         return future
     }
 }
-
-/**
- * Result of a Kubernetes operation.
- */
-data class WorkspaceKubernetesResult(
-    val success: Boolean,
-    val podName: String? = null,
-    val serviceName: String? = null,
-    val ingressUrl: String? = null,
-    val metadata: Map<String, String> = emptyMap(),
-    val error: String? = null,
-)

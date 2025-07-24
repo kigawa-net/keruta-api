@@ -6,7 +6,6 @@ import net.kigawa.keruta.api.session.dto.CreateSessionRequest
 import net.kigawa.keruta.api.session.dto.SessionResponse
 import net.kigawa.keruta.api.session.dto.UpdateSessionRequest
 import net.kigawa.keruta.api.workspace.dto.WorkspaceResponse
-import net.kigawa.keruta.core.usecase.session.CoderWorkspaceMonitoringService
 import net.kigawa.keruta.core.usecase.session.SessionService
 import net.kigawa.keruta.core.usecase.session.SessionServiceImpl
 import net.kigawa.keruta.core.usecase.session.SessionWorkspaceStatusSyncService
@@ -21,7 +20,6 @@ class SessionController(
     private val sessionService: SessionService,
     private val sessionServiceImpl: SessionServiceImpl,
     private val sessionWorkspaceStatusSyncService: SessionWorkspaceStatusSyncService,
-    private val coderWorkspaceMonitoringService: CoderWorkspaceMonitoringService,
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -211,19 +209,10 @@ class SessionController(
     @PostMapping("/{id}/monitor-workspaces")
     @Operation(
         summary = "Monitor session workspaces",
-        description = "Forces monitoring of all workspaces in a session from Coder",
+        description = "Stub: Workspace monitoring moved to keruta-executor",
     )
     suspend fun monitorSessionWorkspaces(@PathVariable id: String): ResponseEntity<Void> {
-        return try {
-            val success = coderWorkspaceMonitoringService.forceMonitorSessionWorkspaces(id)
-            if (success) {
-                ResponseEntity.ok().build()
-            } else {
-                ResponseEntity.internalServerError().build()
-            }
-        } catch (e: Exception) {
-            logger.error("Failed to monitor session workspaces", e)
-            ResponseEntity.internalServerError().build()
-        }
+        logger.info("Stub: Monitor workspaces for session $id - functionality moved to keruta-executor")
+        return ResponseEntity.ok().build()
     }
 }
