@@ -33,11 +33,13 @@ open class WorkspaceServiceImpl(
         val session = sessionRepository.findById(request.sessionId)
             ?: throw IllegalArgumentException("Session not found: ${request.sessionId}")
 
-        // Validate that session doesn't already have a workspace (1:1 relationship)
+        // Validate that session doesn't already have an active workspace (1:1 relationship)
+        // DELETED workspaces are considered as non-existent
         val existingWorkspaces = workspaceRepository.findBySessionId(request.sessionId)
-        if (existingWorkspaces.isNotEmpty()) {
+        val activeWorkspaces = existingWorkspaces.filter { it.status != WorkspaceStatus.DELETED }
+        if (activeWorkspaces.isNotEmpty()) {
             throw IllegalArgumentException(
-                "Session already has a workspace. Each session can have only one workspace. SessionId: ${request.sessionId}, existing workspace: ${existingWorkspaces.first().id}",
+                "Session already has an active workspace. Each session can have only one active workspace. SessionId: ${request.sessionId}, existing workspace: ${activeWorkspaces.first().id}",
             )
         }
 
