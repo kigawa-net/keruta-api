@@ -87,10 +87,18 @@ open class CoderApiClientImpl(
             ).body
             responseDto?.toUseCase()
         } catch (e: Exception) {
-            logger.error(
-                "Failed to get workspace via Coder API. WorkspaceId: $workspaceId, URL: ${coderProperties.baseUrl}",
-                e,
-            )
+            // Check if it's a 404 error (workspace not found) - this is expected and should be logged as debug
+            if (e is org.springframework.web.client.HttpClientErrorException.NotFound) {
+                logger.debug(
+                    "Workspace not found in Coder API (404): workspaceId=$workspaceId, URL=${coderProperties.baseUrl}. " +
+                        "This will be handled by the monitoring service.",
+                )
+            } else {
+                logger.error(
+                    "Failed to get workspace via Coder API. WorkspaceId: $workspaceId, URL: ${coderProperties.baseUrl}",
+                    e,
+                )
+            }
             null
         }
     }
@@ -107,10 +115,18 @@ open class CoderApiClientImpl(
             val responseDto = restTemplate.postForObject(url, entity, CoderWorkspaceBuildResponseDto::class.java)
             responseDto?.toUseCase()
         } catch (e: Exception) {
-            logger.error(
-                "Failed to start workspace via Coder API. WorkspaceId: $workspaceId, URL: ${coderProperties.baseUrl}",
-                e,
-            )
+            // Check if it's a 404 error (workspace not found) - this is expected and should be logged as debug
+            if (e is org.springframework.web.client.HttpClientErrorException.NotFound) {
+                logger.debug(
+                    "Workspace not found for start operation (404): workspaceId=$workspaceId, URL=${coderProperties.baseUrl}. " +
+                        "This will be handled by the monitoring service.",
+                )
+            } else {
+                logger.error(
+                    "Failed to start workspace via Coder API. WorkspaceId: $workspaceId, URL: ${coderProperties.baseUrl}",
+                    e,
+                )
+            }
             null
         }
     }
@@ -127,10 +143,18 @@ open class CoderApiClientImpl(
             val responseDto = restTemplate.postForObject(url, entity, CoderWorkspaceBuildResponseDto::class.java)
             responseDto?.toUseCase()
         } catch (e: Exception) {
-            logger.error(
-                "Failed to stop workspace via Coder API. WorkspaceId: $workspaceId, URL: ${coderProperties.baseUrl}",
-                e,
-            )
+            // Check if it's a 404 error (workspace not found) - this is expected and should be logged as debug
+            if (e is org.springframework.web.client.HttpClientErrorException.NotFound) {
+                logger.debug(
+                    "Workspace not found for stop operation (404): workspaceId=$workspaceId, URL=${coderProperties.baseUrl}. " +
+                        "This will be handled by the monitoring service.",
+                )
+            } else {
+                logger.error(
+                    "Failed to stop workspace via Coder API. WorkspaceId: $workspaceId, URL: ${coderProperties.baseUrl}",
+                    e,
+                )
+            }
             null
         }
     }
@@ -145,11 +169,21 @@ open class CoderApiClientImpl(
             val response = restTemplate.exchange(url, HttpMethod.DELETE, entity, String::class.java)
             response.statusCode.is2xxSuccessful
         } catch (e: Exception) {
-            logger.error(
-                "Failed to delete workspace via Coder API. WorkspaceId: $workspaceId, URL: ${coderProperties.baseUrl}",
-                e,
-            )
-            false
+            // Check if it's a 404 error (workspace not found) - this is expected and should be logged as debug
+            if (e is org.springframework.web.client.HttpClientErrorException.NotFound) {
+                logger.debug(
+                    "Workspace not found for delete operation (404): workspaceId=$workspaceId, URL=${coderProperties.baseUrl}. " +
+                        "Workspace may already be deleted.",
+                )
+                // Return true since the workspace is effectively deleted (not found)
+                true
+            } else {
+                logger.error(
+                    "Failed to delete workspace via Coder API. WorkspaceId: $workspaceId, URL: ${coderProperties.baseUrl}",
+                    e,
+                )
+                false
+            }
         }
     }
 
