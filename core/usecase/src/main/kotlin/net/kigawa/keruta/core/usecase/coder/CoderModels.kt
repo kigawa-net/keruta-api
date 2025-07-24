@@ -176,3 +176,85 @@ data class CoderTemplateVersionJob(
     val fileId: String,
     val tags: Map<String, String> = emptyMap(),
 )
+
+/**
+ * Request to create a new Coder template.
+ */
+data class CoderCreateTemplateRequest(
+    val name: String,
+    val displayName: String,
+    val description: String,
+    val icon: String? = null,
+    val defaultTtlMs: Long = 3600000, // 1 hour default
+    val allowUserCancelWorkspaceJobs: Boolean = true,
+    val terraformArchive: ByteArray, // Base64 encoded tar.gz archive
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as CoderCreateTemplateRequest
+
+        if (name != other.name) return false
+        if (displayName != other.displayName) return false
+        if (description != other.description) return false
+        if (icon != other.icon) return false
+        if (defaultTtlMs != other.defaultTtlMs) return false
+        if (allowUserCancelWorkspaceJobs != other.allowUserCancelWorkspaceJobs) return false
+        if (!terraformArchive.contentEquals(other.terraformArchive)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + displayName.hashCode()
+        result = 31 * result + (description.hashCode())
+        result = 31 * result + (icon?.hashCode() ?: 0)
+        result = 31 * result + defaultTtlMs.hashCode()
+        result = 31 * result + allowUserCancelWorkspaceJobs.hashCode()
+        result = 31 * result + terraformArchive.contentHashCode()
+        return result
+    }
+}
+
+/**
+ * Request to update an existing Coder template.
+ */
+data class CoderUpdateTemplateRequest(
+    val displayName: String? = null,
+    val description: String? = null,
+    val icon: String? = null,
+    val defaultTtlMs: Long? = null,
+    val allowUserCancelWorkspaceJobs: Boolean? = null,
+    val terraformArchive: ByteArray? = null, // Base64 encoded tar.gz archive
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as CoderUpdateTemplateRequest
+
+        if (displayName != other.displayName) return false
+        if (description != other.description) return false
+        if (icon != other.icon) return false
+        if (defaultTtlMs != other.defaultTtlMs) return false
+        if (allowUserCancelWorkspaceJobs != other.allowUserCancelWorkspaceJobs) return false
+        if (terraformArchive != null) {
+            if (other.terraformArchive == null) return false
+            if (!terraformArchive.contentEquals(other.terraformArchive)) return false
+        } else if (other.terraformArchive != null) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = displayName?.hashCode() ?: 0
+        result = 31 * result + (description?.hashCode() ?: 0)
+        result = 31 * result + (icon?.hashCode() ?: 0)
+        result = 31 * result + (defaultTtlMs?.hashCode() ?: 0)
+        result = 31 * result + (allowUserCancelWorkspaceJobs?.hashCode() ?: 0)
+        result = 31 * result + (terraformArchive?.contentHashCode() ?: 0)
+        return result
+    }
+}

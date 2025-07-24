@@ -18,3 +18,5 @@ typealias CoderWorkspaceHealthcheckDto = net.kigawa.keruta.infra.app.coder.dto.C
 typealias CoderWorkspaceHealthDto = net.kigawa.keruta.infra.app.coder.dto.CoderWorkspaceHealthDto
 typealias CoderTemplateResponseDto = net.kigawa.keruta.infra.app.coder.dto.CoderTemplateResponseDto
 typealias CoderRichParameterValueDto = net.kigawa.keruta.infra.app.coder.dto.CoderRichParameterValueDto
+typealias CoderCreateTemplateRequestDto = net.kigawa.keruta.infra.app.coder.dto.CoderCreateTemplateRequestDto
+typealias CoderUpdateTemplateRequestDto = net.kigawa.keruta.infra.app.coder.dto.CoderUpdateTemplateRequestDto

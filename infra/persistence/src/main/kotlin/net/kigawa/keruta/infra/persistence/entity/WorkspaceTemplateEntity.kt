@@ -3,6 +3,7 @@ package net.kigawa.keruta.infra.persistence.entity
 import net.kigawa.keruta.core.domain.model.WorkspaceParameterType
 import net.kigawa.keruta.core.domain.model.WorkspaceTemplate
 import net.kigawa.keruta.core.domain.model.WorkspaceTemplateParameter
+import net.kigawa.keruta.core.domain.model.WorkspaceTemplateType
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 import java.time.LocalDateTime
@@ -20,6 +21,10 @@ data class WorkspaceTemplateEntity(
     val icon: String? = null,
     val isDefault: Boolean = false,
     val parameters: List<WorkspaceTemplateParameterEntity> = emptyList(),
+    val terraformContent: String? = null,
+    val terraformVariables: Map<String, String> = emptyMap(),
+    val coderId: String? = null,
+    val templateType: WorkspaceTemplateType = WorkspaceTemplateType.CODER_MANAGED,
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val updatedAt: LocalDateTime = LocalDateTime.now(),
 ) {
@@ -32,6 +37,10 @@ data class WorkspaceTemplateEntity(
             icon = icon,
             isDefault = isDefault,
             parameters = parameters.map { it.toDomain() },
+            terraformContent = terraformContent,
+            terraformVariables = terraformVariables,
+            coderId = coderId,
+            templateType = templateType,
             createdAt = createdAt,
             updatedAt = updatedAt,
         )
@@ -47,6 +56,10 @@ data class WorkspaceTemplateEntity(
                 icon = template.icon,
                 isDefault = template.isDefault,
                 parameters = template.parameters.map { WorkspaceTemplateParameterEntity.fromDomain(it) },
+                terraformContent = template.terraformContent,
+                terraformVariables = template.terraformVariables,
+                coderId = template.coderId,
+                templateType = template.templateType,
                 createdAt = template.createdAt,
                 updatedAt = template.updatedAt,
             )

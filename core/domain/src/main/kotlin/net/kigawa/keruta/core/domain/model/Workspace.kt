@@ -92,6 +92,10 @@ data class WorkspaceTemplate(
     val icon: String? = null,
     val isDefault: Boolean = false,
     val parameters: List<WorkspaceTemplateParameter> = emptyList(),
+    val terraformContent: String? = null,
+    val terraformVariables: Map<String, String> = emptyMap(),
+    val coderId: String? = null, // Coder side template ID
+    val templateType: WorkspaceTemplateType = WorkspaceTemplateType.CODER_MANAGED,
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val updatedAt: LocalDateTime = LocalDateTime.now(),
 )
@@ -119,4 +123,12 @@ enum class WorkspaceParameterType {
     NUMBER,
     BOOLEAN,
     LIST,
+}
+
+/**
+ * Types of workspace templates.
+ */
+enum class WorkspaceTemplateType {
+    CODER_MANAGED, // Template managed by Coder (existing templates)
+    CUSTOM_TERRAFORM, // Custom Terraform template managed by Keruta
 }

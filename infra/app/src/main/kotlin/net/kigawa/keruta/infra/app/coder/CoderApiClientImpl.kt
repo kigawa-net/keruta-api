@@ -209,6 +209,93 @@ open class CoderApiClientImpl(
             emptyList()
         }
     }
+
+    override fun createTemplate(request: CoderCreateTemplateRequest): CoderTemplateResponse? {
+        return try {
+            val url = "${coderProperties.baseUrl}/api/v2/organizations/${coderProperties.organization}/templates"
+            val headers = HttpHeaders().apply {
+                set("Coder-Session-Token", coderProperties.sessionToken)
+                contentType = MediaType.APPLICATION_JSON
+            }
+
+            val requestDto = CoderCreateTemplateRequestDto(
+                name = request.name,
+                display_name = request.displayName,
+                description = request.description,
+                icon = request.icon,
+                default_ttl_ms = request.defaultTtlMs,
+                allow_user_cancel_workspace_jobs = request.allowUserCancelWorkspaceJobs,
+                file_tar = request.terraformArchive,
+            )
+
+            val entity = HttpEntity(requestDto, headers)
+            val responseDto = restTemplate.postForObject(url, entity, CoderTemplateResponseDto::class.java)
+            responseDto?.toUseCase()
+        } catch (e: Exception) {
+            logger.error(
+                "Failed to create template via Coder API. URL: ${coderProperties.baseUrl}, Organization: ${coderProperties.organization}",
+                e,
+            )
+            null
+        }
+    }
+
+    override fun updateTemplate(templateId: String, request: CoderUpdateTemplateRequest): CoderTemplateResponse? {
+        return try {
+            val url = "${coderProperties.baseUrl}/api/v2/templates/$templateId"
+            val headers = HttpHeaders().apply {
+                set("Coder-Session-Token", coderProperties.sessionToken)
+                contentType = MediaType.APPLICATION_JSON
+            }
+
+            val requestDto = CoderUpdateTemplateRequestDto(
+                display_name = request.displayName,
+                description = request.description,
+                icon = request.icon,
+                default_ttl_ms = request.defaultTtlMs,
+                allow_user_cancel_workspace_jobs = request.allowUserCancelWorkspaceJobs,
+                file_tar = request.terraformArchive,
+            )
+
+            val entity = HttpEntity(requestDto, headers)
+            val response = restTemplate.exchange(url, HttpMethod.PATCH, entity, CoderTemplateResponseDto::class.java)
+            response.body?.toUseCase()
+        } catch (e: Exception) {
+            logger.error(
+                "Failed to update template via Coder API. TemplateId: $templateId, URL: ${coderProperties.baseUrl}",
+                e,
+            )
+            null
+        }
+    }
+
+    override fun deleteTemplate(templateId: String): Boolean {
+        return try {
+            val url = "${coderProperties.baseUrl}/api/v2/templates/$templateId"
+            val headers = HttpHeaders().apply {
+                set("Coder-Session-Token", coderProperties.sessionToken)
+            }
+            val entity = HttpEntity<Any>(headers)
+            val response = restTemplate.exchange(url, HttpMethod.DELETE, entity, String::class.java)
+            response.statusCode.is2xxSuccessful
+        } catch (e: Exception) {
+            // Check if it's a 404 error (template not found) - this is expected and should be logged as debug
+            if (e is org.springframework.web.client.HttpClientErrorException.NotFound) {
+                logger.debug(
+                    "Template not found for delete operation (404): templateId=$templateId, URL=${coderProperties.baseUrl}. " +
+                        "Template may already be deleted.",
+                )
+                // Return true since the template is effectively deleted (not found)
+                true
+            } else {
+                logger.error(
+                    "Failed to delete template via Coder API. TemplateId: $templateId, URL: ${coderProperties.baseUrl}",
+                    e,
+                )
+                false
+            }
+        }
+    }
 }
 
 /**

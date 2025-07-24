@@ -10,4 +10,7 @@ interface CoderApiClient {
     fun stopWorkspace(workspaceId: String): CoderWorkspaceBuildResponse?
     fun deleteWorkspace(workspaceId: String): Boolean
     fun getTemplates(): List<CoderTemplateResponse>
+    fun createTemplate(request: CoderCreateTemplateRequest): CoderTemplateResponse?
+    fun updateTemplate(templateId: String, request: CoderUpdateTemplateRequest): CoderTemplateResponse?
+    fun deleteTemplate(templateId: String): Boolean
 }
