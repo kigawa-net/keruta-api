@@ -87,7 +87,7 @@ class KubernetesJobCreator(
      * @return A CompletableFuture that will complete with the name of the created job
      */
     @Async("infraTaskExecutor")
-    fun createJobAsync(
+    open fun createJobAsync(
         task: Task,
         image: String,
         namespace: String,

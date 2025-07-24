@@ -1,10 +1,10 @@
 package net.kigawa.keruta.core.usecase.session
 
+import kotlinx.coroutines.runBlocking
 import net.kigawa.keruta.core.domain.model.WorkspaceStatus
 import net.kigawa.keruta.core.usecase.coder.CoderApiClient
 import net.kigawa.keruta.core.usecase.workspace.WorkspaceService
 import org.slf4j.LoggerFactory
-import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
@@ -25,8 +25,7 @@ open class CoderWorkspaceMonitoringService(
      * Runs every 2 minutes to ensure timely synchronization.
      */
     @Scheduled(fixedRate = 120000) // 2 minutes
-    @Async
-    open suspend fun monitorCoderWorkspaces() {
+    open fun monitorCoderWorkspaces() = runBlocking {
         logger.debug("Starting Coder workspace monitoring cycle")
 
         try {

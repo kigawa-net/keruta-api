@@ -1,12 +1,12 @@
 package net.kigawa.keruta.core.usecase.session
 
+import kotlinx.coroutines.runBlocking
 import net.kigawa.keruta.core.domain.model.SessionStatus
 import net.kigawa.keruta.core.domain.model.Workspace
 import net.kigawa.keruta.core.domain.model.WorkspaceStatus
 import net.kigawa.keruta.core.usecase.repository.SessionRepository
 import net.kigawa.keruta.core.usecase.workspace.WorkspaceService
 import org.slf4j.LoggerFactory
-import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -25,7 +25,6 @@ open class SessionWorkspaceStatusSyncService(
     /**
      * Handles workspace status change and updates corresponding session status.
      */
-    @Async
     open suspend fun handleWorkspaceStatusChange(workspace: Workspace, oldStatus: WorkspaceStatus) {
         logger.info(
             "Synchronizing session status for workspace change: workspaceId={} sessionId={} oldStatus={} newStatus={}",
@@ -78,8 +77,7 @@ open class SessionWorkspaceStatusSyncService(
      * Runs every 5 minutes to ensure consistency.
      */
     @Scheduled(fixedRate = 300000) // 5 minutes
-    @Async
-    open suspend fun periodicSessionStatusSync() {
+    open fun periodicSessionStatusSync() = runBlocking {
         logger.debug("Starting periodic session status synchronization")
 
         try {
