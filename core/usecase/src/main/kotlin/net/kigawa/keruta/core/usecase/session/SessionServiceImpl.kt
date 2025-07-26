@@ -207,6 +207,23 @@ open class SessionServiceImpl(
         return if (workspace != null) listOf(workspace) else emptyList()
     }
 
+    /**
+     * Gets a session by its associated workspace ID.
+     */
+    suspend fun getSessionByWorkspaceId(workspaceId: String): Session? {
+        return try {
+            val workspace = workspaceService.getWorkspaceById(workspaceId)
+                ?: return null
+            getSessionById(workspace.sessionId)
+        } catch (e: NoSuchElementException) {
+            logger.debug("No session found for workspace ID: {}", workspaceId)
+            null
+        } catch (e: Exception) {
+            logger.error("Error retrieving session for workspace ID: {}", workspaceId, e)
+            null
+        }
+    }
+
     override suspend fun removeTagFromSession(id: String, tag: String): Session {
         val existingSession = getSessionById(id)
         val updatedTags = existingSession.tags.filter { it != tag }

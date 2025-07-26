@@ -215,4 +215,25 @@ class SessionController(
         logger.info("Stub: Monitor workspaces for session $id - functionality moved to keruta-executor")
         return ResponseEntity.ok().build()
     }
+
+    @GetMapping("/by-workspace/{workspaceId}")
+    @Operation(
+        summary = "Get session by workspace ID",
+        description = "Retrieves a session by its associated workspace ID",
+    )
+    suspend fun getSessionByWorkspaceId(
+        @PathVariable workspaceId: String,
+    ): ResponseEntity<SessionResponse> {
+        return try {
+            val session = sessionServiceImpl.getSessionByWorkspaceId(workspaceId)
+            if (session != null) {
+                ResponseEntity.ok(SessionResponse.fromDomain(session))
+            } else {
+                ResponseEntity.notFound().build()
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to get session by workspace ID: {}", workspaceId, e)
+            ResponseEntity.internalServerError().build()
+        }
+    }
 }
