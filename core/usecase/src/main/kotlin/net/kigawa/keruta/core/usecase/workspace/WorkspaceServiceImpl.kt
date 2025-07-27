@@ -1,5 +1,6 @@
 package net.kigawa.keruta.core.usecase.workspace
 
+import net.kigawa.keruta.core.domain.model.CoderTemplate
 import net.kigawa.keruta.core.domain.model.Workspace
 import net.kigawa.keruta.core.domain.model.WorkspaceBuildInfo
 import net.kigawa.keruta.core.domain.model.WorkspaceBuildStatus
@@ -345,5 +346,29 @@ open class WorkspaceServiceImpl(
 
         // Note: In a real implementation, this would be handled through dependency injection
         // and proper event publishing mechanisms to avoid tight coupling
+    }
+
+    override suspend fun getCoderTemplates(): List<CoderTemplate> {
+        logger.info("Fetching Coder templates from Coder server")
+
+        try {
+            // ここではCoderAPIクライアントを使用してテンプレートを取得
+            // 実装としてはHTTPクライアントでCoderサーバーのAPIを呼び出す
+            return workspaceOrchestrator.getCoderTemplates()
+        } catch (e: Exception) {
+            logger.error("Failed to fetch Coder templates", e)
+            return emptyList()
+        }
+    }
+
+    override suspend fun getCoderTemplate(id: String): CoderTemplate? {
+        logger.info("Fetching Coder template: $id")
+
+        try {
+            return workspaceOrchestrator.getCoderTemplate(id)
+        } catch (e: Exception) {
+            logger.error("Failed to fetch Coder template: $id", e)
+            return null
+        }
     }
 }

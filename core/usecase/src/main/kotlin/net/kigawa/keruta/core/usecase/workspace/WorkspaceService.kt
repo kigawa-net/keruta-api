@@ -1,5 +1,6 @@
 package net.kigawa.keruta.core.usecase.workspace
 
+import net.kigawa.keruta.core.domain.model.CoderTemplate
 import net.kigawa.keruta.core.domain.model.Workspace
 import net.kigawa.keruta.core.domain.model.WorkspaceStatus
 import net.kigawa.keruta.core.domain.model.WorkspaceTemplate
@@ -22,6 +23,8 @@ interface WorkspaceService {
     suspend fun createWorkspaceTemplate(template: WorkspaceTemplate): WorkspaceTemplate
     suspend fun updateWorkspaceTemplate(template: WorkspaceTemplate): WorkspaceTemplate
     suspend fun deleteWorkspaceTemplate(id: String): Boolean
+    suspend fun getCoderTemplates(): List<CoderTemplate>
+    suspend fun getCoderTemplate(id: String): CoderTemplate?
 }
 
 /**

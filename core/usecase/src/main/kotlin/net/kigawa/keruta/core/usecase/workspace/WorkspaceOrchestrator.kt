@@ -1,9 +1,11 @@
 package net.kigawa.keruta.core.usecase.workspace
 
+import net.kigawa.keruta.core.domain.model.CoderTemplate
 import net.kigawa.keruta.core.domain.model.SessionTemplateConfig
 import net.kigawa.keruta.core.domain.model.Workspace
 import net.kigawa.keruta.core.domain.model.WorkspaceStatus
 import net.kigawa.keruta.core.domain.model.WorkspaceTemplate
+import net.kigawa.keruta.core.usecase.executor.ExecutorClient
 import net.kigawa.keruta.core.usecase.repository.WorkspaceRepository
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
@@ -21,6 +23,7 @@ import java.util.concurrent.CompletableFuture
 @Component
 open class WorkspaceOrchestrator(
     open val workspaceRepository: WorkspaceRepository,
+    private val executorClient: ExecutorClient,
 ) {
     open val logger = LoggerFactory.getLogger(WorkspaceOrchestrator::class.java)
 
@@ -130,5 +133,33 @@ open class WorkspaceOrchestrator(
         }
 
         return future
+    }
+
+    /**
+     * Gets available Coder templates from the executor service.
+     */
+    suspend fun getCoderTemplates(): List<CoderTemplate> {
+        logger.info("Fetching Coder templates via executor service")
+
+        return try {
+            executorClient.getCoderTemplates()
+        } catch (e: Exception) {
+            logger.error("Failed to fetch Coder templates via executor", e)
+            emptyList()
+        }
+    }
+
+    /**
+     * Gets a specific Coder template by ID via executor service.
+     */
+    suspend fun getCoderTemplate(id: String): CoderTemplate? {
+        logger.info("Fetching Coder template: $id via executor service")
+
+        return try {
+            executorClient.getCoderTemplate(id)
+        } catch (e: Exception) {
+            logger.error("Failed to fetch Coder template: $id via executor", e)
+            null
+        }
     }
 }
