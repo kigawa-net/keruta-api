@@ -11,6 +11,7 @@ import net.kigawa.keruta.core.domain.model.WorkspaceTemplate
 interface WorkspaceService {
     suspend fun createWorkspace(request: CreateWorkspaceRequest): Workspace
     suspend fun getWorkspaceById(id: String): Workspace?
+    suspend fun getAllWorkspaces(): List<Workspace>
     suspend fun getWorkspacesBySessionId(sessionId: String): List<Workspace>
     suspend fun updateWorkspaceStatus(id: String, status: WorkspaceStatus): Workspace?
     suspend fun startWorkspace(id: String): Workspace?

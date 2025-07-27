@@ -93,6 +93,10 @@ open class WorkspaceServiceImpl(
         return workspaceRepository.findById(id)
     }
 
+    override suspend fun getAllWorkspaces(): List<Workspace> {
+        return workspaceRepository.findAll()
+    }
+
     override suspend fun getWorkspacesBySessionId(sessionId: String): List<Workspace> {
         return workspaceRepository.findBySessionId(sessionId)
     }

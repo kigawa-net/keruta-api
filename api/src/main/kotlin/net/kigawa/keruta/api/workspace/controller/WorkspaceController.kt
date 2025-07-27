@@ -50,8 +50,7 @@ class WorkspaceController(
         val workspaces = if (sessionId != null) {
             workspaceService.getWorkspacesBySessionId(sessionId)
         } else {
-            // TODO: Implement get all workspaces method
-            emptyList()
+            workspaceService.getAllWorkspaces()
         }
 
         return ResponseEntity.ok(workspaces.map { WorkspaceResponse.fromDomain(it) })
