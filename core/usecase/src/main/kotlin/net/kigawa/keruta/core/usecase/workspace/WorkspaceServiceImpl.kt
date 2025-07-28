@@ -53,9 +53,9 @@ open class WorkspaceServiceImpl(
                 ?: createDefaultTemplate()
         }
 
-        // Create workspace
+        // Create workspace - Use sessionId as workspace ID for 1:1 relationship
         val workspace = Workspace(
-            id = UUID.randomUUID().toString(),
+            id = request.sessionId,
             name = request.name,
             sessionId = request.sessionId,
             templateId = template.id,

@@ -16,6 +16,7 @@ import org.springframework.scheduling.annotation.ScheduledAnnotationBeanPostProc
         "spring.data.mongodb.database=keruta-test",
         "spring.security.oauth2.client.provider.keycloak.issuer-uri=http://localhost:8080/realms/keruta",
         "keycloak.auth-server-url=http://localhost:8080",
+        "keruta.kubernetes.enabled=false",
     ],
 )
 class KerutaApplicationTest {

@@ -107,6 +107,18 @@ class WorkspaceController(
     }
 
     /**
+     * Gets workspace by session ID (1:1 relationship).
+     */
+    @GetMapping("/session/{sessionId}")
+    suspend fun getWorkspaceBySessionId(@PathVariable sessionId: String): ResponseEntity<WorkspaceResponse> {
+        val workspaces = workspaceService.getWorkspacesBySessionId(sessionId)
+        val workspace = workspaces.firstOrNull()
+            ?: return ResponseEntity.notFound().build()
+
+        return ResponseEntity.ok(WorkspaceResponse.fromDomain(workspace))
+    }
+
+    /**
      * Deletes a workspace.
      */
     @DeleteMapping("/{id}")
