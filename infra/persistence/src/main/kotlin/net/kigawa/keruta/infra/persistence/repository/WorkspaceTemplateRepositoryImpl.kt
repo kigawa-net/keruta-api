@@ -29,6 +29,12 @@ class WorkspaceTemplateRepositoryImpl(
         return mongoWorkspaceTemplateRepository.findFirstByIsDefaultTrue()?.toDomain()
     }
 
+    override suspend fun create(template: WorkspaceTemplate): WorkspaceTemplate {
+        val entity = WorkspaceTemplateEntity.fromDomain(template)
+        val savedEntity = mongoWorkspaceTemplateRepository.save(entity)
+        return savedEntity.toDomain()
+    }
+
     override suspend fun save(template: WorkspaceTemplate): WorkspaceTemplate {
         val entity = WorkspaceTemplateEntity.fromDomain(template)
         val savedEntity = mongoWorkspaceTemplateRepository.save(entity)

@@ -58,6 +58,12 @@ open class TaskRepositoryImpl(
         return savedEntity.toDomain()
     }
 
+    override suspend fun update(task: Task): Task {
+        val entity = TaskEntity.fromDomain(task.copy(updatedAt = LocalDateTime.now()))
+        val savedEntity = mongoTaskRepository.save(entity)
+        return savedEntity.toDomain()
+    }
+
     override suspend fun deleteById(id: String): Boolean {
         return if (mongoTaskRepository.existsById(id)) {
             mongoTaskRepository.deleteById(id)

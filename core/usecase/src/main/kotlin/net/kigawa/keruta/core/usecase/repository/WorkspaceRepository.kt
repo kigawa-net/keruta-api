@@ -31,6 +31,7 @@ interface WorkspaceTemplateRepository {
     suspend fun findByName(name: String): WorkspaceTemplate?
     suspend fun findAll(): List<WorkspaceTemplate>
     suspend fun findDefaultTemplate(): WorkspaceTemplate?
+    suspend fun create(template: WorkspaceTemplate): WorkspaceTemplate
     suspend fun save(template: WorkspaceTemplate): WorkspaceTemplate
     suspend fun update(template: WorkspaceTemplate): WorkspaceTemplate
     suspend fun delete(id: String): Boolean

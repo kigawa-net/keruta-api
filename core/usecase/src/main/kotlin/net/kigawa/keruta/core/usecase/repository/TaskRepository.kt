@@ -18,6 +18,7 @@ interface TaskRepository {
     suspend fun findByTag(tag: String): List<Task>
     suspend fun findByParentTaskId(parentTaskId: String): List<Task>
     suspend fun save(task: Task): Task
+    suspend fun update(task: Task): Task
     suspend fun deleteById(id: String): Boolean
     suspend fun deleteBySessionId(sessionId: String): Boolean
     suspend fun updateStatus(id: String, status: TaskStatus): Task?
