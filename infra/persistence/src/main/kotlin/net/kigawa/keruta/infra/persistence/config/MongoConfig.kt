@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories
 
 @Configuration
-@EnableMongoRepositories(basePackages = ["net.kigawa.keruta.infra.persistence.repository"])
+@EnableMongoRepositories(basePackages = ["net.kigawa.keruta.infra.persistence"])
 class MongoConfig : AbstractMongoClientConfiguration() {
 
     @Value("\${spring.data.mongodb.host}")
