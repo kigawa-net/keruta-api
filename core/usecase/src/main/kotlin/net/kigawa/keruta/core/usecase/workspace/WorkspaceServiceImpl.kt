@@ -73,8 +73,8 @@ open class WorkspaceServiceImpl(
                 buildStartedAt = LocalDateTime.now(),
             ),
             resourceInfo = WorkspaceResourceInfo(
-                kubernetesNamespace = "keruta-workspaces",
-                persistentVolumeClaimName = "workspace-${request.sessionId}-${request.name}",
+                namespace = "keruta-workspaces",
+                volumeClaimName = "workspace-${request.sessionId}-${request.name}",
             ),
         )
 

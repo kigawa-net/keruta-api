@@ -135,8 +135,8 @@ open class SessionStatusBroadcastServiceImpl : SessionStatusBroadcastService {
                     "cpuCores" to resource.cpuCores,
                     "memoryMb" to resource.memoryMb,
                     "diskGb" to resource.diskGb,
-                    "kubernetesNamespace" to resource.kubernetesNamespace,
-                    "podName" to resource.podName,
+                    "namespace" to resource.namespace,
+                    "containerName" to resource.containerName,
                     "ingressUrl" to resource.ingressUrl,
                 )
             },

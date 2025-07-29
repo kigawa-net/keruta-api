@@ -57,13 +57,15 @@ class SessionController(
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update session", description = "Updates an existing session")
+    @Operation(summary = "Update session", description = "Updates an existing session (status changes are not allowed)")
     suspend fun updateSession(
         @PathVariable id: String,
         @RequestBody request: UpdateSessionRequest,
     ): ResponseEntity<SessionResponse> {
         return try {
-            val session = request.toDomain(id)
+            // Get current session to preserve status
+            val currentSession = sessionService.getSessionById(id)
+            val session = request.toDomain(id).copy(status = currentSession.status)
             val updatedSession = sessionService.updateSession(id, session)
             ResponseEntity.ok(SessionResponse.fromDomain(updatedSession))
         } catch (e: NoSuchElementException) {
@@ -109,38 +111,25 @@ class SessionController(
     }
 
     @PutMapping("/{id}/status")
-    @Operation(summary = "Update session status", description = "Updates the status of a specific session")
+    @Operation(
+        summary = "Update session status",
+        description = "Internal API - Status updates are managed by the system",
+    )
     suspend fun updateSessionStatus(
         @PathVariable id: String,
         @RequestBody statusRequest: Map<String, String>,
-    ): ResponseEntity<SessionResponse> {
-        logger.info("updateSessionStatus id={} status={}", id, statusRequest["status"])
-        val statusStr = statusRequest["status"] ?: return ResponseEntity.badRequest().build()
-
-        return try {
-            val sessionStatus = try {
-                net.kigawa.keruta.core.domain.model.SessionStatus.valueOf(statusStr.uppercase())
-            } catch (e: IllegalArgumentException) {
-                logger.error(
-                    "Invalid session status: {} for session: {}. Valid statuses are: {}",
-                    statusStr,
-                    id,
-                    net.kigawa.keruta.core.domain.model.SessionStatus.values().joinToString(", "),
-                    e,
-                )
-                return ResponseEntity.badRequest().build()
-            }
-
-            val updatedSession = sessionService.updateSessionStatus(id, sessionStatus)
-            logger.info("Session status updated successfully: id={} status={}", id, statusStr)
-            ResponseEntity.ok(SessionResponse.fromDomain(updatedSession))
-        } catch (e: NoSuchElementException) {
-            logger.error("Session not found: id={}", id, e)
-            ResponseEntity.notFound().build()
-        } catch (e: Exception) {
-            logger.error("Failed to update session status: id={} status={}", id, statusStr, e)
-            ResponseEntity.internalServerError().build()
-        }
+    ): ResponseEntity<Map<String, String>> {
+        logger.warn(
+            "Attempted to update session status via API - operation not allowed: id={} status={}",
+            id,
+            statusRequest["status"],
+        )
+        return ResponseEntity.status(403).body(
+            mapOf(
+                "error" to "Status updates are not allowed",
+                "message" to "Session status is managed automatically by the system",
+            ),
+        )
     }
 
     @PostMapping("/{id}/tags")

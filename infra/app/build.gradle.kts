@@ -22,9 +22,6 @@ dependencies {
     // Swagger/OpenAPI
     implementation(Dependencies.springdocOpenApi)
 
-    // Kubernetes
-    implementation(Dependencies.fabric8KubernetesClient)
-
     testImplementation(Dependencies.springBootStarterTest)
     testImplementation(Dependencies.mockitoKotlin)
 }

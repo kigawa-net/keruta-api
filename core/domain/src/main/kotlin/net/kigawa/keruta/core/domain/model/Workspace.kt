@@ -74,9 +74,9 @@ data class WorkspaceResourceInfo(
     val cpuCores: Int? = null,
     val memoryMb: Long? = null,
     val diskGb: Long? = null,
-    val kubernetesNamespace: String? = null,
-    val persistentVolumeClaimName: String? = null,
-    val podName: String? = null,
+    val namespace: String? = null,
+    val volumeClaimName: String? = null,
+    val containerName: String? = null,
     val serviceName: String? = null,
     val ingressUrl: String? = null,
 )
