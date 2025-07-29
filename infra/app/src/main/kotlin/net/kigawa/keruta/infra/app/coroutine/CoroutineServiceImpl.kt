@@ -1,4 +1,4 @@
-package net.kigawa.keruta.infra.core.coroutine
+package net.kigawa.keruta.infra.app.coroutine
 
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
