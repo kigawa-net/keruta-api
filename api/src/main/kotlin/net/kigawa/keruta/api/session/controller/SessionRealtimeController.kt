@@ -80,7 +80,6 @@ open class SessionRealtimeController(
                 name = "Test Session",
                 description = "Test session for broadcast functionality",
                 status = net.kigawa.keruta.core.domain.model.SessionStatus.ACTIVE,
-                metadata = mapOf("test" to message),
             )
 
             broadcastService.broadcastSessionUpdate(testSession, "PENDING")

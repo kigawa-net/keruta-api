@@ -12,7 +12,6 @@ data class Session(
     val description: String? = null,
     val status: SessionStatus = SessionStatus.ACTIVE,
     val tags: List<String> = emptyList(),
-    val metadata: Map<String, String> = emptyMap(),
     val templateConfig: SessionTemplateConfig? = null,
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val updatedAt: LocalDateTime = LocalDateTime.now(),

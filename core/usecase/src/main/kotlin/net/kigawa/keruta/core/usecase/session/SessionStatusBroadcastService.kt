@@ -89,7 +89,6 @@ open class SessionStatusBroadcastServiceImpl : SessionStatusBroadcastService {
             "updatedAt" to session.updatedAt.toString(),
             "description" to session.description,
             "tags" to session.tags,
-            "metadata" to session.metadata,
             "templateConfig" to session.templateConfig?.let { config ->
                 mapOf(
                     "templateId" to config.templateId,
@@ -156,7 +155,6 @@ open class SessionStatusBroadcastServiceImpl : SessionStatusBroadcastService {
             "createdAt" to session.createdAt.toString(),
             "description" to session.description,
             "tags" to session.tags,
-            "metadata" to session.metadata,
         )
 
         notifyListeners(session.id, "session_created", creationData)
@@ -181,7 +179,6 @@ open class SessionStatusBroadcastServiceImpl : SessionStatusBroadcastService {
             "name" to session.name,
             "description" to session.description,
             "tags" to session.tags,
-            "metadata" to session.metadata,
             "updatedAt" to session.updatedAt.toString(),
         )
 

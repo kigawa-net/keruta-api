@@ -32,7 +32,10 @@ open class WorkspaceTaskExecutionService(
     private val taskRepository: TaskRepository,
     private val workspaceRepository: WorkspaceRepository,
 ) {
-    private val logger = LoggerFactory.getLogger(WorkspaceTaskExecutionService::class.java)
+    // Initialize logger in companion object to ensure it's available even during class loading
+    companion object {
+        private val logger = LoggerFactory.getLogger(WorkspaceTaskExecutionService::class.java)
+    }
 
     @Autowired(required = false)
     private var executorClient: ExecutorClient? = null
