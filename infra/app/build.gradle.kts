@@ -19,6 +19,10 @@ dependencies {
     implementation(Dependencies.springBootStarter)
     implementation(Dependencies.springBootStarterWeb)
 
+    // Kotlin Coroutines
+    implementation(Dependencies.kotlinxCoroutinesCore)
+    implementation(Dependencies.kotlinxCoroutinesReactor)
+
     // Swagger/OpenAPI
     implementation(Dependencies.springdocOpenApi)
 
