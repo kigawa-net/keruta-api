@@ -16,6 +16,7 @@ open class SessionServiceImpl(
     open val sessionRepository: SessionRepository,
     open val workspaceService: WorkspaceService,
     open val sessionEventListener: SessionEventListener,
+    private val broadcastService: SessionStatusBroadcastService? = null,
 ) : SessionService {
 
     open val logger = LoggerFactory.getLogger(SessionServiceImpl::class.java)
@@ -66,6 +67,9 @@ open class SessionServiceImpl(
                 logger.error("Failed to handle session template change event for session: {}", id, e)
             }
         }
+
+        // Broadcast session metadata update
+        broadcastService?.broadcastSessionMetadataUpdate(savedSession)
 
         logger.info("Session updated successfully: id={}", id)
         return savedSession

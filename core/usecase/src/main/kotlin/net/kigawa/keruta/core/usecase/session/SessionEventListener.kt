@@ -10,11 +10,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
 /**
- * Event listener for session lifecycle events.
+ * Event listener for session lifecycle events with real-time broadcasting.
  */
 @Component
 open class SessionEventListener(
     open val workspaceService: WorkspaceService,
+    private val broadcastService: SessionStatusBroadcastService,
 ) {
     open val logger = LoggerFactory.getLogger(SessionEventListener::class.java)
 
@@ -53,6 +54,11 @@ open class SessionEventListener(
                 session.id,
                 workspace.id,
             )
+
+            // Broadcast session creation
+            broadcastService.broadcastSessionCreated(session)
+            // Broadcast workspace creation
+            broadcastService.broadcastWorkspaceUpdate(workspace, session.id)
         } catch (e: Exception) {
             logger.error("Failed to create workspace for session: sessionId={}", session.id, e)
             throw e
@@ -70,6 +76,9 @@ open class SessionEventListener(
             oldStatus,
             session.status,
         )
+
+        // Broadcast session status change
+        broadcastService.broadcastSessionUpdate(session, oldStatus.name)
 
         try {
             val workspaces = workspaceService.getWorkspacesBySessionId(session.id)
@@ -256,6 +265,9 @@ open class SessionEventListener(
         logger.info("Handling session deletion event: sessionId={}", sessionId)
 
         try {
+            // Broadcast session deletion
+            broadcastService.broadcastSessionDeleted(sessionId)
+
             // Delete all workspaces associated with this session
             val deleted = workspaceService.deleteWorkspacesBySessionId(sessionId)
             if (deleted) {
