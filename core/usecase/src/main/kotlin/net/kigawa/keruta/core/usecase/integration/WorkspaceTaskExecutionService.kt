@@ -27,10 +27,10 @@ import kotlin.random.Random
  */
 @Service
 open class WorkspaceTaskExecutionService(
-    private val taskService: TaskService,
-    private val workspaceService: WorkspaceService,
-    private val taskRepository: TaskRepository,
-    private val workspaceRepository: WorkspaceRepository,
+    protected val taskService: TaskService,
+    protected val workspaceService: WorkspaceService,
+    protected val taskRepository: TaskRepository,
+    protected val workspaceRepository: WorkspaceRepository,
 ) {
     // Initialize logger in companion object to ensure it's available even during class loading
     companion object {

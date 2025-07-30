@@ -214,7 +214,9 @@ open class WorkspaceOrchestrator(
         return try {
             val client = executorClient
             if (client == null) {
-                logger.warn("ExecutorClient is not available - returning empty list")
+                logger.debug(
+                    "ExecutorClient is not configured - returning empty template list (this is normal if keruta-executor is not running)",
+                )
                 return emptyList()
             }
             client.getCoderTemplates()
@@ -233,7 +235,9 @@ open class WorkspaceOrchestrator(
         return try {
             val client = executorClient
             if (client == null) {
-                logger.warn("ExecutorClient is not available - returning null")
+                logger.debug(
+                    "ExecutorClient is not configured - returning null template (this is normal if keruta-executor is not running)",
+                )
                 return null
             }
             client.getCoderTemplate(id)
