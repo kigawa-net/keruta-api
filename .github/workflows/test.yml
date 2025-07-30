@@ -6,7 +6,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
+    steps: []
 #  back:
 #    runs-on: ubuntu-latest
 #    steps:
