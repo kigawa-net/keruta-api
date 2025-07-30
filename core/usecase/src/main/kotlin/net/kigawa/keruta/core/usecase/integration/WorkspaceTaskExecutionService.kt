@@ -26,16 +26,23 @@ import kotlin.random.Random
  * Provides unified workflow for task execution within workspaces.
  */
 @Service
-open class WorkspaceTaskExecutionService(
-    protected val taskService: TaskService,
-    protected val workspaceService: WorkspaceService,
-    protected val taskRepository: TaskRepository,
-    protected val workspaceRepository: WorkspaceRepository,
-) {
+open class WorkspaceTaskExecutionService {
     // Initialize logger in companion object to ensure it's available even during class loading
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceTaskExecutionService::class.java)
     }
+
+    @Autowired
+    private lateinit var taskService: TaskService
+
+    @Autowired
+    private lateinit var workspaceService: WorkspaceService
+
+    @Autowired
+    private lateinit var taskRepository: TaskRepository
+
+    @Autowired
+    private lateinit var workspaceRepository: WorkspaceRepository
 
     @Autowired(required = false)
     private var executorClient: ExecutorClient? = null
