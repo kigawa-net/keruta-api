@@ -3,7 +3,10 @@ name: test
 on:
   workflow_call:
 
-jobs: {}
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
 #  back:
 #    runs-on: ubuntu-latest
 #    steps:

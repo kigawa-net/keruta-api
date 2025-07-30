@@ -1,5 +1,6 @@
 package net.kigawa.keruta.core.usecase.integration
 
+import jakarta.annotation.PostConstruct
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -46,6 +47,11 @@ open class WorkspaceTaskExecutionService {
 
     @Autowired(required = false)
     private var executorClient: ExecutorClient? = null
+
+    @PostConstruct
+    fun init() {
+        logger.info("WorkspaceTaskExecutionService initialized with dependencies")
+    }
 
     /**
      * Execute a task within its associated workspace.
@@ -272,6 +278,11 @@ open class WorkspaceTaskExecutionService {
      */
     @Scheduled(fixedDelay = 60000)
     fun processPendingTasks() {
+        if (!::taskRepository.isInitialized || !::taskService.isInitialized) {
+            logger.warn("Dependencies not yet initialized, skipping pending tasks processing")
+            return
+        }
+
         logger.debug("Processing pending tasks for execution")
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -299,6 +310,11 @@ open class WorkspaceTaskExecutionService {
      */
     @Scheduled(fixedDelay = 300000)
     fun monitorRunningTasks() {
+        if (!::taskRepository.isInitialized || !::taskService.isInitialized) {
+            logger.warn("Dependencies not yet initialized, skipping running tasks monitoring")
+            return
+        }
+
         logger.debug("Monitoring running tasks")
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -339,6 +355,11 @@ open class WorkspaceTaskExecutionService {
      */
     @Scheduled(fixedDelay = 600000)
     fun retryFailedTasks() {
+        if (!::taskRepository.isInitialized || !::taskService.isInitialized) {
+            logger.warn("Dependencies not yet initialized, skipping failed tasks retry")
+            return
+        }
+
         logger.debug("Checking for tasks to retry")
 
         CoroutineScope(Dispatchers.IO).launch {
