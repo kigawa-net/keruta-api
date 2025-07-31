@@ -1,10 +1,12 @@
 package net.kigawa.keruta.api.session.dto
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import net.kigawa.keruta.core.domain.model.Session
 import net.kigawa.keruta.core.domain.model.SessionStatus
 import java.time.LocalDateTime
 import java.util.*
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class CreateSessionRequest(
     val name: String,
     val description: String? = null,
