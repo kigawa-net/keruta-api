@@ -2,6 +2,9 @@ package net.kigawa.keruta.api.template.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import net.kigawa.keruta.core.usecase.executor.ExecutorClient
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.io.File
@@ -14,6 +17,10 @@ import java.util.*
 @RequestMapping("/api/v1/templates")
 @Tag(name = "Template", description = "Coder template management API")
 class TemplateController {
+    private val logger = LoggerFactory.getLogger(TemplateController::class.java)
+
+    @Autowired(required = false)
+    private var executorClient: ExecutorClient? = null
 
     data class Template(
         val id: String,
@@ -246,14 +253,54 @@ class TemplateController {
 
     @PostMapping("/{id}/deploy")
     @Operation(summary = "Deploy template to Coder", description = "Deploys the template to Coder server")
-    fun deployToCoder(@PathVariable id: String): ResponseEntity<Map<String, String>> {
-        // TODO: 実際のCoderサーバーとの連携を実装
-        return ResponseEntity.ok(
-            mapOf(
-                "status" to "success",
-                "message" to "テンプレートの登録機能は未実装です",
-            ),
-        )
+    fun deployToCoder(@PathVariable id: String): ResponseEntity<Map<String, Any>> {
+        logger.info("Deploying template to Coder: templateId=$id")
+
+        // Check if executor client is available
+        val client = executorClient
+        if (client == null) {
+            logger.warn("ExecutorClient is not available - template deployment cannot proceed")
+            return ResponseEntity.badRequest().body(
+                mapOf(
+                    "status" to "error",
+                    "message" to "Executorサービスが利用できません。keruta-executorが起動していることを確認してください。",
+                    "success" to false,
+                ),
+            )
+        }
+
+        return try {
+            // Delegate the deployment to the executor service
+            val result = client.deployTemplate(id)
+
+            logger.info("Template deployment result: templateId=$id, success=${result.success}")
+
+            val responseBody = mutableMapOf<String, Any>(
+                "status" to if (result.success) "success" else "error",
+                "message" to result.message,
+                "success" to result.success,
+            )
+
+            // Add optional fields if present
+            result.coderTemplateId?.let { responseBody["coderTemplateId"] = it }
+            result.errorDetails?.let { responseBody["errorDetails"] = it }
+
+            if (result.success) {
+                ResponseEntity.ok(responseBody)
+            } else {
+                ResponseEntity.badRequest().body(responseBody)
+            }
+        } catch (e: Exception) {
+            logger.error("Unexpected error during template deployment: templateId=$id", e)
+            ResponseEntity.internalServerError().body(
+                mapOf(
+                    "status" to "error",
+                    "message" to "テンプレートのデプロイ中に予期しないエラーが発生しました",
+                    "success" to false,
+                    "errorDetails" to (e.message ?: "Unknown error"),
+                ),
+            )
+        }
     }
 
     @GetMapping("/content")

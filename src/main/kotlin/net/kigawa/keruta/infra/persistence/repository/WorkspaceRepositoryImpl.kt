@@ -5,6 +5,7 @@ import net.kigawa.keruta.core.domain.model.WorkspaceStatus
 import net.kigawa.keruta.core.usecase.repository.WorkspaceRepository
 import net.kigawa.keruta.infra.persistence.entity.WorkspaceEntity
 import org.springframework.stereotype.Component
+import java.time.LocalDateTime
 
 /**
  * Implementation of WorkspaceRepository using MongoDB.
@@ -116,5 +117,9 @@ class WorkspaceRepositoryImpl(
      */
     fun findActiveBySessionId(sessionId: String): List<Workspace> {
         return mongoWorkspaceRepository.findActiveBySessionId(sessionId).map { it.toDomain() }
+    }
+
+    override suspend fun findByStatusAndUpdatedAtBefore(status: WorkspaceStatus, cutoffTime: LocalDateTime): List<Workspace> {
+        return mongoWorkspaceRepository.findByStatusAndUpdatedAtBefore(status, cutoffTime).map { it.toDomain() }
     }
 }

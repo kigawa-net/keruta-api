@@ -5,6 +5,7 @@ import net.kigawa.keruta.core.domain.model.SessionStatus
 import net.kigawa.keruta.core.domain.model.Workspace
 import net.kigawa.keruta.core.domain.model.WorkspaceStatus
 import net.kigawa.keruta.core.usecase.workspace.CreateWorkspaceRequest
+import net.kigawa.keruta.core.usecase.workspace.FailedWorkspaceCleanupService
 import net.kigawa.keruta.core.usecase.workspace.WorkspaceService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component
 open class SessionEventListener(
     open val workspaceService: WorkspaceService,
     private val broadcastService: SessionStatusBroadcastService,
+    private val failedWorkspaceCleanupService: FailedWorkspaceCleanupService,
 ) {
     open val logger = LoggerFactory.getLogger(SessionEventListener::class.java)
 
@@ -163,7 +165,8 @@ open class SessionEventListener(
                                 e,
                             )
                             logger.warn("Will attempt to delete and recreate workspace in background")
-                            // TODO: Consider implementing background cleanup task for failed workspaces
+                            // Request background cleanup for the failed workspace
+                            failedWorkspaceCleanupService.requestFailedWorkspaceCleanup(session.id, workspace.id)
                         }
                     } else {
                         workspaceService.startWorkspace(workspace.id)

@@ -3,6 +3,7 @@ package net.kigawa.keruta.core.usecase.repository
 import net.kigawa.keruta.core.domain.model.Workspace
 import net.kigawa.keruta.core.domain.model.WorkspaceStatus
 import net.kigawa.keruta.core.domain.model.WorkspaceTemplate
+import java.time.LocalDateTime
 
 /**
  * Repository interface for workspace operations.
@@ -21,6 +22,7 @@ interface WorkspaceRepository {
     suspend fun existsBySessionId(sessionId: String): Boolean
     suspend fun countByStatus(status: WorkspaceStatus): Long
     suspend fun countBySessionId(sessionId: String): Long
+    suspend fun findByStatusAndUpdatedAtBefore(status: WorkspaceStatus, cutoffTime: LocalDateTime): List<Workspace>
 }
 
 /**

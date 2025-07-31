@@ -1,10 +1,14 @@
 package net.kigawa.keruta.infra.app.executor
 
 import net.kigawa.keruta.core.domain.model.CoderTemplate
+import net.kigawa.keruta.core.usecase.executor.TemplateDeploymentResult
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.ParameterizedTypeReference
+import org.springframework.http.HttpEntity
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
+import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
 import java.time.LocalDateTime
@@ -59,6 +63,51 @@ class ExecutorClientImpl(
             null
         }
     }
+
+    /**
+     * Deploys a template to Coder server via the executor service.
+     */
+    override fun deployTemplate(templateId: String): TemplateDeploymentResult {
+        logger.info("Deploying template to Coder via executor: templateId=$templateId")
+
+        return try {
+            val url = "$executorBaseUrl/api/v1/coder/templates/deploy"
+            val headers = HttpHeaders().apply {
+                contentType = MediaType.APPLICATION_JSON
+            }
+
+            val requestBody = mapOf("templateId" to templateId)
+            val request = HttpEntity(requestBody, headers)
+
+            val response = restTemplate.postForObject(url, request, TemplateDeploymentResponseDto::class.java)
+
+            if (response != null) {
+                logger.info(
+                    "Successfully deployed template to Coder: templateId=$templateId, coderTemplateId=${response.coderTemplateId}",
+                )
+                TemplateDeploymentResult(
+                    success = response.success,
+                    message = response.message,
+                    coderTemplateId = response.coderTemplateId,
+                    errorDetails = response.errorDetails,
+                )
+            } else {
+                logger.warn("Received null response from executor for template deployment: templateId=$templateId")
+                TemplateDeploymentResult(
+                    success = false,
+                    message = "Executorからの応答が空でした",
+                    errorDetails = "Null response from executor",
+                )
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to deploy template to Coder via executor: templateId=$templateId", e)
+            TemplateDeploymentResult(
+                success = false,
+                message = "テンプレートのデプロイに失敗しました: ${e.message}",
+                errorDetails = e.toString(),
+            )
+        }
+    }
 }
 
 /**
@@ -101,3 +150,13 @@ data class ExecutorCoderTemplateDto(
         )
     }
 }
+
+/**
+ * DTO for template deployment response from executor.
+ */
+data class TemplateDeploymentResponseDto(
+    val success: Boolean,
+    val message: String,
+    val coderTemplateId: String? = null,
+    val errorDetails: String? = null,
+)

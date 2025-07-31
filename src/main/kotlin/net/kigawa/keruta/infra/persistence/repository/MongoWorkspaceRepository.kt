@@ -5,6 +5,7 @@ import net.kigawa.keruta.infra.persistence.entity.WorkspaceEntity
 import org.springframework.data.mongodb.repository.MongoRepository
 import org.springframework.data.mongodb.repository.Query
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 /**
  * MongoDB repository for workspace entities.
@@ -41,4 +42,7 @@ interface MongoWorkspaceRepository : MongoRepository<WorkspaceEntity, String> {
 
     @Query("{ 'sessionId': ?0, 'deletedAt': { \$exists: false } }")
     fun findActiveBySessionId(sessionId: String): List<WorkspaceEntity>
+
+    @Query("{ 'status': ?0, 'updatedAt': { \$lt: ?1 } }")
+    fun findByStatusAndUpdatedAtBefore(status: WorkspaceStatus, cutoffTime: LocalDateTime): List<WorkspaceEntity>
 }
