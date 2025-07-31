@@ -16,9 +16,7 @@ RUN chmod +x ./gradlew
 RUN ./gradlew dependencies --no-daemon
 
 # Copy source code
-COPY ./api api
-COPY ./core core
-COPY ./infra infra
+COPY ./src src
 
 # Build the application
 RUN ./gradlew bootJar --no-daemon
@@ -31,7 +29,7 @@ WORKDIR /app
 RUN groupadd -r keruta && useradd -r -g keruta keruta
 
 # Copy the built jar file from the builder stage
-COPY --from=builder /app/api/build/libs/*.jar app.jar
+COPY --from=builder /app/build/libs/*.jar app.jar
 
 # Copy terraform templates
 COPY ./terraform-templates ./terraform-templates
