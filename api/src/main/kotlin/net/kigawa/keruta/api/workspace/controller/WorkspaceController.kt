@@ -1,5 +1,6 @@
 package net.kigawa.keruta.api.workspace.controller
 
+import net.kigawa.keruta.api.template.dto.WorkspaceTemplateResponse
 import net.kigawa.keruta.api.workspace.dto.*
 import net.kigawa.keruta.core.domain.model.WorkspaceStatus
 import net.kigawa.keruta.core.usecase.workspace.WorkspaceService

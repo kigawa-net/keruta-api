@@ -48,8 +48,11 @@ open class WorkspaceTaskExecutionService {
     @Autowired(required = false)
     private var executorClient: ExecutorClient? = null
 
+    private var initialized = false
+
     @PostConstruct
     fun init() {
+        initialized = true
         logger.info("WorkspaceTaskExecutionService initialized with dependencies")
     }
 
@@ -278,8 +281,8 @@ open class WorkspaceTaskExecutionService {
      */
     @Scheduled(fixedDelay = 60000)
     fun processPendingTasks() {
-        if (!::taskRepository.isInitialized || !::taskService.isInitialized) {
-            logger.warn("Dependencies not yet initialized, skipping pending tasks processing")
+        if (!initialized) {
+            logger.warn("Service not yet initialized, skipping pending tasks processing")
             return
         }
 
@@ -310,8 +313,8 @@ open class WorkspaceTaskExecutionService {
      */
     @Scheduled(fixedDelay = 300000)
     fun monitorRunningTasks() {
-        if (!::taskRepository.isInitialized || !::taskService.isInitialized) {
-            logger.warn("Dependencies not yet initialized, skipping running tasks monitoring")
+        if (!initialized) {
+            logger.warn("Service not yet initialized, skipping running tasks monitoring")
             return
         }
 
@@ -355,8 +358,8 @@ open class WorkspaceTaskExecutionService {
      */
     @Scheduled(fixedDelay = 600000)
     fun retryFailedTasks() {
-        if (!::taskRepository.isInitialized || !::taskService.isInitialized) {
-            logger.warn("Dependencies not yet initialized, skipping failed tasks retry")
+        if (!initialized) {
+            logger.warn("Service not yet initialized, skipping failed tasks retry")
             return
         }
 
