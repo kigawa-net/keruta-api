@@ -214,7 +214,7 @@ open class WorkspaceOrchestrator(
         return try {
             val client = executorClient
             if (client == null) {
-                logger.debug(
+                logger.error(
                     "ExecutorClient is not configured - returning empty template list (this is normal if keruta-executor is not running)",
                 )
                 return emptyList()
