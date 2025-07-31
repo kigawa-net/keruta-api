@@ -10,11 +10,11 @@ import java.time.LocalDateTime
 data class TaskEntity(
     @Id
     val id: String,
-    val name: String,
+    val name: String? = null,
     val description: String? = null,
-    val script: String,
+    val script: String? = null,
     val status: String,
-    val sessionId: String,
+    val sessionId: String? = null,
     val workspaceId: String? = null,
     val priority: Int = 0,
     val parameters: Map<String, String> = emptyMap(),
@@ -36,11 +36,11 @@ data class TaskEntity(
     fun toDomain(): Task {
         return Task(
             id = id,
-            name = name,
+            name = name ?: "Unknown Task",
             description = description,
-            script = script,
+            script = script ?: "",
             status = TaskStatus.valueOf(status),
-            sessionId = sessionId,
+            sessionId = sessionId ?: "",
             workspaceId = workspaceId,
             priority = priority,
             parameters = parameters,
