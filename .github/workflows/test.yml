@@ -3,7 +3,11 @@ name: test
 on:
   workflow_call:
 
-jobs: {}
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo no content
 #  back:
 #    runs-on: ubuntu-latest
 #    steps:

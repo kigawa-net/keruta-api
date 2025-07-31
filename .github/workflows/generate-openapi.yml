@@ -37,7 +37,7 @@ jobs:
         run: |
           # set -e を追加してコマンド失敗時にスクリプトを終了
           set -e
-          ./gradlew :api:bootRun --args='--spring.profiles.active=test' || { echo "Gradleビルドに失敗しました"; exit 1; } &
+          ./gradlew :bootRun --args='--spring.profiles.active=test' || { echo "Gradleビルドに失敗しました"; exit 1; } &
           echo "Waiting for application to start..."
 
           # Health check instead of sleep
