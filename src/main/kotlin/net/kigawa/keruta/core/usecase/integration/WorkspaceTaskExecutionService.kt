@@ -52,8 +52,33 @@ open class WorkspaceTaskExecutionService {
 
     @PostConstruct
     fun init() {
-        initialized = true
-        logger.info("WorkspaceTaskExecutionService initialized with dependencies")
+        // Verify all required dependencies are injected
+        val missingDependencies = mutableListOf<String>()
+
+        if (!::taskService.isInitialized) missingDependencies.add("taskService")
+        if (!::workspaceService.isInitialized) missingDependencies.add("workspaceService")
+        if (!::taskRepository.isInitialized) missingDependencies.add("taskRepository")
+        if (!::workspaceRepository.isInitialized) missingDependencies.add("workspaceRepository")
+
+        if (missingDependencies.isEmpty()) {
+            initialized = true
+            logger.info("WorkspaceTaskExecutionService initialized with all dependencies")
+        } else {
+            logger.warn(
+                "WorkspaceTaskExecutionService initialization failed - missing dependencies: {}",
+                missingDependencies.joinToString(", "),
+            )
+        }
+    }
+
+    /**
+     * Try to initialize if not already initialized
+     */
+    private fun tryInitialize(): Boolean {
+        if (!initialized) {
+            init()
+        }
+        return initialized
     }
 
     /**
@@ -281,7 +306,7 @@ open class WorkspaceTaskExecutionService {
      */
     @Scheduled(fixedDelay = 60000)
     fun processPendingTasks() {
-        if (!initialized) {
+        if (!tryInitialize()) {
             logger.warn("Service not yet initialized, skipping pending tasks processing")
             return
         }
@@ -313,7 +338,7 @@ open class WorkspaceTaskExecutionService {
      */
     @Scheduled(fixedDelay = 300000)
     fun monitorRunningTasks() {
-        if (!initialized) {
+        if (!tryInitialize()) {
             logger.warn("Service not yet initialized, skipping running tasks monitoring")
             return
         }
@@ -358,7 +383,7 @@ open class WorkspaceTaskExecutionService {
      */
     @Scheduled(fixedDelay = 600000)
     fun retryFailedTasks() {
-        if (!initialized) {
+        if (!tryInitialize()) {
             logger.warn("Service not yet initialized, skipping failed tasks retry")
             return
         }
