@@ -6,7 +6,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    steps: []
+    steps:
+      - run: echo no content
 #  back:
 #    runs-on: ubuntu-latest
 #    steps:
