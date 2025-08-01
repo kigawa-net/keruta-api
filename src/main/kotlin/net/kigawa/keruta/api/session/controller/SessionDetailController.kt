@@ -24,16 +24,15 @@ class SessionDetailController(
     @GetMapping("/{id}/detail")
     @Operation(
         summary = "Get session detail",
-        description = "Retrieves detailed information about a session including workspaces",
+        description = "Retrieves detailed information about a session",
     )
     suspend fun getSessionDetail(@PathVariable id: String): ResponseEntity<SessionDetailResponse> {
         return try {
             val session = sessionService.getSessionById(id)
-            val workspaces = sessionServiceImpl.getSessionWorkspaces(id)
 
-            logger.info("Retrieved session detail: id={}, workspaces={}", id, workspaces.size)
+            logger.info("Retrieved session detail: id={}", id)
 
-            ResponseEntity.ok(SessionDetailResponse.fromDomain(session, workspaces))
+            ResponseEntity.ok(SessionDetailResponse.fromDomain(session))
         } catch (e: NoSuchElementException) {
             logger.warn("Session not found: id={}", id)
             ResponseEntity.notFound().build()

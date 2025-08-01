@@ -1,7 +1,5 @@
 package net.kigawa.keruta.infra.persistence.config
 
-import kotlinx.coroutines.runBlocking
-import net.kigawa.keruta.infra.persistence.repository.WorkspaceTemplateRepositoryImpl
 import org.slf4j.LoggerFactory
 import org.springframework.boot.CommandLineRunner
 import org.springframework.core.annotation.Order
@@ -9,46 +7,20 @@ import org.springframework.stereotype.Component
 
 /**
  * Database initializer that runs on application startup.
- * Fixes database inconsistencies and performs cleanup tasks.
+ * Note: Template management functionality has been simplified.
  */
 @Component
 @Order(1) // Run before other initializers
-class DatabaseInitializer(
-    private val workspaceTemplateRepositoryImpl: WorkspaceTemplateRepositoryImpl,
-) : CommandLineRunner {
+class DatabaseInitializer : CommandLineRunner {
 
     private val logger = LoggerFactory.getLogger(DatabaseInitializer::class.java)
 
     override fun run(vararg args: String?) {
-        runBlocking {
-            try {
-                logger.info("Starting database initialization...")
-
-                // Fix duplicate default templates
-                fixDuplicateDefaultTemplates()
-
-                logger.info("Database initialization completed")
-            } catch (e: Exception) {
-                logger.error("Database initialization failed", e)
-            }
-        }
-    }
-
-    private suspend fun fixDuplicateDefaultTemplates() {
         try {
-            logger.info("Checking for duplicate default templates...")
-
-            val defaultTemplates = workspaceTemplateRepositoryImpl.findAllDefaultTemplates()
-
-            if (defaultTemplates.size > 1) {
-                logger.warn("Found {} default templates, fixing duplicates...", defaultTemplates.size)
-                val fixed = workspaceTemplateRepositoryImpl.fixDuplicateDefaultTemplates()
-                logger.info("Fixed {} duplicate default templates", fixed)
-            } else {
-                logger.info("Default templates are properly configured (count: {})", defaultTemplates.size)
-            }
+            logger.info("Starting database initialization...")
+            logger.info("Database initialization completed (template management moved to keruta-executor)")
         } catch (e: Exception) {
-            logger.error("Failed to fix duplicate default templates", e)
+            logger.error("Database initialization failed", e)
         }
     }
 }

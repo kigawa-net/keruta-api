@@ -1,7 +1,6 @@
 package net.kigawa.keruta.core.usecase.session
 
 import net.kigawa.keruta.core.domain.model.Session
-import net.kigawa.keruta.core.domain.model.Workspace
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -27,11 +26,6 @@ interface SessionStatusBroadcastService {
     fun broadcastSessionUpdate(session: Session, previousStatus: String? = null)
 
     /**
-     * Broadcast workspace status update
-     */
-    fun broadcastWorkspaceUpdate(workspace: Workspace, sessionId: String)
-
-    /**
      * Broadcast session creation
      */
     fun broadcastSessionCreated(session: Session)
@@ -45,6 +39,11 @@ interface SessionStatusBroadcastService {
      * Broadcast session metadata update
      */
     fun broadcastSessionMetadataUpdate(session: Session)
+
+    /**
+     * Broadcast session template changed
+     */
+    fun broadcastSessionTemplateChanged(newSession: Session, oldSession: Session)
 
     /**
      * Get broadcast statistics
@@ -100,51 +99,6 @@ open class SessionStatusBroadcastServiceImpl : SessionStatusBroadcastService {
         notifyListeners(session.id, "session_update", updateData)
     }
 
-    override fun broadcastWorkspaceUpdate(workspace: Workspace, sessionId: String) {
-        logger.debug(
-            "Broadcasting workspace update: workspaceId={}, sessionId={}, status={}",
-            workspace.id,
-            sessionId,
-            workspace.status,
-        )
-
-        val updateData = mapOf(
-            "workspaceId" to workspace.id,
-            "sessionId" to sessionId,
-            "name" to workspace.name,
-            "status" to workspace.status.name,
-            "updatedAt" to workspace.updatedAt.toString(),
-            "templateId" to workspace.templateId,
-            "automaticUpdates" to workspace.automaticUpdates,
-            "ttlMs" to workspace.ttlMs,
-            "lastUsedAt" to workspace.lastUsedAt?.toString(),
-            "startedAt" to workspace.startedAt?.toString(),
-            "stoppedAt" to workspace.stoppedAt?.toString(),
-            "buildInfo" to workspace.buildInfo?.let { build ->
-                mapOf(
-                    "buildId" to build.buildId,
-                    "buildNumber" to build.buildNumber,
-                    "buildStatus" to build.buildStatus.name,
-                    "buildReason" to build.buildReason,
-                    "buildStartedAt" to build.buildStartedAt?.toString(),
-                    "buildCompletedAt" to build.buildCompletedAt?.toString(),
-                )
-            },
-            "resourceInfo" to workspace.resourceInfo?.let { resource ->
-                mapOf(
-                    "cpuCores" to resource.cpuCores,
-                    "memoryMb" to resource.memoryMb,
-                    "diskGb" to resource.diskGb,
-                    "namespace" to resource.namespace,
-                    "containerName" to resource.containerName,
-                    "ingressUrl" to resource.ingressUrl,
-                )
-            },
-        )
-
-        notifyListeners(sessionId, "workspace_update", updateData)
-    }
-
     override fun broadcastSessionCreated(session: Session) {
         logger.info("Broadcasting session created: sessionId={}", session.id)
 
@@ -183,6 +137,20 @@ open class SessionStatusBroadcastServiceImpl : SessionStatusBroadcastService {
         )
 
         notifyListeners(session.id, "session_metadata_update", metadataData)
+    }
+
+    override fun broadcastSessionTemplateChanged(newSession: Session, oldSession: Session) {
+        logger.info("Broadcasting session template changed: sessionId={}", newSession.id)
+
+        val updateData = mapOf(
+            "sessionId" to newSession.id,
+            "eventType" to "template_changed",
+            "oldTemplateId" to oldSession.templateConfig?.templateId,
+            "newTemplateId" to newSession.templateConfig?.templateId,
+            "changedAt" to LocalDateTime.now().toString(),
+        )
+
+        notifyListeners(newSession.id, "session_template_changed", updateData)
     }
 
     override fun getBroadcastStats(): BroadcastStats {

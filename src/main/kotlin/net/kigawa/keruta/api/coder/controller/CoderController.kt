@@ -1,8 +1,9 @@
 package net.kigawa.keruta.api.coder.controller
 
 import net.kigawa.keruta.api.coder.dto.CoderTemplateResponse
-import net.kigawa.keruta.core.usecase.workspace.WorkspaceService
+import net.kigawa.keruta.core.usecase.executor.ExecutorClient
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -12,9 +13,10 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/v1/coder")
 @CrossOrigin(origins = ["*"])
-class CoderController(
-    private val workspaceService: WorkspaceService,
-) {
+class CoderController {
+
+    @Autowired(required = false)
+    private var executorClient: ExecutorClient? = null
     private val logger = LoggerFactory.getLogger(CoderController::class.java)
 
     /**
@@ -24,12 +26,18 @@ class CoderController(
     suspend fun getCoderTemplates(): ResponseEntity<List<CoderTemplateResponse>> {
         logger.info("Fetching Coder templates from Coder server")
 
-        try {
-            val templates = workspaceService.getCoderTemplates()
-            return ResponseEntity.ok(templates.map { CoderTemplateResponse.fromDomain(it) })
+        return try {
+            val executorClient = this.executorClient
+            if (executorClient != null) {
+                val templates = executorClient.getCoderTemplates()
+                ResponseEntity.ok(templates.map { CoderTemplateResponse.fromDomain(it) })
+            } else {
+                logger.warn("ExecutorClient not available, returning empty template list")
+                ResponseEntity.ok(emptyList())
+            }
         } catch (e: Exception) {
             logger.error("Failed to fetch Coder templates", e)
-            return ResponseEntity.ok(emptyList())
+            ResponseEntity.ok(emptyList())
         }
     }
 
@@ -40,14 +48,22 @@ class CoderController(
     suspend fun getCoderTemplate(@PathVariable id: String): ResponseEntity<CoderTemplateResponse> {
         logger.info("Fetching Coder template: $id")
 
-        try {
-            val template = workspaceService.getCoderTemplate(id)
-                ?: return ResponseEntity.notFound().build()
-
-            return ResponseEntity.ok(CoderTemplateResponse.fromDomain(template))
+        return try {
+            val executorClient = this.executorClient
+            if (executorClient != null) {
+                val template = executorClient.getCoderTemplate(id)
+                if (template != null) {
+                    ResponseEntity.ok(CoderTemplateResponse.fromDomain(template))
+                } else {
+                    ResponseEntity.notFound().build()
+                }
+            } else {
+                logger.warn("ExecutorClient not available")
+                ResponseEntity.notFound().build()
+            }
         } catch (e: Exception) {
             logger.error("Failed to fetch Coder template: $id", e)
-            return ResponseEntity.notFound().build()
+            ResponseEntity.notFound().build()
         }
     }
 }

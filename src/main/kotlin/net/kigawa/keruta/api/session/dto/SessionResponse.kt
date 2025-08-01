@@ -2,7 +2,6 @@ package net.kigawa.keruta.api.session.dto
 
 import net.kigawa.keruta.core.domain.model.Session
 import net.kigawa.keruta.core.domain.model.SessionTemplateConfig
-import net.kigawa.keruta.core.domain.model.Workspace
 import java.time.LocalDateTime
 
 data class SessionResponse(
@@ -14,10 +13,9 @@ data class SessionResponse(
     val templateConfig: SessionTemplateConfigResponse? = null,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
-    val workspaces: List<SessionWorkspaceInfo> = emptyList(),
 ) {
     companion object {
-        fun fromDomain(session: Session, workspaces: List<Workspace> = emptyList()): SessionResponse {
+        fun fromDomain(session: Session): SessionResponse {
             return SessionResponse(
                 id = session.id,
                 name = session.name,
@@ -27,7 +25,6 @@ data class SessionResponse(
                 templateConfig = session.templateConfig?.let { SessionTemplateConfigResponse.fromDomain(it) },
                 createdAt = session.createdAt,
                 updatedAt = session.updatedAt,
-                workspaces = workspaces.map { SessionWorkspaceInfo.fromDomain(it) },
             )
         }
     }
@@ -55,31 +52,6 @@ data class SessionTemplateConfigResponse(
                 templatePath = config.templatePath,
                 preferredKeywords = config.preferredKeywords,
                 parameters = config.parameters,
-            )
-        }
-    }
-}
-
-/**
- * Workspace information for session response.
- */
-data class SessionWorkspaceInfo(
-    val id: String,
-    val name: String,
-    val status: String,
-    val workspaceUrl: String? = null,
-    val createdAt: LocalDateTime,
-    val lastUsedAt: LocalDateTime? = null,
-) {
-    companion object {
-        fun fromDomain(workspace: Workspace): SessionWorkspaceInfo {
-            return SessionWorkspaceInfo(
-                id = workspace.id,
-                name = workspace.name,
-                status = workspace.status.name,
-                workspaceUrl = workspace.resourceInfo?.ingressUrl,
-                createdAt = workspace.createdAt,
-                lastUsedAt = workspace.lastUsedAt,
             )
         }
     }

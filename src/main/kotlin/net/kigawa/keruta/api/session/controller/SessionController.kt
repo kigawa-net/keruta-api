@@ -5,10 +5,8 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import net.kigawa.keruta.api.session.dto.CreateSessionRequest
 import net.kigawa.keruta.api.session.dto.SessionResponse
 import net.kigawa.keruta.api.session.dto.UpdateSessionRequest
-import net.kigawa.keruta.api.workspace.dto.WorkspaceResponse
 import net.kigawa.keruta.core.usecase.session.SessionService
 import net.kigawa.keruta.core.usecase.session.SessionServiceImpl
-import net.kigawa.keruta.core.usecase.session.SessionWorkspaceStatusSyncService
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -19,7 +17,6 @@ import org.springframework.web.bind.annotation.*
 class SessionController(
     private val sessionService: SessionService,
     private val sessionServiceImpl: SessionServiceImpl,
-    private val sessionWorkspaceStatusSyncService: SessionWorkspaceStatusSyncService,
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -49,8 +46,7 @@ class SessionController(
     suspend fun getSessionById(@PathVariable id: String): ResponseEntity<SessionResponse> {
         return try {
             val session = sessionService.getSessionById(id)
-            val workspaces = sessionServiceImpl.getSessionWorkspaces(id)
-            ResponseEntity.ok(SessionResponse.fromDomain(session, workspaces))
+            ResponseEntity.ok(SessionResponse.fromDomain(session))
         } catch (e: NoSuchElementException) {
             ResponseEntity.notFound().build()
         }
@@ -158,71 +154,6 @@ class SessionController(
             ResponseEntity.ok(SessionResponse.fromDomain(updatedSession))
         } catch (e: NoSuchElementException) {
             ResponseEntity.notFound().build()
-        }
-    }
-
-    @GetMapping("/{id}/workspace")
-    @Operation(summary = "Get session workspace", description = "Gets the single workspace for a specific session")
-    suspend fun getSessionWorkspace(@PathVariable id: String): ResponseEntity<WorkspaceResponse> {
-        return try {
-            val workspace = sessionServiceImpl.getSessionWorkspace(id)
-            if (workspace != null) {
-                ResponseEntity.ok(WorkspaceResponse.fromDomain(workspace))
-            } else {
-                ResponseEntity.notFound().build()
-            }
-        } catch (e: NoSuchElementException) {
-            ResponseEntity.notFound().build()
-        }
-    }
-
-    @PostMapping("/{id}/sync-status")
-    @Operation(summary = "Sync session status", description = "Synchronizes session status with workspace states")
-    suspend fun syncSessionStatus(@PathVariable id: String): ResponseEntity<SessionResponse> {
-        return try {
-            val success = sessionWorkspaceStatusSyncService.forceSyncSessionStatus(id)
-            if (success) {
-                val session = sessionService.getSessionById(id)
-                ResponseEntity.ok(SessionResponse.fromDomain(session))
-            } else {
-                ResponseEntity.internalServerError().build()
-            }
-        } catch (e: NoSuchElementException) {
-            ResponseEntity.notFound().build()
-        } catch (e: Exception) {
-            logger.error("Failed to sync session status", e)
-            ResponseEntity.internalServerError().build()
-        }
-    }
-
-    @PostMapping("/{id}/monitor-workspaces")
-    @Operation(
-        summary = "Monitor session workspaces",
-        description = "Stub: Workspace monitoring moved to keruta-executor",
-    )
-    suspend fun monitorSessionWorkspaces(@PathVariable id: String): ResponseEntity<Void> {
-        logger.info("Stub: Monitor workspaces for session $id - functionality moved to keruta-executor")
-        return ResponseEntity.ok().build()
-    }
-
-    @GetMapping("/by-workspace/{workspaceId}")
-    @Operation(
-        summary = "Get session by workspace ID",
-        description = "Retrieves a session by its associated workspace ID",
-    )
-    suspend fun getSessionByWorkspaceId(
-        @PathVariable workspaceId: String,
-    ): ResponseEntity<SessionResponse> {
-        return try {
-            val session = sessionServiceImpl.getSessionByWorkspaceId(workspaceId)
-            if (session != null) {
-                ResponseEntity.ok(SessionResponse.fromDomain(session))
-            } else {
-                ResponseEntity.notFound().build()
-            }
-        } catch (e: Exception) {
-            logger.error("Failed to get session by workspace ID: {}", workspaceId, e)
-            ResponseEntity.internalServerError().build()
         }
     }
 }
