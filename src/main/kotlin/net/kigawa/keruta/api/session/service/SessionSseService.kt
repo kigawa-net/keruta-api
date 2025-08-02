@@ -19,9 +19,13 @@ open class SessionSseService(
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    // Map of session ID to emitters (null key for all sessions)
-    private val sessionEmitters = ConcurrentHashMap<String?, MutableSet<SseEmitter>>()
+    // Map of session ID to emitters (special key for all sessions)
+    private val sessionEmitters = ConcurrentHashMap<String, MutableSet<SseEmitter>>()
     private val emitterToSession = ConcurrentHashMap<SseEmitter, String?>()
+
+    companion object {
+        private const val ALL_SESSIONS_KEY = "__ALL_SESSIONS__"
+    }
 
     @PostConstruct
     fun initialize() {
@@ -39,7 +43,8 @@ open class SessionSseService(
      * Register SSE emitter for session updates
      */
     fun registerEmitter(sessionId: String?, emitter: SseEmitter) {
-        sessionEmitters.computeIfAbsent(sessionId) { ConcurrentHashMap.newKeySet() }.add(emitter)
+        val key = sessionId ?: ALL_SESSIONS_KEY
+        sessionEmitters.computeIfAbsent(key) { ConcurrentHashMap.newKeySet() }.add(emitter)
         emitterToSession[emitter] = sessionId
 
         emitter.onCompletion {
@@ -78,10 +83,11 @@ open class SessionSseService(
      */
     fun removeEmitter(emitter: SseEmitter) {
         val sessionId = emitterToSession.remove(emitter)
-        sessionEmitters[sessionId]?.remove(emitter)
+        val key = sessionId ?: ALL_SESSIONS_KEY
+        sessionEmitters[key]?.remove(emitter)
 
-        if (sessionEmitters[sessionId]?.isEmpty() == true) {
-            sessionEmitters.remove(sessionId)
+        if (sessionEmitters[key]?.isEmpty() == true) {
+            sessionEmitters.remove(key)
         }
 
         logger.debug("Removed SSE emitter for sessionId: {}", sessionId ?: "all")
@@ -128,7 +134,7 @@ open class SessionSseService(
         }
 
         // Send to subscribers of all sessions
-        sessionEmitters[null]?.let { emitters ->
+        sessionEmitters[ALL_SESSIONS_KEY]?.let { emitters ->
             val iterator = emitters.iterator()
             while (iterator.hasNext()) {
                 val emitter = iterator.next()
