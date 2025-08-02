@@ -211,4 +211,45 @@ class SessionController(
             ResponseEntity.internalServerError().build()
         }
     }
+
+    @PostMapping("/{id}/sync-status")
+    @Operation(
+        summary = "Sync session status with workspaces",
+        description = "Synchronize session status with associated workspace status from Coder",
+    )
+    suspend fun syncSessionStatus(@PathVariable id: String): ResponseEntity<Map<String, Any>> {
+        logger.info("Syncing status for session: {}", id)
+
+        return try {
+            // Verify session exists
+            val session = sessionService.getSessionById(id)
+
+            // Get workspaces for this session from Coder via executor
+            val workspaces = executorClient.getWorkspacesBySessionId(id)
+
+            val syncResult = mapOf(
+                "sessionId" to id,
+                "sessionStatus" to session.status.name,
+                "workspaceCount" to workspaces.size,
+                "workspaces" to workspaces.map { workspace ->
+                    mapOf(
+                        "id" to workspace.id,
+                        "name" to workspace.name,
+                        "status" to workspace.status,
+                        "health" to workspace.health,
+                    )
+                },
+                "syncedAt" to System.currentTimeMillis(),
+            )
+
+            logger.info("Sync completed for session: {} with {} workspaces", id, workspaces.size)
+            ResponseEntity.ok(syncResult)
+        } catch (e: NoSuchElementException) {
+            logger.warn("Session not found for sync: {}", id)
+            ResponseEntity.notFound().build()
+        } catch (e: Exception) {
+            logger.error("Failed to sync status for session: {}", id, e)
+            ResponseEntity.internalServerError().build()
+        }
+    }
 }
