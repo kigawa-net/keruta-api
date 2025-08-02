@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import net.kigawa.keruta.api.session.dto.CreateSessionRequest
 import net.kigawa.keruta.api.session.dto.SessionResponse
 import net.kigawa.keruta.api.session.dto.UpdateSessionRequest
+import net.kigawa.keruta.api.workspace.dto.CoderWorkspaceResponse
+import net.kigawa.keruta.core.usecase.executor.ExecutorClient
 import net.kigawa.keruta.core.usecase.session.SessionService
 import net.kigawa.keruta.core.usecase.session.SessionServiceImpl
 import org.slf4j.LoggerFactory
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*
 class SessionController(
     private val sessionService: SessionService,
     private val sessionServiceImpl: SessionServiceImpl,
+    private val executorClient: ExecutorClient,
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -154,6 +157,58 @@ class SessionController(
             ResponseEntity.ok(SessionResponse.fromDomain(updatedSession))
         } catch (e: NoSuchElementException) {
             ResponseEntity.notFound().build()
+        }
+    }
+
+    @PostMapping("/{id}/monitor-workspaces")
+    @Operation(
+        summary = "Monitor session workspaces",
+        description = "Get workspaces associated with this session from Coder via executor",
+    )
+    suspend fun monitorSessionWorkspaces(@PathVariable id: String): ResponseEntity<List<CoderWorkspaceResponse>> {
+        logger.info("Monitoring workspaces for session: {}", id)
+
+        return try {
+            // Verify session exists
+            sessionService.getSessionById(id)
+            // Get workspaces for this session from Coder via executor
+            val workspaces = executorClient.getWorkspacesBySessionId(id)
+            val workspaceResponses = workspaces.map { CoderWorkspaceResponse.fromDomain(it) }
+
+            logger.info("Found {} workspaces for session: {}", workspaces.size, id)
+            ResponseEntity.ok(workspaceResponses)
+        } catch (e: NoSuchElementException) {
+            logger.warn("Session not found: {}", id)
+            ResponseEntity.notFound().build()
+        } catch (e: Exception) {
+            logger.error("Failed to monitor workspaces for session: {}", id, e)
+            ResponseEntity.internalServerError().build()
+        }
+    }
+
+    @GetMapping("/{id}/workspaces")
+    @Operation(
+        summary = "Get session workspaces",
+        description = "Get workspaces associated with this session from Coder via executor",
+    )
+    suspend fun getSessionWorkspaces(@PathVariable id: String): ResponseEntity<List<CoderWorkspaceResponse>> {
+        logger.info("Getting workspaces for session: {}", id)
+
+        return try {
+            // Verify session exists
+            sessionService.getSessionById(id)
+            // Get workspaces for this session from Coder via executor
+            val workspaces = executorClient.getWorkspacesBySessionId(id)
+            val workspaceResponses = workspaces.map { CoderWorkspaceResponse.fromDomain(it) }
+
+            logger.info("Found {} workspaces for session: {}", workspaces.size, id)
+            ResponseEntity.ok(workspaceResponses)
+        } catch (e: NoSuchElementException) {
+            logger.warn("Session not found: {}", id)
+            ResponseEntity.notFound().build()
+        } catch (e: Exception) {
+            logger.error("Failed to get workspaces for session: {}", id, e)
+            ResponseEntity.internalServerError().build()
         }
     }
 }
