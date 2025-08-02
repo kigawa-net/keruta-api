@@ -1,7 +1,7 @@
 package net.kigawa.keruta.infra.app.executor
 
 import net.kigawa.keruta.core.domain.model.CoderTemplate
-import net.kigawa.keruta.core.usecase.executor.TemplateDeploymentResult
+import net.kigawa.keruta.core.usecase.executor.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.ParameterizedTypeReference
@@ -108,6 +108,131 @@ class ExecutorClientImpl(
             )
         }
     }
+
+    override fun getWorkspacesBySessionId(sessionId: String): List<CoderWorkspace> {
+        logger.info("Fetching workspaces by session ID from executor: sessionId=$sessionId")
+
+        return try {
+            val url = "$executorBaseUrl/api/v1/workspaces?sessionId=$sessionId"
+            val typeReference = object : ParameterizedTypeReference<List<ExecutorCoderWorkspaceDto>>() {}
+            val response = restTemplate.exchange(url, HttpMethod.GET, null, typeReference)
+
+            val workspaces = response.body ?: emptyList()
+            logger.info("Successfully fetched {} workspaces from executor for session: $sessionId", workspaces.size)
+
+            workspaces.map { it.toDomain() }
+        } catch (e: Exception) {
+            logger.error("Failed to fetch workspaces from executor for session: $sessionId", e)
+            emptyList()
+        }
+    }
+
+    override fun getAllWorkspaces(): List<CoderWorkspace> {
+        logger.info("Fetching all workspaces from executor")
+
+        return try {
+            val url = "$executorBaseUrl/api/v1/workspaces"
+            val typeReference = object : ParameterizedTypeReference<List<ExecutorCoderWorkspaceDto>>() {}
+            val response = restTemplate.exchange(url, HttpMethod.GET, null, typeReference)
+
+            val workspaces = response.body ?: emptyList()
+            logger.info("Successfully fetched {} workspaces from executor", workspaces.size)
+
+            workspaces.map { it.toDomain() }
+        } catch (e: Exception) {
+            logger.error("Failed to fetch workspaces from executor", e)
+            emptyList()
+        }
+    }
+
+    override fun getWorkspace(workspaceId: String): CoderWorkspace? {
+        logger.info("Fetching workspace from executor: workspaceId=$workspaceId")
+
+        return try {
+            val url = "$executorBaseUrl/api/v1/workspaces/$workspaceId"
+            val response = restTemplate.getForObject(url, ExecutorCoderWorkspaceDto::class.java)
+
+            response?.toDomain()?.also {
+                logger.info("Successfully fetched workspace from executor: $workspaceId")
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to fetch workspace from executor: $workspaceId", e)
+            null
+        }
+    }
+
+    override fun createWorkspace(request: CreateCoderWorkspaceRequest): CoderWorkspace {
+        logger.info("Creating workspace in Coder via executor: name=${request.name}")
+
+        val url = "$executorBaseUrl/api/v1/workspaces"
+        val headers = HttpHeaders().apply {
+            contentType = MediaType.APPLICATION_JSON
+        }
+
+        val requestEntity = HttpEntity(request, headers)
+        val response = restTemplate.postForObject(url, requestEntity, ExecutorCoderWorkspaceDto::class.java)
+
+        return response?.toDomain() ?: throw RuntimeException("Failed to create workspace: null response")
+    }
+
+    override fun startWorkspace(workspaceId: String): CoderWorkspace {
+        logger.info("Starting workspace via executor: workspaceId=$workspaceId")
+
+        val url = "$executorBaseUrl/api/v1/workspaces/$workspaceId/start"
+        val headers = HttpHeaders().apply {
+            contentType = MediaType.APPLICATION_JSON
+        }
+
+        val requestEntity = HttpEntity<Any>(headers)
+        val response = restTemplate.postForObject(url, requestEntity, ExecutorCoderWorkspaceDto::class.java)
+
+        return response?.toDomain() ?: throw RuntimeException("Failed to start workspace: null response")
+    }
+
+    override fun stopWorkspace(workspaceId: String): CoderWorkspace {
+        logger.info("Stopping workspace via executor: workspaceId=$workspaceId")
+
+        val url = "$executorBaseUrl/api/v1/workspaces/$workspaceId/stop"
+        val headers = HttpHeaders().apply {
+            contentType = MediaType.APPLICATION_JSON
+        }
+
+        val requestEntity = HttpEntity<Any>(headers)
+        val response = restTemplate.postForObject(url, requestEntity, ExecutorCoderWorkspaceDto::class.java)
+
+        return response?.toDomain() ?: throw RuntimeException("Failed to stop workspace: null response")
+    }
+
+    override fun deleteWorkspace(workspaceId: String): Boolean {
+        logger.info("Deleting workspace via executor: workspaceId=$workspaceId")
+
+        return try {
+            val url = "$executorBaseUrl/api/v1/workspaces/$workspaceId"
+            restTemplate.delete(url)
+            true
+        } catch (e: Exception) {
+            logger.error("Failed to delete workspace via executor: $workspaceId", e)
+            false
+        }
+    }
+
+    override fun getWorkspaceTemplates(): List<CoderWorkspaceTemplate> {
+        logger.info("Fetching workspace templates from executor")
+
+        return try {
+            val url = "$executorBaseUrl/api/v1/workspaces/templates"
+            val typeReference = object : ParameterizedTypeReference<List<ExecutorCoderWorkspaceTemplateDto>>() {}
+            val response = restTemplate.exchange(url, HttpMethod.GET, null, typeReference)
+
+            val templates = response.body ?: emptyList()
+            logger.info("Successfully fetched {} workspace templates from executor", templates.size)
+
+            templates.map { it.toDomain() }
+        } catch (e: Exception) {
+            logger.error("Failed to fetch workspace templates from executor", e)
+            emptyList()
+        }
+    }
 }
 
 /**
@@ -160,3 +285,71 @@ data class TemplateDeploymentResponseDto(
     val coderTemplateId: String? = null,
     val errorDetails: String? = null,
 )
+
+/**
+ * DTO for Coder workspace data from executor.
+ */
+data class ExecutorCoderWorkspaceDto(
+    val id: String,
+    val name: String,
+    val ownerId: String,
+    val ownerName: String,
+    val templateId: String,
+    val templateName: String,
+    val status: String,
+    val health: String,
+    val accessUrl: String?,
+    val autoStart: Boolean,
+    val ttlMs: Long,
+    val lastUsedAt: LocalDateTime?,
+    val createdAt: LocalDateTime,
+    val updatedAt: LocalDateTime,
+    val sessionId: String? = null,
+) {
+    fun toDomain(): net.kigawa.keruta.core.usecase.executor.CoderWorkspace {
+        return net.kigawa.keruta.core.usecase.executor.CoderWorkspace(
+            id = id,
+            name = name,
+            ownerId = ownerId,
+            ownerName = ownerName,
+            templateId = templateId,
+            templateName = templateName,
+            status = status,
+            health = health,
+            accessUrl = accessUrl,
+            autoStart = autoStart,
+            ttlMs = ttlMs,
+            lastUsedAt = lastUsedAt,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+            sessionId = sessionId,
+        )
+    }
+}
+
+/**
+ * DTO for Coder workspace template data from executor.
+ */
+data class ExecutorCoderWorkspaceTemplateDto(
+    val id: String,
+    val name: String,
+    val description: String?,
+    val version: String,
+    val icon: String?,
+    val isDefault: Boolean,
+    val createdAt: LocalDateTime,
+    val updatedAt: LocalDateTime,
+) {
+    fun toDomain(): net.kigawa.keruta.core.usecase.executor.CoderWorkspaceTemplate {
+        return net.kigawa.keruta.core.usecase.executor.CoderWorkspaceTemplate(
+            id = id,
+            name = name,
+            description = description,
+            version = version,
+            icon = icon,
+            isDefault = isDefault,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+        )
+    }
+}
