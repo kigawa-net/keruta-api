@@ -4,3 +4,4 @@
 **/.kotlin/
 /hs_err_pid*.log
 /app.log
+/replay_pid*.log
