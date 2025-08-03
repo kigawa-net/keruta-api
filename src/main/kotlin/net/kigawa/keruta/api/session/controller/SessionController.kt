@@ -6,6 +6,9 @@ import net.kigawa.keruta.api.session.dto.CreateSessionRequest
 import net.kigawa.keruta.api.session.dto.SessionResponse
 import net.kigawa.keruta.api.session.dto.UpdateSessionRequest
 import net.kigawa.keruta.api.workspace.dto.CoderWorkspaceResponse
+import net.kigawa.keruta.core.domain.model.Session
+import net.kigawa.keruta.core.usecase.executor.CoderWorkspaceTemplate
+import net.kigawa.keruta.core.usecase.executor.CreateCoderWorkspaceRequest
 import net.kigawa.keruta.core.usecase.executor.ExecutorClient
 import net.kigawa.keruta.core.usecase.session.SessionService
 import net.kigawa.keruta.core.usecase.session.SessionServiceImpl
@@ -215,7 +218,7 @@ class SessionController(
     @PostMapping("/{id}/sync-status")
     @Operation(
         summary = "Sync session status with workspaces",
-        description = "Synchronize session status with associated workspace status from Coder",
+        description = "Synchronize session status with associated workspace status from Coder. Creates workspace if none exists.",
     )
     suspend fun syncSessionStatus(@PathVariable id: String): ResponseEntity<Map<String, Any>> {
         logger.info("Syncing status for session: {}", id)
@@ -225,9 +228,61 @@ class SessionController(
             val session = sessionService.getSessionById(id)
 
             // Get workspaces for this session from Coder via executor
-            val workspaces = executorClient.getWorkspacesBySessionId(id)
+            var workspaces = executorClient.getWorkspacesBySessionId(id)
+            var workspaceCreated = false
+            var creationError: String? = null
 
-            val syncResult = mapOf(
+            // If no workspaces exist, create one automatically
+            if (workspaces.isEmpty()) {
+                logger.info("No workspace found for session: {}. Creating workspace automatically.", id)
+                try {
+                    // Get available templates
+                    val templates = executorClient.getWorkspaceTemplates()
+                    val selectedTemplate = selectBestTemplateForSession(templates, session)
+
+                    if (selectedTemplate != null) {
+                        logger.info(
+                            "Creating workspace for session: {} using template: {}",
+                            id,
+                            selectedTemplate.name,
+                        )
+
+                        // Generate workspace name
+                        val workspaceName = generateWorkspaceNameForSession(session)
+
+                        // Create workspace
+                        val createRequest = CreateCoderWorkspaceRequest(
+                            name = workspaceName,
+                            templateId = selectedTemplate.id,
+                            ownerId = "system-user",
+                            ownerName = "System User",
+                            sessionId = id,
+                            ttlMs = 3600000, // 1 hour
+                            autoStart = true,
+                            parameters = emptyMap(),
+                        )
+
+                        val createdWorkspace = executorClient.createWorkspace(createRequest)
+                        workspaceCreated = true
+                        logger.info(
+                            "Successfully created workspace for session: {} workspaceId: {}",
+                            id,
+                            createdWorkspace.id,
+                        )
+
+                        // Refresh workspace list
+                        workspaces = executorClient.getWorkspacesBySessionId(id)
+                    } else {
+                        creationError = "No suitable template found"
+                        logger.warn("No suitable template found for workspace creation for session: {}", id)
+                    }
+                } catch (e: Exception) {
+                    creationError = e.message
+                    logger.error("Failed to create workspace for session: {}", id, e)
+                }
+            }
+
+            val syncResult = mutableMapOf<String, Any>(
                 "sessionId" to id,
                 "sessionStatus" to session.status.name,
                 "workspaceCount" to workspaces.size,
@@ -242,8 +297,17 @@ class SessionController(
                 "syncedAt" to System.currentTimeMillis(),
             )
 
+            // Add workspace creation information
+            if (workspaceCreated) {
+                syncResult["workspaceCreated"] = true
+                syncResult["message"] = "Workspace created successfully"
+            } else if (creationError != null) {
+                syncResult["workspaceCreated"] = false
+                syncResult["creationError"] = creationError
+            }
+
             logger.info("Sync completed for session: {} with {} workspaces", id, workspaces.size)
-            ResponseEntity.ok(syncResult)
+            ResponseEntity.ok(syncResult as Map<String, Any>)
         } catch (e: NoSuchElementException) {
             logger.warn("Session not found for sync: {}", id)
             ResponseEntity.notFound().build()
@@ -251,5 +315,58 @@ class SessionController(
             logger.error("Failed to sync status for session: {}", id, e)
             ResponseEntity.internalServerError().build()
         }
+    }
+
+    /**
+     * Selects the best template for a session based on tags and preferences.
+     */
+    private fun selectBestTemplateForSession(
+        templates: List<CoderWorkspaceTemplate>,
+        session: Session,
+    ): CoderWorkspaceTemplate? {
+        if (templates.isEmpty()) {
+            logger.warn("No templates available for workspace creation")
+            return null
+        }
+
+        // First, try to find a template that matches session tags
+        for (tag in session.tags) {
+            val matchingTemplate = templates.find { template ->
+                template.name.contains(tag, ignoreCase = true) ||
+                    template.description?.contains(tag, ignoreCase = true) == true
+            }
+            if (matchingTemplate != null) {
+                logger.info("Found template matching tag '{}': templateId={}", tag, matchingTemplate.id)
+                return matchingTemplate
+            }
+        }
+
+        // Look for keruta-specific template
+        val kerutaTemplate = templates.find { it.name.contains("keruta", ignoreCase = true) }
+        if (kerutaTemplate != null) {
+            logger.info("Using Keruta-optimized template: templateId={}", kerutaTemplate.id)
+            return kerutaTemplate
+        }
+
+        // Fallback to first available template
+        val defaultTemplate = templates.firstOrNull()
+        if (defaultTemplate != null) {
+            logger.info("Using first available template as fallback: templateId={}", defaultTemplate.id)
+        }
+        return defaultTemplate
+    }
+
+    /**
+     * Generates a workspace name for the session.
+     */
+    private fun generateWorkspaceNameForSession(session: Session): String {
+        // Use session name but ensure it's Coder-compatible
+        val sanitizedSessionName = session.name
+            .replace("[^a-zA-Z0-9-_]".toRegex(), "-")
+            .replace("-+".toRegex(), "-")
+            .trim('-')
+            .take(30) // Limit length
+
+        return "session-${session.id.take(8)}-$sanitizedSessionName"
     }
 }
