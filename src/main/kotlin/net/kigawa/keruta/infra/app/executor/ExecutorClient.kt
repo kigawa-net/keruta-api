@@ -337,10 +337,11 @@ data class ExecutorCoderWorkspaceTemplateDto(
     val version: String?,
     val icon: String?,
     val isDefault: Boolean,
-    val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime,
+    val createdAt: LocalDateTime?,
+    val updatedAt: LocalDateTime?,
 ) {
     fun toDomain(): net.kigawa.keruta.core.usecase.executor.CoderWorkspaceTemplate {
+        val currentTime = LocalDateTime.now()
         return net.kigawa.keruta.core.usecase.executor.CoderWorkspaceTemplate(
             id = id,
             name = name,
@@ -348,8 +349,8 @@ data class ExecutorCoderWorkspaceTemplateDto(
             version = version ?: "unknown",
             icon = icon,
             isDefault = isDefault,
-            createdAt = createdAt,
-            updatedAt = updatedAt,
+            createdAt = createdAt ?: currentTime,
+            updatedAt = updatedAt ?: currentTime,
         )
     }
 }
