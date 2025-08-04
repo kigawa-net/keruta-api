@@ -291,10 +291,20 @@ class SessionController(
                         val createdWorkspace = executorClient.createWorkspace(createRequest)
                         workspaceCreated = true
                         logger.info(
-                            "Successfully created workspace for session: {} workspaceId: {}",
+                            "Successfully created workspace for session: {} workspaceId: {} workspaceName: {}",
                             id,
                             createdWorkspace.id,
+                            workspaceName,
                         )
+
+                        // Update session name to match workspace name for easy reverse lookup
+                        try {
+                            val updatedSession = session.copy(name = workspaceName)
+                            sessionService.updateSession(id, updatedSession)
+                            logger.info("Updated session name to match workspace name: {}", workspaceName)
+                        } catch (e: Exception) {
+                            logger.warn("Failed to update session name to workspace name: {}", workspaceName, e)
+                        }
 
                         // Refresh workspace list
                         workspaces = executorClient.getWorkspacesBySessionId(id)
