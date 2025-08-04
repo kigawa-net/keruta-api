@@ -391,8 +391,7 @@ class SessionController(
             .replace("[^a-zA-Z0-9-_]".toRegex(), "-")
             .replace("-+".toRegex(), "-")
             .trim('-')
-            .take(30) // Limit length
 
-        return "session-${session.id.take(8)}-$sanitizedSessionName"
+        return "session-${session.id}-$sanitizedSessionName"
     }
 }
