@@ -171,4 +171,30 @@ open class SessionServiceImpl(
         )
         return sessionRepository.save(updatedSession)
     }
+
+    override suspend fun searchSessionsByPartialId(partialId: String): List<Session> {
+        logger.debug("Searching sessions by partial ID: {}", partialId)
+
+        // Validate partial ID (should be at least 4 characters)
+        if (partialId.length < 4) {
+            logger.debug("Partial ID too short: {}", partialId)
+            return emptyList()
+        }
+
+        // Ensure partial ID contains only valid UUID characters
+        val validUuidPattern = Regex("^[0-9a-fA-F-]+$")
+        if (!validUuidPattern.matches(partialId)) {
+            logger.debug("Invalid partial ID format: {}", partialId)
+            return emptyList()
+        }
+
+        try {
+            val sessions = sessionRepository.findByPartialId(partialId)
+            logger.debug("Found {} sessions matching partial ID: {}", sessions.size, partialId)
+            return sessions
+        } catch (e: Exception) {
+            logger.error("Failed to search sessions by partial ID: {}", partialId, e)
+            return emptyList()
+        }
+    }
 }

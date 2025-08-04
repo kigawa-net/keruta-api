@@ -102,4 +102,13 @@ interface SessionService {
      * @throws NoSuchElementException if the session is not found
      */
     suspend fun removeTagFromSession(id: String, tag: String): Session
+
+    /**
+     * Searches for sessions by partial ID.
+     * This is useful for finding sessions when only part of the UUID is known.
+     *
+     * @param partialId The partial ID to search for (e.g., "29229ea1")
+     * @return List of sessions with IDs starting with the partial ID
+     */
+    suspend fun searchSessionsByPartialId(partialId: String): List<Session>
 }

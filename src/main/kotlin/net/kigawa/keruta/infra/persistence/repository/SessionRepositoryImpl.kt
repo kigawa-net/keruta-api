@@ -108,4 +108,31 @@ class SessionRepositoryImpl(private val mongoSessionRepository: MongoSessionRepo
     override suspend fun findByTag(tag: String): List<Session> {
         return mongoSessionRepository.findByTagsContaining(tag).map { it.toDomain() }
     }
+
+    override suspend fun findByPartialId(partialId: String): List<Session> {
+        logger.debug("Finding sessions by partial ID: {}", partialId)
+        try {
+            val entities = mongoSessionRepository.findByIdStartingWithIgnoreCase(partialId)
+            logger.debug("Found {} session entities with partial ID: {}", entities.size, partialId)
+
+            val sessions = entities.mapNotNull { entity ->
+                try {
+                    entity.toDomain()
+                } catch (e: Exception) {
+                    logger.error("Failed to convert session entity to domain object: {}", entity.id, e)
+                    null
+                }
+            }
+
+            logger.debug(
+                "Successfully converted {} session entities to domain objects for partial ID: {}",
+                sessions.size,
+                partialId,
+            )
+            return sessions
+        } catch (e: Exception) {
+            logger.error("Failed to find sessions by partial ID: {}", partialId, e)
+            throw e
+        }
+    }
 }

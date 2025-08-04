@@ -61,4 +61,13 @@ interface SessionRepository {
      * @return List of sessions with the specified tag
      */
     suspend fun findByTag(tag: String): List<Session>
+
+    /**
+     * Finds sessions by partial ID.
+     * This searches for sessions where the ID starts with the provided partial ID.
+     *
+     * @param partialId The partial ID to search for (e.g., "29229ea1")
+     * @return List of sessions with IDs starting with the partial ID
+     */
+    suspend fun findByPartialId(partialId: String): List<Session>
 }

@@ -32,4 +32,13 @@ interface MongoSessionRepository : MongoRepository<SessionEntity, String> {
      * @return List of sessions with the specified tag
      */
     fun findByTagsContaining(tag: String): List<SessionEntity>
+
+    /**
+     * Finds sessions by partial ID.
+     * This searches for sessions where the ID starts with the provided partial ID.
+     *
+     * @param partialId The partial ID to search for (e.g., "29229ea1")
+     * @return List of sessions with IDs starting with the partial ID
+     */
+    fun findByIdStartingWithIgnoreCase(partialId: String): List<SessionEntity>
 }

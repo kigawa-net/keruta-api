@@ -106,6 +106,32 @@ class SessionController(
         return sessionService.searchSessionsByName(name).map { SessionResponse.fromDomain(it) }
     }
 
+    @GetMapping("/search/partial-id")
+    @Operation(
+        summary = "Search sessions by partial ID",
+        description = "Searches sessions by partial UUID (useful for finding sessions from workspace names)",
+    )
+    suspend fun searchSessionsByPartialId(@RequestParam partialId: String): ResponseEntity<List<SessionResponse>> {
+        logger.debug("Searching sessions by partial ID: {}", partialId)
+
+        // Validate input
+        if (partialId.isBlank() || partialId.length < 4) {
+            logger.debug("Invalid partial ID: too short or blank")
+            return ResponseEntity.badRequest().build()
+        }
+
+        return try {
+            val sessions = sessionService.searchSessionsByPartialId(partialId)
+            logger.debug("Found {} sessions matching partial ID: {}", sessions.size, partialId)
+
+            val responses = sessions.map { SessionResponse.fromDomain(it) }
+            ResponseEntity.ok(responses)
+        } catch (e: Exception) {
+            logger.error("Failed to search sessions by partial ID: {}", partialId, e)
+            ResponseEntity.internalServerError().build()
+        }
+    }
+
     @GetMapping("/tag/{tag}")
     @Operation(summary = "Get sessions by tag", description = "Retrieves all sessions with a specific tag")
     suspend fun getSessionsByTag(@PathVariable tag: String): List<SessionResponse> {
