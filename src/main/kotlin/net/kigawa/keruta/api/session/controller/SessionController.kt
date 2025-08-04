@@ -386,12 +386,6 @@ class SessionController(
      * Generates a workspace name for the session.
      */
     private fun generateWorkspaceNameForSession(session: Session): String {
-        // Use session name but ensure it's Coder-compatible
-        val sanitizedSessionName = session.name
-            .replace("[^a-zA-Z0-9-_]".toRegex(), "-")
-            .replace("-+".toRegex(), "-")
-            .trim('-')
-
-        return "session-${session.id}-$sanitizedSessionName"
+        return session.id.replace("-".toRegex(), "")
     }
 }
