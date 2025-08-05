@@ -128,7 +128,6 @@ open class SessionServiceImpl(
         logger.info("Updating session status: id={} status={}", id, status)
         try {
             val existingSession = getSessionById(id)
-            val oldStatus = existingSession.status
             val updatedSession = existingSession.copy(
                 status = status,
                 updatedAt = LocalDateTime.now(),

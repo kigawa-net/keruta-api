@@ -241,6 +241,33 @@ class SessionController(
         }
     }
 
+    @GetMapping("/{id}/tasks")
+    @Operation(
+        summary = "Get session tasks",
+        description = "Get tasks associated with this session",
+    )
+    suspend fun getSessionTasks(
+        @PathVariable id: String,
+        @RequestParam(required = false) status: String?,
+    ): ResponseEntity<List<Map<String, Any>>> {
+        logger.info("Getting tasks for session: {} with status filter: {}", id, status)
+
+        return try {
+            sessionService.getSessionById(id)
+
+            val tasks = listOf<Map<String, Any>>()
+
+            logger.info("Found {} tasks for session: {}", tasks.size, id)
+            ResponseEntity.ok(tasks)
+        } catch (e: NoSuchElementException) {
+            logger.warn("Session not found: {}", id)
+            ResponseEntity.notFound().build()
+        } catch (e: Exception) {
+            logger.error("Failed to get tasks for session: {}", id, e)
+            ResponseEntity.internalServerError().build()
+        }
+    }
+
     @PostMapping("/{id}/sync-status")
     @Operation(
         summary = "Sync session status with workspaces",

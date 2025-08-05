@@ -222,10 +222,10 @@ open class RepositoryServiceImpl(
 
             // 実際の実装では、スクリプトをテスト環境で実行する
             // ここではシミュレーション
-            val hasShebang = repository.installScript!!.startsWith("#!")
-            val hasBasicCommands = repository.installScript!!.contains("echo") ||
-                repository.installScript!!.contains("install") ||
-                repository.installScript!!.contains("build")
+            val hasShebang = repository.installScript.startsWith("#!")
+            val hasBasicCommands = repository.installScript.contains("echo") ||
+                repository.installScript.contains("install") ||
+                repository.installScript.contains("build")
 
             val success = hasShebang && hasBasicCommands
 
@@ -235,7 +235,7 @@ open class RepositoryServiceImpl(
                 details = mapOf(
                     "hasShebang" to hasShebang,
                     "hasBasicCommands" to hasBasicCommands,
-                    "scriptLength" to repository.installScript!!.length,
+                    "scriptLength" to repository.installScript.length,
                 ),
             )
         } catch (e: Exception) {
