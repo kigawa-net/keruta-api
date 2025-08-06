@@ -8,6 +8,8 @@ data class UpdateSessionRequest(
     val name: String,
     val description: String? = null,
     val tags: List<String> = emptyList(),
+    val repositoryUrl: String? = null,
+    val repositoryRef: String = "main",
     val templateConfig: SessionTemplateConfigRequest? = null,
 ) {
     fun toDomain(id: String): Session {
@@ -17,6 +19,8 @@ data class UpdateSessionRequest(
             description = description,
             status = SessionStatus.ACTIVE, // Status will be overridden by controller
             tags = tags,
+            repositoryUrl = repositoryUrl,
+            repositoryRef = repositoryRef,
             templateConfig = templateConfig?.toDomain(),
             updatedAt = LocalDateTime.now(),
         )

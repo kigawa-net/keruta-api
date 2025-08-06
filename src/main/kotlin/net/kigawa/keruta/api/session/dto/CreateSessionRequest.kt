@@ -11,6 +11,8 @@ data class CreateSessionRequest(
     val name: String,
     val description: String? = null,
     val tags: List<String> = emptyList(),
+    val repositoryUrl: String? = null,
+    val repositoryRef: String = "main",
     val templateConfig: SessionTemplateConfigRequest? = null,
 ) {
     fun toDomain(): Session {
@@ -20,6 +22,8 @@ data class CreateSessionRequest(
             description = description,
             status = SessionStatus.ACTIVE, // Status is always set to ACTIVE on creation
             tags = tags,
+            repositoryUrl = repositoryUrl,
+            repositoryRef = repositoryRef,
             templateConfig = templateConfig?.toDomain(),
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now(),
