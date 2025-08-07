@@ -115,6 +115,18 @@ open class TaskController(
         return ResponseEntity.noContent().build()
     }
 
+    @GetMapping("/health")
+    suspend fun healthCheck(): ResponseEntity<Map<String, String>> {
+        logger.info("Task controller health check")
+        return ResponseEntity.ok(
+            mapOf(
+                "status" to "OK",
+                "controller" to "TaskController",
+                "timestamp" to System.currentTimeMillis().toString(),
+            ),
+        )
+    }
+
     @PostMapping("/test/{sessionId}")
     suspend fun createTestTask(@PathVariable sessionId: String): ResponseEntity<TaskResponse> {
         logger.info("Creating test Claude task for session: $sessionId")
