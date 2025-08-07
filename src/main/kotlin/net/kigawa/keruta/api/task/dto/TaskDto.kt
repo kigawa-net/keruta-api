@@ -6,19 +6,24 @@ import net.kigawa.keruta.core.domain.model.TaskStatus
 import java.time.LocalDateTime
 
 data class CreateTaskRequest(
-    val sessionId: String,
-    val name: String,
-    val description: String = "",
-    val script: String = "",
-    val parameters: Map<String, Any> = emptyMap(),
+    val sessionId: String?,
+    val name: String?,
+    val description: String? = null,
+    val script: String? = null,
+    val parameters: Map<String, Any>? = null,
 ) {
-    fun toDomain(): Task = Task(
-        sessionId = sessionId,
-        name = name,
-        description = description,
-        script = script,
-        parameters = parameters,
-    )
+    fun toDomain(): Task {
+        require(!sessionId.isNullOrBlank()) { "sessionId is required" }
+        require(!name.isNullOrBlank()) { "name is required" }
+
+        return Task(
+            sessionId = sessionId,
+            name = name,
+            description = description ?: "",
+            script = script ?: "",
+            parameters = parameters ?: emptyMap(),
+        )
+    }
 }
 
 data class UpdateTaskStatusRequest(

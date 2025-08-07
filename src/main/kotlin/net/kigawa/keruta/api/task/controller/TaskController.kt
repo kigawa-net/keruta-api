@@ -1,6 +1,8 @@
 package net.kigawa.keruta.api.task.controller
 
 import net.kigawa.keruta.api.task.dto.*
+import net.kigawa.keruta.core.domain.model.Task
+import net.kigawa.keruta.core.domain.model.TaskStatus
 import net.kigawa.keruta.core.usecase.task.TaskService
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -18,11 +20,19 @@ open class TaskController(
     suspend fun createTask(@RequestBody request: CreateTaskRequest): ResponseEntity<TaskResponse> {
         logger.info("Creating task: ${request.name} for session: ${request.sessionId}")
 
-        val task = request.toDomain()
-        val createdTask = taskService.createTask(task)
+        return try {
+            val task = request.toDomain()
+            val createdTask = taskService.createTask(task)
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(TaskResponse.fromDomain(createdTask))
+            ResponseEntity.status(HttpStatus.CREATED)
+                .body(TaskResponse.fromDomain(createdTask))
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Invalid task creation request: ${e.message}")
+            ResponseEntity.badRequest().build()
+        } catch (e: Exception) {
+            logger.error("Failed to create task", e)
+            ResponseEntity.internalServerError().build()
+        }
     }
 
     @GetMapping("/{id}")
@@ -91,5 +101,28 @@ open class TaskController(
 
         taskService.deleteTask(id)
         return ResponseEntity.noContent().build()
+    }
+
+    @PostMapping("/test/{sessionId}")
+    suspend fun createTestTask(@PathVariable sessionId: String): ResponseEntity<TaskResponse> {
+        logger.info("Creating test Claude task for session: $sessionId")
+
+        return try {
+            val testTask = Task(
+                sessionId = sessionId,
+                name = "Test Claude Task",
+                description = "Test task for Claude execution with tmux",
+                script = "claude test task execution",
+                status = TaskStatus.PENDING,
+            )
+
+            val createdTask = taskService.createTask(testTask)
+
+            ResponseEntity.status(HttpStatus.CREATED)
+                .body(TaskResponse.fromDomain(createdTask))
+        } catch (e: Exception) {
+            logger.error("Failed to create test task", e)
+            ResponseEntity.internalServerError().build()
+        }
     }
 }
