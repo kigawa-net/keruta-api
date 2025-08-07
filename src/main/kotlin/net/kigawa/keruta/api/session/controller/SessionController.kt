@@ -5,13 +5,16 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import net.kigawa.keruta.api.session.dto.CreateSessionRequest
 import net.kigawa.keruta.api.session.dto.SessionResponse
 import net.kigawa.keruta.api.session.dto.UpdateSessionRequest
+import net.kigawa.keruta.api.task.dto.TaskResponse
 import net.kigawa.keruta.api.workspace.dto.CoderWorkspaceResponse
 import net.kigawa.keruta.core.domain.model.Session
+import net.kigawa.keruta.core.domain.model.TaskStatus
 import net.kigawa.keruta.core.usecase.executor.CoderWorkspaceTemplate
 import net.kigawa.keruta.core.usecase.executor.CreateCoderWorkspaceRequest
 import net.kigawa.keruta.core.usecase.executor.ExecutorClient
 import net.kigawa.keruta.core.usecase.session.SessionService
 import net.kigawa.keruta.core.usecase.session.SessionServiceImpl
+import net.kigawa.keruta.core.usecase.task.TaskService
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -23,6 +26,7 @@ class SessionController(
     private val sessionService: SessionService,
     private val sessionServiceImpl: SessionServiceImpl,
     private val executorClient: ExecutorClient,
+    private val taskService: TaskService,
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -249,19 +253,29 @@ class SessionController(
     suspend fun getSessionTasks(
         @PathVariable id: String,
         @RequestParam(required = false) status: String?,
-    ): ResponseEntity<List<Map<String, Any>>> {
+    ): ResponseEntity<List<TaskResponse>> {
         logger.info("Getting tasks for session: {} with status filter: {}", id, status)
 
         return try {
             sessionService.getSessionById(id)
 
-            val tasks = listOf<Map<String, Any>>()
+            val tasks = if (status != null) {
+                val taskStatus = TaskStatus.valueOf(status.uppercase())
+                taskService.getTasksBySessionAndStatus(id, taskStatus)
+            } else {
+                taskService.getTasksBySession(id)
+            }
+
+            val taskResponses = tasks.map { TaskResponse.fromDomain(it) }
 
             logger.info("Found {} tasks for session: {}", tasks.size, id)
-            ResponseEntity.ok(tasks)
+            ResponseEntity.ok(taskResponses)
         } catch (e: NoSuchElementException) {
             logger.warn("Session not found: {}", id)
             ResponseEntity.notFound().build()
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Invalid task status: {}", status)
+            ResponseEntity.badRequest().build()
         } catch (e: Exception) {
             logger.error("Failed to get tasks for session: {}", id, e)
             ResponseEntity.internalServerError().build()
