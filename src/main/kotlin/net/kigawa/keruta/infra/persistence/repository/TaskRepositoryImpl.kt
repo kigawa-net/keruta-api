@@ -6,6 +6,7 @@ import net.kigawa.keruta.core.domain.model.Task
 import net.kigawa.keruta.core.domain.model.TaskStatus
 import net.kigawa.keruta.core.usecase.repository.TaskRepository
 import net.kigawa.keruta.infra.persistence.entity.TaskEntity
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import reactor.core.publisher.Mono
 import java.time.LocalDateTime
@@ -14,6 +15,8 @@ import java.time.LocalDateTime
 open class TaskRepositoryImpl(
     private val mongoTaskRepository: MongoTaskRepository,
 ) : TaskRepository {
+
+    private val logger = LoggerFactory.getLogger(TaskRepositoryImpl::class.java)
 
     override suspend fun findById(id: String): Task? {
         return Mono.fromCallable { mongoTaskRepository.findById(id).orElse(null) }
@@ -40,10 +43,21 @@ open class TaskRepositoryImpl(
     }
 
     override suspend fun save(task: Task): Task {
-        val taskEntity = TaskEntity.fromDomain(task.copy(updatedAt = LocalDateTime.now()))
-        return Mono.fromCallable { mongoTaskRepository.save(taskEntity) }
-            .awaitSingle()
-            .toDomain()
+        logger.info("TaskRepository.save called with task ID: ${task.id}")
+
+        return try {
+            val taskEntity = TaskEntity.fromDomain(task.copy(updatedAt = LocalDateTime.now()))
+            logger.debug("Converting task to entity: $taskEntity")
+
+            val savedEntity = Mono.fromCallable { mongoTaskRepository.save(taskEntity) }
+                .awaitSingle()
+
+            logger.info("Task entity saved successfully: ${savedEntity.id}")
+            savedEntity.toDomain()
+        } catch (e: Exception) {
+            logger.error("Failed to save task entity: ${e.message}", e)
+            throw e
+        }
     }
 
     override suspend fun delete(id: String) {

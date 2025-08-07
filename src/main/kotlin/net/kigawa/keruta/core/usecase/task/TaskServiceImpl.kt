@@ -16,6 +16,8 @@ open class TaskServiceImpl(
     private val logger = LoggerFactory.getLogger(TaskServiceImpl::class.java)
 
     override suspend fun createTask(task: Task): Task {
+        logger.info("TaskService.createTask called with: $task")
+
         val newTask = task.copy(
             id = if (task.id.isEmpty()) UUID.randomUUID().toString() else task.id,
             createdAt = LocalDateTime.now(),
@@ -23,7 +25,15 @@ open class TaskServiceImpl(
         )
 
         logger.info("Creating task: ${newTask.id} for session: ${newTask.sessionId}")
-        return taskRepository.save(newTask)
+
+        return try {
+            val savedTask = taskRepository.save(newTask)
+            logger.info("Task saved successfully: ${savedTask.id}")
+            savedTask
+        } catch (e: Exception) {
+            logger.error("Failed to save task: ${e.message}", e)
+            throw e
+        }
     }
 
     override suspend fun getTask(id: String): Task? {

@@ -17,21 +17,33 @@ open class TaskController(
     private val logger = LoggerFactory.getLogger(TaskController::class.java)
 
     @PostMapping
-    suspend fun createTask(@RequestBody request: CreateTaskRequest): ResponseEntity<TaskResponse> {
-        logger.info("Creating task: ${request.name} for session: ${request.sessionId}")
+    suspend fun createTask(@RequestBody request: CreateTaskRequest): ResponseEntity<Any> {
+        logger.info("Creating task: name=${request.name}, title=${request.title}, sessionId=${request.sessionId}")
+        logger.debug("Full request: $request")
 
         return try {
             val task = request.toDomain()
             val createdTask = taskService.createTask(task)
 
+            logger.info("Task created successfully with ID: ${createdTask.id}")
             ResponseEntity.status(HttpStatus.CREATED)
                 .body(TaskResponse.fromDomain(createdTask))
         } catch (e: IllegalArgumentException) {
-            logger.warn("Invalid task creation request: ${e.message}")
-            ResponseEntity.badRequest().build()
+            logger.warn("Invalid task creation request: ${e.message}, request: $request")
+            ResponseEntity.badRequest().body(
+                mapOf(
+                    "error" to "Invalid request",
+                    "message" to e.message,
+                ),
+            )
         } catch (e: Exception) {
-            logger.error("Failed to create task", e)
-            ResponseEntity.internalServerError().build()
+            logger.error("Failed to create task: ${e.message}, request: $request", e)
+            ResponseEntity.internalServerError().body(
+                mapOf(
+                    "error" to "Internal server error",
+                    "message" to e.message,
+                ),
+            )
         }
     }
 
