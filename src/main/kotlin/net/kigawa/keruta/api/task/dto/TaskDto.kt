@@ -1,24 +1,33 @@
 package net.kigawa.keruta.api.task.dto
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import net.kigawa.keruta.core.domain.model.Task
 import net.kigawa.keruta.core.domain.model.TaskStatus
 import java.time.LocalDateTime
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class CreateTaskRequest(
     val sessionId: String?,
     val name: String?,
+    val title: String? = null, // titleフィールドを追加（nameのエイリアスとして使用）
     val description: String? = null,
     val script: String? = null,
     val parameters: Map<String, Any>? = null,
 ) {
     fun toDomain(): Task {
         require(!sessionId.isNullOrBlank()) { "sessionId is required" }
-        require(!name.isNullOrBlank()) { "name is required" }
+
+        // nameまたはtitleのいずれかが必須
+        val taskName = when {
+            !name.isNullOrBlank() -> name
+            !title.isNullOrBlank() -> title
+            else -> throw IllegalArgumentException("name or title is required")
+        }
 
         return Task(
             sessionId = sessionId,
-            name = name,
+            name = taskName,
             description = description ?: "",
             script = script ?: "",
             parameters = parameters ?: emptyMap(),
