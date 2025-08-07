@@ -9,14 +9,21 @@ import java.time.LocalDateTime
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class CreateTaskRequest(
     val sessionId: String?,
+    val session: String? = null, // sessionフィールドを追加（sessionIdのエイリアスとして使用）
     val name: String?,
     val title: String? = null, // titleフィールドを追加（nameのエイリアスとして使用）
     val description: String? = null,
     val script: String? = null,
+    val priority: Int? = null, // priorityフィールドを追加
     val parameters: Map<String, Any>? = null,
 ) {
     fun toDomain(): Task {
-        require(!sessionId.isNullOrBlank()) { "sessionId is required" }
+        // sessionIdまたはsessionのいずれかが必須
+        val taskSessionId = when {
+            !sessionId.isNullOrBlank() -> sessionId
+            !session.isNullOrBlank() -> session
+            else -> throw IllegalArgumentException("sessionId or session is required")
+        }
 
         // nameまたはtitleのいずれかが必須
         val taskName = when {
@@ -26,7 +33,7 @@ data class CreateTaskRequest(
         }
 
         return Task(
-            sessionId = sessionId,
+            sessionId = taskSessionId,
             name = taskName,
             description = description ?: "",
             script = script ?: "",
