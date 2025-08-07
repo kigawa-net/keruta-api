@@ -11,13 +11,14 @@ data class UpdateSessionRequest(
     val repositoryUrl: String? = null,
     val repositoryRef: String = "main",
     val templateConfig: SessionTemplateConfigRequest? = null,
+    val status: SessionStatus? = null,
 ) {
-    fun toDomain(id: String): Session {
+    fun toDomain(id: String, defaultStatus: SessionStatus = SessionStatus.ACTIVE): Session {
         return Session(
             id = id,
             name = name,
             description = description,
-            status = SessionStatus.ACTIVE, // Status will be overridden by controller
+            status = status ?: defaultStatus,
             tags = tags,
             repositoryUrl = repositoryUrl,
             repositoryRef = repositoryRef,
