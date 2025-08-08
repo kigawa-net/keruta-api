@@ -6,6 +6,7 @@ import net.kigawa.keruta.core.domain.model.TaskStatus
 interface TaskService {
     suspend fun createTask(task: Task): Task
     suspend fun getTask(id: String): Task?
+    suspend fun getAllTasks(): List<Task>
     suspend fun getTasksBySession(sessionId: String): List<Task>
     suspend fun getTasksBySessionAndStatus(sessionId: String, status: TaskStatus): List<Task>
     suspend fun updateTaskStatus(

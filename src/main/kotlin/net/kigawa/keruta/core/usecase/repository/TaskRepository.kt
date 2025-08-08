@@ -5,6 +5,7 @@ import net.kigawa.keruta.core.domain.model.TaskStatus
 
 interface TaskRepository {
     suspend fun findById(id: String): Task?
+    suspend fun findAll(): List<Task>
     suspend fun findBySessionId(sessionId: String): List<Task>
     suspend fun findBySessionIdAndStatus(sessionId: String, status: TaskStatus): List<Task>
     suspend fun findByStatus(status: TaskStatus): List<Task>

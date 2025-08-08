@@ -40,6 +40,11 @@ open class TaskServiceImpl(
         return taskRepository.findById(id)
     }
 
+    override suspend fun getAllTasks(): List<Task> {
+        logger.info("Getting all tasks")
+        return taskRepository.findAll()
+    }
+
     override suspend fun getTasksBySession(sessionId: String): List<Task> {
         return taskRepository.findBySessionId(sessionId)
     }

@@ -107,6 +107,17 @@ open class TaskController(
         return ResponseEntity.ok(response)
     }
 
+    @GetMapping
+    suspend fun getAllTasks(): ResponseEntity<List<TaskResponse>> {
+        logger.info("Getting all tasks")
+
+        val tasks = taskService.getAllTasks()
+        val taskResponses = tasks.map { TaskResponse.fromDomain(it) }
+
+        logger.info("Found ${tasks.size} tasks")
+        return ResponseEntity.ok(taskResponses)
+    }
+
     @DeleteMapping("/{id}")
     suspend fun deleteTask(@PathVariable id: String): ResponseEntity<Void> {
         logger.info("Deleting task: $id")

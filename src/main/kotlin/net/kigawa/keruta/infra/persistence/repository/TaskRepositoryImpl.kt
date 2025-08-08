@@ -24,6 +24,12 @@ open class TaskRepositoryImpl(
             ?.toDomain()
     }
 
+    override suspend fun findAll(): List<Task> {
+        return Mono.fromCallable { mongoTaskRepository.findAll().toList() }
+            .awaitSingle()
+            .map { it.toDomain() }
+    }
+
     override suspend fun findBySessionId(sessionId: String): List<Task> {
         return Mono.fromCallable { mongoTaskRepository.findBySessionIdOrderByCreatedAtAsc(sessionId) }
             .awaitSingle()
