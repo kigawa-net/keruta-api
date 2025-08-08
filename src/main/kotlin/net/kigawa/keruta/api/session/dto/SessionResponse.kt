@@ -40,8 +40,6 @@ data class SessionResponse(
 data class SessionTemplateConfigResponse(
     val templateId: String? = null,
     val templateName: String? = null,
-    val repositoryUrl: String? = null,
-    val repositoryRef: String = "main",
     val templatePath: String = ".",
     val preferredKeywords: List<String> = emptyList(),
     val parameters: Map<String, String> = emptyMap(),
@@ -51,8 +49,6 @@ data class SessionTemplateConfigResponse(
             return SessionTemplateConfigResponse(
                 templateId = config.templateId,
                 templateName = config.templateName,
-                repositoryUrl = config.repositoryUrl,
-                repositoryRef = config.repositoryRef,
                 templatePath = config.templatePath,
                 preferredKeywords = config.preferredKeywords,
                 parameters = config.parameters,

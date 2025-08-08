@@ -35,8 +35,6 @@ enum class SessionStatus {
 data class SessionTemplateConfig(
     val templateId: String? = null,
     val templateName: String? = null,
-    val repositoryUrl: String? = null,
-    val repositoryRef: String = "main",
     val templatePath: String = ".",
     val preferredKeywords: List<String> = emptyList(),
     val parameters: Map<String, String> = emptyMap(),

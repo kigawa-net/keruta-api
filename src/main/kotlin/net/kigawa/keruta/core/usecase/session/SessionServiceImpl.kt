@@ -85,8 +85,6 @@ open class SessionServiceImpl(
         // Both are non-null, compare their contents
         return existingConfig!!.templateId != newConfig!!.templateId ||
             existingConfig.templateName != newConfig.templateName ||
-            existingConfig.repositoryUrl != newConfig.repositoryUrl ||
-            existingConfig.repositoryRef != newConfig.repositoryRef ||
             existingConfig.templatePath != newConfig.templatePath ||
             existingConfig.preferredKeywords != newConfig.preferredKeywords ||
             existingConfig.parameters != newConfig.parameters

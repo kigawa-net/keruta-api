@@ -10,8 +10,6 @@ data class WorkspaceTemplate(
     val name: String,
     val description: String? = null,
     val templatePath: String,
-    val repositoryUrl: String? = null,
-    val repositoryRef: String? = null,
     val isDefault: Boolean = false,
     val icon: String? = null,
     val tags: List<String> = emptyList(),
