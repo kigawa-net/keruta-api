@@ -27,4 +27,5 @@ enum class TaskStatus {
     COMPLETED,
     FAILED,
     WAITING_FOR_INPUT,
+    RETRYING,
 }
