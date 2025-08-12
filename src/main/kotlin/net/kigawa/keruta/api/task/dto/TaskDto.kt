@@ -98,3 +98,41 @@ data class TaskScriptContent(
     val filename: String,
     val parameters: Map<String, Any>,
 )
+
+data class CreateTaskLogRequest(
+    val level: String,
+    val message: String,
+    val source: String? = "task",
+    val metadata: Map<String, Any>? = emptyMap(),
+)
+
+data class TaskLogResponse(
+    val id: String,
+    val taskId: String,
+    val sessionId: String,
+    val level: String,
+    val source: String,
+    val message: String,
+    val timestamp: LocalDateTime,
+    val metadata: Map<String, Any>,
+) {
+    companion object {
+        fun fromDomain(taskLog: net.kigawa.keruta.core.domain.model.TaskLog): TaskLogResponse = TaskLogResponse(
+            id = taskLog.id,
+            taskId = taskLog.taskId,
+            sessionId = taskLog.sessionId,
+            level = taskLog.level.name,
+            source = taskLog.source,
+            message = taskLog.message,
+            timestamp = taskLog.timestamp,
+            metadata = taskLog.metadata,
+        )
+    }
+}
+
+data class TaskLogQueryRequest(
+    val level: String? = null,
+    val startTime: LocalDateTime? = null,
+    val endTime: LocalDateTime? = null,
+    val source: String? = null,
+)

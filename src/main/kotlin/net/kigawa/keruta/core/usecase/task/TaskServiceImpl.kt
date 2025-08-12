@@ -1,5 +1,6 @@
 package net.kigawa.keruta.core.usecase.task
 
+import net.kigawa.keruta.core.domain.model.LogLevel
 import net.kigawa.keruta.core.domain.model.Task
 import net.kigawa.keruta.core.domain.model.TaskStatus
 import net.kigawa.keruta.core.usecase.repository.TaskRepository
@@ -11,6 +12,7 @@ import java.util.*
 @Service
 open class TaskServiceImpl(
     private val taskRepository: TaskRepository,
+    private val taskLogService: TaskLogService,
 ) : TaskService {
 
     private val logger = LoggerFactory.getLogger(TaskServiceImpl::class.java)
@@ -81,7 +83,23 @@ open class TaskServiceImpl(
 
     override suspend fun sendTaskLog(taskId: String, level: String, message: String) {
         logger.info("Task $taskId [$level]: $message")
-        // 将来的にはログストレージに保存する実装を追加
+
+        try {
+            val task = taskRepository.findById(taskId)
+            if (task != null) {
+                val logLevel = LogLevel.valueOf(level.uppercase())
+                taskLogService.createLog(
+                    taskId = taskId,
+                    sessionId = task.sessionId,
+                    level = logLevel,
+                    message = message,
+                )
+            } else {
+                logger.warn("Task not found for logging: $taskId")
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to save task log: taskId=$taskId, level=$level", e)
+        }
     }
 
     override suspend fun getTaskScript(taskId: String): String? {
