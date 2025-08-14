@@ -138,6 +138,34 @@ open class TaskController(
         )
     }
 
+    @GetMapping("/session/{sessionId}")
+    suspend fun getTasksBySession(
+        @PathVariable sessionId: String,
+        @RequestParam(required = false) status: String?,
+    ): ResponseEntity<List<TaskResponse>> {
+        logger.info("Getting tasks for session: $sessionId with status filter: $status")
+
+        return try {
+            val tasks = if (status != null) {
+                val taskStatus = TaskStatus.valueOf(status.uppercase())
+                taskService.getTasksBySessionAndStatus(sessionId, taskStatus)
+            } else {
+                taskService.getTasksBySession(sessionId)
+            }
+
+            val taskResponses = tasks.map { TaskResponse.fromDomain(it) }
+
+            logger.info("Found ${tasks.size} tasks for session: $sessionId")
+            ResponseEntity.ok(taskResponses)
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Invalid task status: $status")
+            ResponseEntity.badRequest().body(emptyList())
+        } catch (e: Exception) {
+            logger.error("Failed to get tasks for session: $sessionId", e)
+            ResponseEntity.internalServerError().body(emptyList())
+        }
+    }
+
     @PostMapping("/test/{sessionId}")
     suspend fun createTestTask(@PathVariable sessionId: String): ResponseEntity<TaskResponse> {
         logger.info("Creating test Claude task for session: $sessionId")
