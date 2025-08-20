@@ -469,18 +469,29 @@ class SessionController(
 
     /**
      * Generates a workspace name for the session.
+     * Follows Coder workspace naming rules:
+     * - Must contain only lowercase alphanumeric characters, hyphens, and underscores
+     * - Must start with a lowercase letter
+     * - Must be between 1-32 characters
      */
     private fun generateWorkspaceNameForSession(session: Session): String {
-        // Use session name but ensure it's Coder-compatible
-        val sanitizedSessionName = session.name
-            .replace("[^a-zA-Z0-9-_]".toRegex(), "-")
-            .replace("-+".toRegex(), "-")
-            .trim('-')
-            .take(15) // Limit length to leave room for timestamp
+        // Start with a letter as required by Coder
+        val prefix = "ws"
 
-        // Add timestamp to ensure uniqueness
-        val timestamp = System.currentTimeMillis().toString().takeLast(6)
+        // Use shortened session ID (8 chars) for uniqueness
+        val sessionIdShort = session.id.take(8).lowercase()
 
-        return "session-${session.id.take(8)}-$sanitizedSessionName-$timestamp"
+        // Sanitize session name: only lowercase alphanumeric, max 10 chars
+        val sanitizedName = session.name
+            .lowercase()
+            .replace("[^a-z0-9]".toRegex(), "")
+            .take(10)
+            .ifEmpty { "session" }
+
+        // Add short timestamp for uniqueness (4 digits)
+        val timestamp = (System.currentTimeMillis() % 10000).toString().padStart(4, '0')
+
+        // Combine: ws-{sessionId8}-{name10}-{time4} = max 29 chars (within 32 limit)
+        return "$prefix-$sessionIdShort-$sanitizedName-$timestamp"
     }
 }
