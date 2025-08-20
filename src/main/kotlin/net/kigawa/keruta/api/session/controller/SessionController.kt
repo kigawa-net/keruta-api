@@ -145,14 +145,14 @@ class SessionController(
     @PutMapping("/{id}/status")
     @Operation(
         summary = "Update session status",
-        description = "Internal API - Status updates are managed by the system",
+        description = "External API - Status updates are not allowed from users",
     )
     suspend fun updateSessionStatus(
         @PathVariable id: String,
         @RequestBody statusRequest: Map<String, String>,
     ): ResponseEntity<Map<String, String>> {
         logger.warn(
-            "Attempted to update session status via API - operation not allowed: id={} status={}",
+            "Attempted to update session status via external API - operation not allowed: id={} status={}",
             id,
             statusRequest["status"],
         )
@@ -162,6 +162,40 @@ class SessionController(
                 "message" to "Session status is managed automatically by the system",
             ),
         )
+    }
+
+    @PutMapping("/{id}/system-status")
+    @Operation(
+        summary = "Update session status (System Only)",
+        description = "Internal API for system components to update session status",
+    )
+    suspend fun updateSessionStatusSystem(
+        @PathVariable id: String,
+        @RequestBody statusRequest: Map<String, String>,
+    ): ResponseEntity<SessionResponse> {
+        val statusStr = statusRequest["status"]
+        if (statusStr == null) {
+            logger.warn("Missing status in request for session: {}", id)
+            return ResponseEntity.badRequest().build()
+        }
+
+        logger.info("System updating session status: id={} status={}", id, statusStr)
+
+        return try {
+            val sessionStatus = net.kigawa.keruta.core.domain.model.SessionStatus.valueOf(statusStr.uppercase())
+            val updatedSession = sessionService.updateSessionStatus(id, sessionStatus)
+            logger.info("Successfully updated session status: id={} status={}", id, sessionStatus)
+            ResponseEntity.ok(SessionResponse.fromDomain(updatedSession))
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Invalid session status: {} for session: {}", statusStr, id)
+            ResponseEntity.badRequest().build()
+        } catch (e: NoSuchElementException) {
+            logger.warn("Session not found: {}", id)
+            ResponseEntity.notFound().build()
+        } catch (e: Exception) {
+            logger.error("Failed to update session status: id={} status={}", id, statusStr, e)
+            ResponseEntity.internalServerError().build()
+        }
     }
 
     @PostMapping("/{id}/tags")
