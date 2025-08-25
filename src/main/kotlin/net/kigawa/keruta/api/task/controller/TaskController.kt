@@ -75,16 +75,7 @@ open class TaskController(
         return ResponseEntity.ok(TaskResponse.fromDomain(updatedTask))
     }
 
-    @PostMapping("/{id}/logs")
-    suspend fun sendTaskLog(
-        @PathVariable id: String,
-        @RequestBody request: TaskLogRequest,
-    ): ResponseEntity<Void> {
-        logger.info("Sending log for task $id [${request.level}]: ${request.message}")
-
-        taskService.sendTaskLog(id, request.level, request.message)
-        return ResponseEntity.ok().build()
-    }
+    // TaskLogControllerに移行済み - 削除
 
     @GetMapping("/{id}/script")
     suspend fun getTaskScript(@PathVariable id: String): ResponseEntity<TaskScriptResponse> {

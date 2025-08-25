@@ -25,15 +25,15 @@ open class TaskLogController(
         logger.info("Creating log for task $taskId [${request.level}]: ${request.message}")
 
         return try {
-            // タスクの存在確認
-            val task = taskService.getTask(taskId)
-                ?: return ResponseEntity.notFound().build()
-
             val level = LogLevel.valueOf(request.level.uppercase())
+
+            // タスクの存在確認（存在しない場合は空のセッションIDでログ作成）
+            val task = taskService.getTask(taskId)
+            val sessionId = task?.sessionId ?: ""
 
             val taskLog = taskLogService.createLog(
                 taskId = taskId,
-                sessionId = task.sessionId,
+                sessionId = sessionId,
                 level = level,
                 message = request.message,
                 source = request.source ?: "task",
