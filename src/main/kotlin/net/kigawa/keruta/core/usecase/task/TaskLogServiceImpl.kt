@@ -3,6 +3,7 @@ package net.kigawa.keruta.core.usecase.task
 import net.kigawa.keruta.core.domain.model.LogLevel
 import net.kigawa.keruta.core.domain.model.TaskLog
 import net.kigawa.keruta.core.usecase.repository.TaskLogRepository
+import org.bson.types.ObjectId
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -27,6 +28,7 @@ open class TaskLogServiceImpl(
         logger.debug("Creating log for task: taskId=$taskId, level=$level, message=$message")
 
         val taskLog = TaskLog(
+            id = ObjectId().toHexString(),
             taskId = taskId,
             sessionId = sessionId,
             level = level,

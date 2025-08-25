@@ -28,12 +28,12 @@ open class TaskLogRepositoryImpl(
 
     override suspend fun findByTaskId(taskId: String): List<TaskLog> = withContext(Dispatchers.IO) {
         logger.debug("Finding logs by taskId: $taskId")
-        mongoTaskLogRepository.findByTaskIdOrderByTimestampAsc(taskId).map { it.toDomain() }
+        mongoTaskLogRepository.findByTaskIdOrderByTimestampDesc(taskId).map { it.toDomain() }
     }
 
     override suspend fun findBySessionId(sessionId: String): List<TaskLog> = withContext(Dispatchers.IO) {
         logger.debug("Finding logs by sessionId: $sessionId")
-        mongoTaskLogRepository.findBySessionIdOrderByTimestampAsc(sessionId).map { it.toDomain() }
+        mongoTaskLogRepository.findBySessionIdOrderByTimestampDesc(sessionId).map { it.toDomain() }
     }
 
     override suspend fun findByTaskIdAndTimeRange(
@@ -46,7 +46,7 @@ open class TaskLogRepositoryImpl(
         if (startTime != null && endTime != null) {
             mongoTaskLogRepository.findByTaskIdAndTimestampBetween(taskId, startTime, endTime).map { it.toDomain() }
         } else {
-            mongoTaskLogRepository.findByTaskIdOrderByTimestampAsc(taskId).map { it.toDomain() }
+            mongoTaskLogRepository.findByTaskIdOrderByTimestampDesc(taskId).map { it.toDomain() }
         }
     }
 
@@ -54,7 +54,7 @@ open class TaskLogRepositoryImpl(
         Dispatchers.IO,
     ) {
         logger.debug("Finding logs by taskId and level: taskId=$taskId, level=$level")
-        mongoTaskLogRepository.findByTaskIdAndLevel(taskId, level.name).map { it.toDomain() }
+        mongoTaskLogRepository.findByTaskIdAndLevelOrderByTimestampDesc(taskId, level.name).map { it.toDomain() }
     }
 
     override suspend fun deleteByTaskId(taskId: String) = withContext(Dispatchers.IO) {

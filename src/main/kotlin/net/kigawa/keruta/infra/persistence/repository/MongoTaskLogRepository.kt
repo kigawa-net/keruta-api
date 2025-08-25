@@ -8,11 +8,11 @@ import java.time.LocalDateTime
 
 @Repository
 interface MongoTaskLogRepository : MongoRepository<TaskLogEntity, String> {
-    fun findByTaskIdOrderByTimestampAsc(taskId: String): List<TaskLogEntity>
-    fun findBySessionIdOrderByTimestampAsc(sessionId: String): List<TaskLogEntity>
-    fun findByTaskIdAndLevel(taskId: String, level: String): List<TaskLogEntity>
+    fun findByTaskIdOrderByTimestampDesc(taskId: String): List<TaskLogEntity>
+    fun findBySessionIdOrderByTimestampDesc(sessionId: String): List<TaskLogEntity>
+    fun findByTaskIdAndLevelOrderByTimestampDesc(taskId: String, level: String): List<TaskLogEntity>
 
-    @Query("{ 'taskId': ?0, 'timestamp': { \$gte: ?1, \$lte: ?2 } }")
+    @Query(value = "{ 'taskId': ?0, 'timestamp': { \$gte: ?1, \$lte: ?2 } }", sort = "{ 'timestamp': -1 }")
     fun findByTaskIdAndTimestampBetween(
         taskId: String,
         startTime: LocalDateTime,
