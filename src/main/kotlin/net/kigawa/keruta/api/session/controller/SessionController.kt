@@ -336,60 +336,83 @@ class SessionController(
             // If no workspaces exist, create one automatically
             if (workspaces.isEmpty()) {
                 logger.info("No workspace found for session: {}. Creating workspace automatically.", id)
-                try {
-                    // Get available templates
-                    val templates = executorClient.getWorkspaceTemplates()
-                    val selectedTemplate = selectBestTemplateForSession(templates, session)
-
-                    if (selectedTemplate != null) {
-                        logger.info(
-                            "Creating workspace for session: {} using template: {}",
-                            id,
-                            selectedTemplate.name,
-                        )
-
-                        // Generate workspace name
-                        val workspaceName = generateWorkspaceNameForSession(session)
-
-                        // Create workspace
-                        val createRequest = CreateCoderWorkspaceRequest(
-                            name = workspaceName,
-                            templateId = selectedTemplate.id,
-                            ownerId = "system-user",
-                            ownerName = "System User",
-                            sessionId = id,
-                            ttlMs = 3600000, // 1 hour
-                            autoStart = true,
-                            parameters = emptyMap(),
-                        )
-
-                        val createdWorkspace = executorClient.createWorkspace(createRequest)
-                        workspaceCreated = true
-                        logger.info(
-                            "Successfully created workspace for session: {} workspaceId: {} workspaceName: {}",
-                            id,
-                            createdWorkspace.id,
-                            workspaceName,
-                        )
-
-                        // Update session name to match workspace name for easy reverse lookup
-                        try {
-                            val updatedSession = session.copy(name = workspaceName)
-                            sessionService.updateSession(id, updatedSession)
-                            logger.info("Updated session name to match workspace name: {}", workspaceName)
-                        } catch (e: Exception) {
-                            logger.warn("Failed to update session name to workspace name: {}", workspaceName, e)
-                        }
-
-                        // Refresh workspace list
-                        workspaces = executorClient.getWorkspacesBySessionId(id)
-                    } else {
-                        creationError = "No suitable template found"
-                        logger.warn("No suitable template found for workspace creation for session: {}", id)
+                
+                // Check if session already has a consistent workspace name
+                val existingWorkspaceName = if (session.name.startsWith("ws-") && session.name.contains(id.take(8))) {
+                    session.name
+                } else {
+                    null
+                }
+                
+                // If we have an existing workspace name, try to find it first
+                if (existingWorkspaceName != null) {
+                    logger.info("Checking for existing workspace with name: {}", existingWorkspaceName)
+                    val allWorkspaces = executorClient.getAllWorkspaces()
+                    val existingWorkspace = allWorkspaces.find { it.name == existingWorkspaceName }
+                    
+                    if (existingWorkspace != null) {
+                        logger.info("Found existing workspace: {} (id: {})", existingWorkspaceName, existingWorkspace.id)
+                        workspaces = listOf(existingWorkspace)
                     }
-                } catch (e: Exception) {
-                    creationError = e.message
-                    logger.error("Failed to create workspace for session: {}", id, e)
+                }
+                
+                // Only create if we still don't have a workspace
+                if (workspaces.isEmpty()) {
+                    try {
+                        // Get available templates
+                        val templates = executorClient.getWorkspaceTemplates()
+                        val selectedTemplate = selectBestTemplateForSession(templates, session)
+
+                        if (selectedTemplate != null) {
+                            logger.info(
+                                "Creating workspace for session: {} using template: {}",
+                                id,
+                                selectedTemplate.name,
+                            )
+
+                            // Generate workspace name (consistent for the same session)
+                            val workspaceName = existingWorkspaceName ?: generateConsistentWorkspaceNameForSession(session)
+
+                            // Create workspace
+                            val createRequest = CreateCoderWorkspaceRequest(
+                                name = workspaceName,
+                                templateId = selectedTemplate.id,
+                                ownerId = "system-user",
+                                ownerName = "System User",
+                                sessionId = id,
+                                ttlMs = 3600000, // 1 hour
+                                autoStart = true,
+                                parameters = emptyMap(),
+                            )
+
+                            val createdWorkspace = executorClient.createWorkspace(createRequest)
+                            workspaceCreated = true
+                            logger.info(
+                                "Successfully created workspace for session: {} workspaceId: {} workspaceName: {}",
+                                id,
+                                createdWorkspace.id,
+                                workspaceName,
+                            )
+
+                            // Update session name to match workspace name for easy reverse lookup
+                            try {
+                                val updatedSession = session.copy(name = workspaceName)
+                                sessionService.updateSession(id, updatedSession)
+                                logger.info("Updated session name to match workspace name: {}", workspaceName)
+                            } catch (e: Exception) {
+                                logger.warn("Failed to update session name to workspace name: {}", workspaceName, e)
+                            }
+
+                            // Refresh workspace list
+                            workspaces = executorClient.getWorkspacesBySessionId(id)
+                        } else {
+                            creationError = "No suitable template found"
+                            logger.warn("No suitable template found for workspace creation for session: {}", id)
+                        }
+                    } catch (e: Exception) {
+                        creationError = e.message
+                        logger.error("Failed to create workspace for session: {}", id, e)
+                    }
                 }
             }
 
