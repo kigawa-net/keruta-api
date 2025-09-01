@@ -336,26 +336,26 @@ class SessionController(
             // If no workspaces exist, create one automatically
             if (workspaces.isEmpty()) {
                 logger.info("No workspace found for session: {}. Creating workspace automatically.", id)
-                
+
                 // Check if session already has a consistent workspace name
                 val existingWorkspaceName = if (session.name.startsWith("ws-") && session.name.contains(id.take(8))) {
                     session.name
                 } else {
                     null
                 }
-                
+
                 // If we have an existing workspace name, try to find it first
                 if (existingWorkspaceName != null) {
                     logger.info("Checking for existing workspace with name: {}", existingWorkspaceName)
                     val allWorkspaces = executorClient.getAllWorkspaces()
                     val existingWorkspace = allWorkspaces.find { it.name == existingWorkspaceName }
-                    
+
                     if (existingWorkspace != null) {
                         logger.info("Found existing workspace: {} (id: {})", existingWorkspaceName, existingWorkspace.id)
                         workspaces = listOf(existingWorkspace)
                     }
                 }
-                
+
                 // Only create if we still don't have a workspace
                 if (workspaces.isEmpty()) {
                     try {
@@ -371,7 +371,7 @@ class SessionController(
                             )
 
                             // Generate workspace name (consistent for the same session)
-                            val workspaceName = existingWorkspaceName ?: generateConsistentWorkspaceNameForSession(session)
+                            val workspaceName = existingWorkspaceName ?: generateWorkspaceNameForSession(session)
 
                             // Create workspace
                             val createRequest = CreateCoderWorkspaceRequest(
