@@ -5,6 +5,7 @@ package net.kigawa.keruta.core.usecase.session
 
 import net.kigawa.keruta.core.domain.model.Session
 import net.kigawa.keruta.core.domain.model.SessionStatus
+import net.kigawa.keruta.core.domain.model.SessionLogLevel
 import net.kigawa.keruta.core.usecase.repository.SessionRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -15,6 +16,7 @@ open class SessionServiceImpl(
     open val sessionRepository: SessionRepository,
     open val sessionEventListener: SessionEventListener,
     private val broadcastService: SessionStatusBroadcastService? = null,
+    private val sessionLogService: SessionLogService? = null,
 ) : SessionService {
 
     open val logger = LoggerFactory.getLogger(SessionServiceImpl::class.java)
@@ -29,6 +31,27 @@ open class SessionServiceImpl(
 
     override suspend fun createSession(session: Session): Session {
         val createdSession = sessionRepository.save(session)
+
+        // Log session creation
+        sessionLogService?.let { logService ->
+            try {
+                logService.log(
+                    sessionId = createdSession.id,
+                    level = SessionLogLevel.INFO,
+                    source = "system",
+                    action = "session_created",
+                    message = "Session created: ${createdSession.name}",
+                    details = "Session successfully created with status ${createdSession.status}",
+                    metadata = mapOf(
+                        "sessionName" to createdSession.name,
+                        "sessionStatus" to createdSession.status.name,
+                        "tags" to createdSession.tags
+                    )
+                )
+            } catch (e: Exception) {
+                logger.error("Failed to create session log for session creation: {}", createdSession.id, e)
+            }
+        }
 
         try {
             sessionEventListener.onSessionCreated(createdSession)
@@ -54,9 +77,53 @@ open class SessionServiceImpl(
 
         val savedSession = sessionRepository.save(updatedSession)
 
+        // Log session update
+        sessionLogService?.let { logService ->
+            try {
+                logService.log(
+                    sessionId = id,
+                    level = SessionLogLevel.INFO,
+                    source = "system",
+                    action = "session_updated",
+                    message = "Session updated: ${savedSession.name}",
+                    details = if (templateConfigChanged) "Session updated with template configuration changes" else "Session metadata updated",
+                    metadata = mapOf(
+                        "sessionName" to savedSession.name,
+                        "sessionStatus" to savedSession.status.name,
+                        "tags" to savedSession.tags,
+                        "templateConfigChanged" to templateConfigChanged
+                    )
+                )
+            } catch (e: Exception) {
+                logger.error("Failed to create session log for session update: {}", id, e)
+            }
+        }
+
         if (templateConfigChanged) {
             try {
                 sessionEventListener.onSessionTemplateChanged(savedSession, existingSession)
+                
+                // Log template configuration change
+                sessionLogService?.let { logService ->
+                    try {
+                        logService.log(
+                            sessionId = id,
+                            level = SessionLogLevel.INFO,
+                            source = "system",
+                            action = "template_config_changed",
+                            message = "Session template configuration changed",
+                            details = "Template configuration updated, triggering template change event",
+                            metadata = mapOf(
+                                "previousTemplateId" to existingSession.templateConfig?.templateId,
+                                "newTemplateId" to savedSession.templateConfig?.templateId,
+                                "previousTemplatePath" to existingSession.templateConfig?.templatePath,
+                                "newTemplatePath" to savedSession.templateConfig?.templatePath
+                            )
+                        )
+                    } catch (e: Exception) {
+                        logger.error("Failed to create session log for template change: {}", id, e)
+                    }
+                }
             } catch (e: Exception) {
                 logger.error("Failed to handle session template change event for session: {}", id, e)
             }
@@ -96,11 +163,36 @@ open class SessionServiceImpl(
         // Verify session exists before deletion
         val session = getSessionById(id)
         logger.info("Found session to delete: id={} name={} status={}", id, session.name, session.status)
+        
+        // Log session deletion before actual deletion
+        sessionLogService?.let { logService ->
+            try {
+                logService.log(
+                    sessionId = id,
+                    level = SessionLogLevel.INFO,
+                    source = "system",
+                    action = "session_deleted",
+                    message = "Session deleted: ${session.name}",
+                    details = "Session and all associated data will be removed",
+                    metadata = mapOf(
+                        "sessionName" to session.name,
+                        "sessionStatus" to session.status.name,
+                        "tags" to session.tags
+                    )
+                )
+            } catch (e: Exception) {
+                logger.error("Failed to create session log for session deletion: {}", id, e)
+            }
+        }
+        
         try {
             sessionEventListener.onSessionDeleted(id)
         } catch (e: Exception) {
             logger.error("Failed to handle session deletion event for session: {}", id, e)
         }
+
+        // Delete the session logs first
+        sessionLogService?.deleteSessionLogs(id)
 
         // Delete the session itself
         if (!sessionRepository.deleteById(id)) {
@@ -126,11 +218,33 @@ open class SessionServiceImpl(
         logger.info("Updating session status: id={} status={}", id, status)
         try {
             val existingSession = getSessionById(id)
+            val previousStatus = existingSession.status
             val updatedSession = existingSession.copy(
                 status = status,
                 updatedAt = LocalDateTime.now(),
             )
             val savedSession = sessionRepository.save(updatedSession)
+
+            // Log status change
+            sessionLogService?.let { logService ->
+                try {
+                    logService.log(
+                        sessionId = id,
+                        level = SessionLogLevel.INFO,
+                        source = "system",
+                        action = "status_changed",
+                        message = "Session status changed from $previousStatus to $status",
+                        details = "Session status updated by system",
+                        metadata = mapOf(
+                            "previousStatus" to previousStatus.name,
+                            "newStatus" to status.name,
+                            "sessionName" to savedSession.name
+                        )
+                    )
+                } catch (e: Exception) {
+                    logger.error("Failed to create session log for status change: {}", id, e)
+                }
+            }
 
             // Status change notifications are handled by keruta-executor
 

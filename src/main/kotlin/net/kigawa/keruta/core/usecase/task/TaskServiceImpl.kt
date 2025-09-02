@@ -4,6 +4,7 @@ import net.kigawa.keruta.core.domain.model.LogLevel
 import net.kigawa.keruta.core.domain.model.Task
 import net.kigawa.keruta.core.domain.model.TaskStatus
 import net.kigawa.keruta.core.usecase.repository.TaskRepository
+import net.kigawa.keruta.core.usecase.submodule.SubmoduleService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -13,6 +14,7 @@ import java.util.*
 open class TaskServiceImpl(
     private val taskRepository: TaskRepository,
     private val taskLogService: TaskLogService,
+    private val submoduleService: SubmoduleService,
 ) : TaskService {
 
     private val logger = LoggerFactory.getLogger(TaskServiceImpl::class.java)
@@ -73,7 +75,18 @@ open class TaskServiceImpl(
         )
 
         logger.info("Updating task $id status to $status: $message")
-        return taskRepository.save(updatedTask)
+        val savedTask = taskRepository.save(updatedTask)
+        
+        // Handle submodule operations when task is completed
+        if (status == TaskStatus.COMPLETED) {
+            try {
+                submoduleService.handleTaskCompletion(savedTask)
+            } catch (e: Exception) {
+                logger.error("Failed to handle submodule operations for completed task: $id", e)
+            }
+        }
+        
+        return savedTask
     }
 
     override suspend fun deleteTask(id: String) {
