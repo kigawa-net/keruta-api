@@ -351,7 +351,11 @@ class SessionController(
                     val existingWorkspace = allWorkspaces.find { it.name == existingWorkspaceName }
 
                     if (existingWorkspace != null) {
-                        logger.info("Found existing workspace: {} (id: {})", existingWorkspaceName, existingWorkspace.id)
+                        logger.info(
+                            "Found existing workspace: {} (id: {})",
+                            existingWorkspaceName,
+                            existingWorkspace.id,
+                        )
                         workspaces = listOf(existingWorkspace)
                     }
                 }
