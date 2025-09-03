@@ -119,4 +119,36 @@ open class TaskServiceImpl(
         val task = taskRepository.findById(taskId)
         return task?.script
     }
+
+    override suspend fun getSubTasks(parentTaskId: String): List<Task> {
+        logger.info("Getting subtasks for parent task: $parentTaskId")
+        return taskRepository.findByParentTaskId(parentTaskId)
+    }
+
+    override suspend fun createSubTask(parentTaskId: String, subTask: Task): Task {
+        logger.info("Creating subtask for parent task: $parentTaskId")
+        
+        // Verify parent task exists
+        val parentTask = taskRepository.findById(parentTaskId)
+            ?: throw IllegalArgumentException("Parent task not found: $parentTaskId")
+
+        val newSubTask = subTask.copy(
+            id = if (subTask.id.isEmpty()) UUID.randomUUID().toString() else subTask.id,
+            parentTaskId = parentTaskId,
+            sessionId = parentTask.sessionId, // Inherit session from parent
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now(),
+        )
+
+        logger.info("Creating subtask: ${newSubTask.id} for parent task: $parentTaskId")
+        
+        return try {
+            val savedSubTask = taskRepository.save(newSubTask)
+            logger.info("Subtask saved successfully: ${savedSubTask.id}")
+            savedSubTask
+        } catch (e: Exception) {
+            logger.error("Failed to save subtask: ${e.message}", e)
+            throw e
+        }
+    }
 }

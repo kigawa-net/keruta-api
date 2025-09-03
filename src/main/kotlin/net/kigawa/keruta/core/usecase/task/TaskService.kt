@@ -19,4 +19,6 @@ interface TaskService {
     suspend fun deleteTask(id: String)
     suspend fun sendTaskLog(taskId: String, level: String, message: String)
     suspend fun getTaskScript(taskId: String): String?
+    suspend fun getSubTasks(parentTaskId: String): List<Task>
+    suspend fun createSubTask(parentTaskId: String, subTask: Task): Task
 }

@@ -49,6 +49,29 @@ data class UpdateTaskStatusRequest(
     val errorCode: String? = null,
 )
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class CreateSubTaskRequest(
+    val name: String,
+    val description: String? = null,
+    val script: String? = null,
+    val inheritLogs: Boolean? = false,
+    val parameters: Map<String, Any>? = null,
+) {
+    fun toDomain(): Task {
+        if (name.isBlank()) {
+            throw IllegalArgumentException("name is required")
+        }
+
+        return Task(
+            sessionId = "", // Will be set by the service from parent task
+            name = name,
+            description = description ?: "",
+            script = script ?: "",
+            parameters = parameters ?: emptyMap(),
+        )
+    }
+}
+
 data class TaskLogRequest(
     val level: String,
     val message: String,
@@ -57,6 +80,7 @@ data class TaskLogRequest(
 data class TaskResponse(
     val id: String,
     val sessionId: String,
+    val parentTaskId: String? = null,
     val name: String,
     val title: String, // Frontend compatibility: maps to name
     val description: String,
@@ -73,6 +97,7 @@ data class TaskResponse(
         fun fromDomain(task: Task): TaskResponse = TaskResponse(
             id = task.id,
             sessionId = task.sessionId,
+            parentTaskId = task.parentTaskId,
             name = task.name,
             title = task.name, // Map name to title for frontend compatibility
             description = task.description,

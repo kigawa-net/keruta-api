@@ -9,6 +9,7 @@ interface TaskRepository {
     suspend fun findBySessionId(sessionId: String): List<Task>
     suspend fun findBySessionIdAndStatus(sessionId: String, status: TaskStatus): List<Task>
     suspend fun findByStatus(status: TaskStatus): List<Task>
+    suspend fun findByParentTaskId(parentTaskId: String): List<Task>
     suspend fun save(task: Task): Task
     suspend fun delete(id: String)
     suspend fun existsById(id: String): Boolean

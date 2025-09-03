@@ -11,6 +11,7 @@ data class TaskEntity(
     @Id
     val id: String = "",
     val sessionId: String = "",
+    val parentTaskId: String? = null,
     val name: String = "",
     val description: String = "",
     val script: String = "",
@@ -25,6 +26,7 @@ data class TaskEntity(
     fun toDomain(): Task = Task(
         id = id,
         sessionId = sessionId,
+        parentTaskId = parentTaskId,
         name = name,
         description = description,
         script = script,
@@ -41,6 +43,7 @@ data class TaskEntity(
         fun fromDomain(task: Task): TaskEntity = TaskEntity(
             id = task.id,
             sessionId = task.sessionId,
+            parentTaskId = task.parentTaskId,
             name = task.name,
             description = task.description,
             script = task.script,

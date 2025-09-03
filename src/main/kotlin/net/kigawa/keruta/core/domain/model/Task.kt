@@ -9,6 +9,7 @@ data class Task(
     @Id
     val id: String = "",
     val sessionId: String,
+    val parentTaskId: String? = null,
     val name: String,
     val description: String = "",
     val script: String = "",

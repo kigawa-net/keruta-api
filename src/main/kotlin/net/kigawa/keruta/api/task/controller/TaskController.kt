@@ -179,4 +179,54 @@ open class TaskController(
             ResponseEntity.internalServerError().build()
         }
     }
+
+    @GetMapping("/{parentTaskId}/subtasks")
+    suspend fun getSubTasks(@PathVariable parentTaskId: String): ResponseEntity<List<TaskResponse>> {
+        logger.info("Getting subtasks for parent task: $parentTaskId")
+
+        return try {
+            val subTasks = taskService.getSubTasks(parentTaskId)
+            val subTaskResponses = subTasks.map { TaskResponse.fromDomain(it) }
+
+            logger.info("Found ${subTasks.size} subtasks for parent task: $parentTaskId")
+            ResponseEntity.ok(subTaskResponses)
+        } catch (e: Exception) {
+            logger.error("Failed to get subtasks for parent task: $parentTaskId", e)
+            ResponseEntity.internalServerError().body(emptyList())
+        }
+    }
+
+    @PostMapping("/{parentTaskId}/subtasks")
+    suspend fun createSubTask(
+        @PathVariable parentTaskId: String,
+        @RequestBody request: CreateSubTaskRequest,
+    ): ResponseEntity<Any> {
+        logger.info("Creating subtask for parent task: $parentTaskId, subtask: ${request.name}")
+        logger.debug("Full request: $request")
+
+        return try {
+            val subTask = request.toDomain()
+            val createdSubTask = taskService.createSubTask(parentTaskId, subTask)
+
+            logger.info("Subtask created successfully with ID: ${createdSubTask.id}")
+            ResponseEntity.status(HttpStatus.CREATED)
+                .body(TaskResponse.fromDomain(createdSubTask))
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Invalid subtask creation request: ${e.message}, request: $request")
+            ResponseEntity.badRequest().body(
+                mapOf(
+                    "error" to "Invalid request",
+                    "message" to e.message,
+                ),
+            )
+        } catch (e: Exception) {
+            logger.error("Failed to create subtask: ${e.message}, request: $request", e)
+            ResponseEntity.internalServerError().body(
+                mapOf(
+                    "error" to "Internal server error",
+                    "message" to e.message,
+                ),
+            )
+        }
+    }
 }

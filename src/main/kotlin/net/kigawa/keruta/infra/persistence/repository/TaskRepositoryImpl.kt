@@ -48,6 +48,12 @@ open class TaskRepositoryImpl(
             .map { it.toDomain() }
     }
 
+    override suspend fun findByParentTaskId(parentTaskId: String): List<Task> {
+        return Mono.fromCallable { mongoTaskRepository.findByParentTaskId(parentTaskId) }
+            .awaitSingle()
+            .map { it.toDomain() }
+    }
+
     override suspend fun save(task: Task): Task {
         logger.info("TaskRepository.save called with task ID: ${task.id}")
 
