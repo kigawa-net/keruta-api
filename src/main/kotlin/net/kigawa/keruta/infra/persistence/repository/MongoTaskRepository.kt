@@ -8,6 +8,6 @@ import org.springframework.stereotype.Repository
 @Repository
 interface MongoTaskRepository : MongoRepository<TaskEntity, String> {
     fun findBySessionIdAndStatus(sessionId: String, status: TaskStatus): List<TaskEntity>
-    fun findBySessionIdOrderByCreatedAtAsc(sessionId: String): List<TaskEntity>
+    fun findBySessionIdOrderByCreatedAtDesc(sessionId: String): List<TaskEntity>
     fun findByStatus(status: TaskStatus): List<TaskEntity>
 }

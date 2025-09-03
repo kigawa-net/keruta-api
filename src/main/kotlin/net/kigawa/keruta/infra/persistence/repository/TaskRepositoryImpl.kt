@@ -31,7 +31,7 @@ open class TaskRepositoryImpl(
     }
 
     override suspend fun findBySessionId(sessionId: String): List<Task> {
-        return Mono.fromCallable { mongoTaskRepository.findBySessionIdOrderByCreatedAtAsc(sessionId) }
+        return Mono.fromCallable { mongoTaskRepository.findBySessionIdOrderByCreatedAtDesc(sessionId) }
             .awaitSingle()
             .map { it.toDomain() }
     }
