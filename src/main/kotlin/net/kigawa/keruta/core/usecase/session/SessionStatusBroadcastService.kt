@@ -46,6 +46,11 @@ interface SessionStatusBroadcastService {
     fun broadcastSessionTemplateChanged(newSession: Session, oldSession: Session)
 
     /**
+     * Broadcast custom session event
+     */
+    fun broadcastSessionUpdate(sessionId: String, eventType: String, data: Map<String, Any?>)
+
+    /**
      * Get broadcast statistics
      */
     fun getBroadcastStats(): BroadcastStats
@@ -151,6 +156,11 @@ open class SessionStatusBroadcastServiceImpl : SessionStatusBroadcastService {
         )
 
         notifyListeners(newSession.id, "session_template_changed", updateData)
+    }
+
+    override fun broadcastSessionUpdate(sessionId: String, eventType: String, data: Map<String, Any?>) {
+        logger.debug("Broadcasting custom session event: sessionId={}, eventType={}", sessionId, eventType)
+        notifyListeners(sessionId, eventType, data)
     }
 
     override fun getBroadcastStats(): BroadcastStats {

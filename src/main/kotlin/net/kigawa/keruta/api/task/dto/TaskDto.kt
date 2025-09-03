@@ -58,6 +58,7 @@ data class TaskResponse(
     val id: String,
     val sessionId: String,
     val name: String,
+    val title: String, // Frontend compatibility: maps to name
     val description: String,
     val script: String,
     val status: TaskStatus,
@@ -73,6 +74,7 @@ data class TaskResponse(
             id = task.id,
             sessionId = task.sessionId,
             name = task.name,
+            title = task.name, // Map name to title for frontend compatibility
             description = task.description,
             script = task.script,
             status = task.status,

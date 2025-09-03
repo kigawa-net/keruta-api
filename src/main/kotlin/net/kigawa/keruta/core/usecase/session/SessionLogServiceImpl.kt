@@ -13,7 +13,8 @@ import java.util.*
  */
 @Service
 class SessionLogServiceImpl(
-    private val sessionLogRepository: SessionLogRepository
+    private val sessionLogRepository: SessionLogRepository,
+    private val sessionStatusBroadcastService: SessionStatusBroadcastService
 ) : SessionLogService {
     
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -22,7 +23,35 @@ class SessionLogServiceImpl(
         logger.debug("Creating session log: sessionId={}, level={}, action={}", 
             sessionLog.sessionId, sessionLog.level, sessionLog.action)
         
-        return sessionLogRepository.save(sessionLog)
+        val createdLog = sessionLogRepository.save(sessionLog)
+        
+        // Broadcast log creation event via SSE
+        try {
+            val logData = mapOf(
+                "id" to createdLog.id,
+                "level" to createdLog.level.name,
+                "source" to createdLog.source,
+                "action" to createdLog.action,
+                "message" to createdLog.message,
+                "details" to createdLog.details,
+                "metadata" to createdLog.metadata,
+                "userId" to createdLog.userId,
+                "timestamp" to createdLog.timestamp.toString()
+            )
+            
+            sessionStatusBroadcastService.broadcastSessionUpdate(
+                sessionId = createdLog.sessionId,
+                eventType = "session_log_created", 
+                data = logData
+            )
+            
+            logger.debug("Broadcasted log creation event for sessionId={}, logId={}", 
+                createdLog.sessionId, createdLog.id)
+        } catch (e: Exception) {
+            logger.warn("Failed to broadcast log creation event: {}", e.message)
+        }
+        
+        return createdLog
     }
     
     override suspend fun log(
