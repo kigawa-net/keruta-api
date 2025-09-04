@@ -1,13 +1,15 @@
 package net.kigawa.keruta.api.session.controller
 
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.tags.Tag
+import net.kigawa.keruta.api.generated.SessionApi
+import net.kigawa.keruta.model.generated.Session
+import net.kigawa.keruta.model.generated.SessionCreateRequest
+import net.kigawa.keruta.model.generated.SessionUpdateRequest
 import net.kigawa.keruta.api.session.dto.CreateSessionRequest
 import net.kigawa.keruta.api.session.dto.SessionResponse
 import net.kigawa.keruta.api.session.dto.UpdateSessionRequest
 import net.kigawa.keruta.api.task.dto.TaskResponse
 import net.kigawa.keruta.api.workspace.dto.CoderWorkspaceResponse
-import net.kigawa.keruta.core.domain.model.Session
+import net.kigawa.keruta.core.domain.model.Session as DomainSession
 import net.kigawa.keruta.core.domain.model.TaskStatus
 import net.kigawa.keruta.core.usecase.executor.CoderWorkspaceTemplate
 import net.kigawa.keruta.core.usecase.executor.CreateCoderWorkspaceRequest
@@ -20,19 +22,15 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/api/v1/sessions")
-@Tag(name = "Session", description = "Session management API")
 class SessionController(
     private val sessionService: SessionService,
     private val sessionServiceImpl: SessionServiceImpl,
     private val executorClient: ExecutorClient,
     private val taskService: TaskService,
-) {
+) : SessionApi {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    @PostMapping
-    @Operation(summary = "Create a new session", description = "Creates a new session in the system")
-    suspend fun createSession(@RequestBody request: CreateSessionRequest): ResponseEntity<SessionResponse> {
+    override fun createSession(sessionCreateRequest: SessionCreateRequest): ResponseEntity<Session> {
         logger.info("Creating new session: {}", request)
         try {
             val session = request.toDomain()
@@ -45,9 +43,7 @@ class SessionController(
         }
     }
 
-    @GetMapping
-    @Operation(summary = "Get all sessions", description = "Retrieves all sessions in the system")
-    suspend fun getAllSessions(): List<SessionResponse> {
+    override fun getAllSessions(): ResponseEntity<List<Session>> {
         return sessionService.getAllSessions().map { SessionResponse.fromDomain(it) }
     }
 

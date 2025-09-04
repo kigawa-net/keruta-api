@@ -4,6 +4,7 @@ plugins {
     id("org.springframework.boot") version "3.2.0"
     id("io.spring.dependency-management") version "1.1.4"
     id("org.jlleitschuh.gradle.ktlint") version "11.6.1"
+    id("org.openapi.generator") version "7.1.0"
 }
 
 group = "net.kigawa"
@@ -82,4 +83,36 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+// OpenAPI Code Generation Configuration
+openApiGenerate {
+    generatorName.set("kotlin-spring")
+    inputSpec.set("$rootDir/src/main/resources/openapi.yaml")
+    outputDir.set("$buildDir/generated")
+    apiPackage.set("net.kigawa.keruta.api.generated")
+    modelPackage.set("net.kigawa.keruta.model.generated")
+    packageName.set("net.kigawa.keruta.generated")
+    configOptions.set(mapOf(
+        "dateLibrary" to "java8",
+        "interfaceOnly" to "true",
+        "useTags" to "true",
+        "skipDefaultInterface" to "true",
+        "documentationProvider" to "springdoc",
+        "useSpringBoot3" to "true"
+    ))
+}
+
+// Add generated sources to compilation
+sourceSets {
+    main {
+        kotlin {
+            srcDir("$buildDir/generated/src/main/kotlin")
+        }
+    }
+}
+
+// Ensure code generation runs before compilation
+tasks.named("compileKotlin") {
+    dependsOn("openApiGenerate")
 }
