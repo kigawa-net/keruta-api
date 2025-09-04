@@ -75,6 +75,47 @@ open class TaskController(
         return ResponseEntity.ok(TaskResponse.fromDomain(updatedTask))
     }
 
+    @PutMapping("/{id}")
+    suspend fun updateTask(
+        @PathVariable id: String,
+        @RequestBody request: UpdateTaskRequest,
+    ): ResponseEntity<Any> {
+        logger.info(
+            "Updating task $id: name=${request.name ?: "unchanged"}, " +
+                "description=${if (request.description != null) "updated" else "unchanged"}, " +
+                "script=${if (request.script != null) "updated" else "unchanged"}",
+        )
+        logger.debug("Full request: $request")
+
+        return try {
+            val updatedTask = taskService.updateTask(
+                id = id,
+                name = request.name,
+                description = request.description,
+                script = request.script,
+            ) ?: return ResponseEntity.notFound().build()
+
+            logger.info("Task updated successfully: ${updatedTask.id}")
+            ResponseEntity.ok(TaskResponse.fromDomain(updatedTask))
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Invalid task update request: ${e.message}, request: $request")
+            ResponseEntity.badRequest().body(
+                mapOf(
+                    "error" to "Invalid request",
+                    "message" to e.message,
+                ),
+            )
+        } catch (e: Exception) {
+            logger.error("Failed to update task: ${e.message}, request: $request", e)
+            ResponseEntity.internalServerError().body(
+                mapOf(
+                    "error" to "Internal server error",
+                    "message" to e.message,
+                ),
+            )
+        }
+    }
+
     // TaskLogControllerに移行済み - 削除
 
     @GetMapping("/{id}/script")

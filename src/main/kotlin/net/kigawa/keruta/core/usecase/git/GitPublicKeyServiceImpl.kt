@@ -10,8 +10,6 @@ import java.security.SecureRandom
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
-import javax.crypto.KeyGenerator
-import javax.crypto.spec.SecretKeySpec
 
 /**
  * Git公開鍵管理サービス実装
@@ -150,11 +148,11 @@ open class GitPublicKeyServiceImpl(
         try {
             val trimmedKey = publicKey.trim()
             val parts = trimmedKey.split(Regex("\\s+"))
-            
+
             if (parts.size < 2) {
                 return GitPublicKeyValidationResult(
                     isValid = false,
-                    error = "SSH public key must contain at least algorithm and key data"
+                    error = "SSH public key must contain at least algorithm and key data",
                 )
             }
 
@@ -163,14 +161,18 @@ open class GitPublicKeyServiceImpl(
 
             // Validate algorithm
             val validAlgorithms = setOf(
-                "ssh-rsa", "ssh-dss", "ssh-ed25519",
-                "ecdsa-sha2-nistp256", "ecdsa-sha2-nistp384", "ecdsa-sha2-nistp521"
+                "ssh-rsa",
+                "ssh-dss",
+                "ssh-ed25519",
+                "ecdsa-sha2-nistp256",
+                "ecdsa-sha2-nistp384",
+                "ecdsa-sha2-nistp521",
             )
-            
+
             if (!validAlgorithms.contains(algorithm)) {
                 return GitPublicKeyValidationResult(
                     isValid = false,
-                    error = "Unsupported SSH key algorithm: $algorithm"
+                    error = "Unsupported SSH key algorithm: $algorithm",
                 )
             }
 
@@ -180,13 +182,13 @@ open class GitPublicKeyServiceImpl(
             } catch (e: IllegalArgumentException) {
                 return GitPublicKeyValidationResult(
                     isValid = false,
-                    error = "Invalid base64 key data"
+                    error = "Invalid base64 key data",
                 )
             }
 
             // Estimate key size based on algorithm and key data length
             val keySize = estimateSSHKeySize(algorithm, keyData)
-            
+
             // Generate fingerprint
             val fingerprint = generateSSHFingerprint(keyData)
 
@@ -194,12 +196,12 @@ open class GitPublicKeyServiceImpl(
                 isValid = true,
                 algorithm = algorithm,
                 keySize = keySize,
-                fingerprint = fingerprint
+                fingerprint = fingerprint,
             )
         } catch (e: Exception) {
             return GitPublicKeyValidationResult(
                 isValid = false,
-                error = "Error validating SSH public key: ${e.message}"
+                error = "Error validating SSH public key: ${e.message}",
             )
         }
     }
@@ -207,13 +209,14 @@ open class GitPublicKeyServiceImpl(
     private fun validateGPGPublicKey(publicKey: String): GitPublicKeyValidationResult {
         try {
             val trimmedKey = publicKey.trim()
-            
+
             // Basic GPG public key format validation
             if (!trimmedKey.contains("-----BEGIN PGP PUBLIC KEY BLOCK-----") ||
-                !trimmedKey.contains("-----END PGP PUBLIC KEY BLOCK-----")) {
+                !trimmedKey.contains("-----END PGP PUBLIC KEY BLOCK-----")
+            ) {
                 return GitPublicKeyValidationResult(
                     isValid = false,
-                    error = "Invalid GPG public key format"
+                    error = "Invalid GPG public key format",
                 )
             }
 
@@ -223,12 +226,12 @@ open class GitPublicKeyServiceImpl(
             return GitPublicKeyValidationResult(
                 isValid = true,
                 algorithm = "GPG",
-                fingerprint = fingerprint
+                fingerprint = fingerprint,
             )
         } catch (e: Exception) {
             return GitPublicKeyValidationResult(
                 isValid = false,
-                error = "Error validating GPG public key: ${e.message}"
+                error = "Error validating GPG public key: ${e.message}",
             )
         }
     }
@@ -274,7 +277,7 @@ open class GitPublicKeyServiceImpl(
     ): GitKeyPairResult {
         // Note: In a real implementation, you would use proper cryptographic libraries
         // This is a simplified implementation for demonstration
-        
+
         return when (keyType) {
             GitKeyType.SSH -> generateSSHKeyPair(name, keySize, algorithm)
             GitKeyType.GPG -> generateGPGKeyPair(name, keySize, algorithm)
@@ -284,20 +287,20 @@ open class GitPublicKeyServiceImpl(
     private suspend fun generateSSHKeyPair(
         name: String,
         keySize: Int,
-        algorithm: String?
+        algorithm: String?,
     ): GitKeyPairResult {
         // Simplified key generation - in production, use proper crypto libraries
         val actualAlgorithm = algorithm ?: "ssh-rsa"
         val random = SecureRandom()
-        
+
         // Generate mock keys (in production, use real key generation)
         val keyBytes = ByteArray(keySize / 8)
         random.nextBytes(keyBytes)
-        
+
         val publicKeyData = Base64.getEncoder().encodeToString(keyBytes)
         val publicKeyString = "$actualAlgorithm $publicKeyData $name@keruta"
         val fingerprint = generateSSHFingerprint(publicKeyData)
-        
+
         // Create and save the public key
         val id = UUID.randomUUID().toString()
         val publicKey = GitPublicKey.create(
@@ -307,11 +310,11 @@ open class GitPublicKeyServiceImpl(
             publicKey = publicKeyString,
             fingerprint = fingerprint,
             algorithm = actualAlgorithm,
-            keySize = keySize
+            keySize = keySize,
         )
-        
+
         val savedPublicKey = gitPublicKeyRepository.save(publicKey)
-        
+
         // Generate mock private key
         val privateKeyData = ByteArray(keySize / 8)
         random.nextBytes(privateKeyData)
@@ -320,32 +323,32 @@ open class GitPublicKeyServiceImpl(
             ${Base64.getEncoder().encodeToString(privateKeyData)}
             -----END OPENSSH PRIVATE KEY-----
         """.trimIndent()
-        
+
         return GitKeyPairResult(
             publicKey = savedPublicKey,
-            privateKey = privateKeyString
+            privateKey = privateKeyString,
         )
     }
 
     private suspend fun generateGPGKeyPair(
         name: String,
         keySize: Int,
-        algorithm: String?
+        algorithm: String?,
     ): GitKeyPairResult {
         // Simplified GPG key generation for demo
         val random = SecureRandom()
         val keyBytes = ByteArray(keySize / 8)
         random.nextBytes(keyBytes)
-        
+
         val publicKeyString = """
             -----BEGIN PGP PUBLIC KEY BLOCK-----
             
             ${Base64.getEncoder().encodeToString(keyBytes)}
             -----END PGP PUBLIC KEY BLOCK-----
         """.trimIndent()
-        
+
         val fingerprint = generateGPGFingerprint(publicKeyString)
-        
+
         val id = UUID.randomUUID().toString()
         val publicKey = GitPublicKey.create(
             id = id,
@@ -354,21 +357,21 @@ open class GitPublicKeyServiceImpl(
             publicKey = publicKeyString,
             fingerprint = fingerprint,
             algorithm = "GPG",
-            keySize = keySize
+            keySize = keySize,
         )
-        
+
         val savedPublicKey = gitPublicKeyRepository.save(publicKey)
-        
+
         val privateKeyString = """
             -----BEGIN PGP PRIVATE KEY BLOCK-----
             
             ${Base64.getEncoder().encodeToString(keyBytes)}
             -----END PGP PRIVATE KEY BLOCK-----
         """.trimIndent()
-        
+
         return GitKeyPairResult(
             publicKey = savedPublicKey,
-            privateKey = privateKeyString
+            privateKey = privateKeyString,
         )
     }
 
@@ -376,23 +379,25 @@ open class GitPublicKeyServiceImpl(
         val allKeys = gitPublicKeyRepository.findAll()
         val activeKeys = allKeys.filter { it.isActive }
         val usedKeys = gitPublicKeyRepository.findByLastUsedIsNotNull()
-        
+
         val now = LocalDateTime.now()
         val recentlyUsed = usedKeys.filter { key ->
             key.lastUsed?.let { ChronoUnit.DAYS.between(it, now) <= 30 } ?: false
         }
-        
+
         val keyTypeDistribution = allKeys.groupBy { it.keyType }
             .mapValues { it.value.size }
-        
+
         val algorithmDistribution = allKeys.groupBy { it.algorithm }
             .mapValues { it.value.size }
-        
+
         val averageAge = if (allKeys.isNotEmpty()) {
             val totalAge = allKeys.sumOf { ChronoUnit.DAYS.between(it.createdAt, now) }
             totalAge / allKeys.size
-        } else 0L
-        
+        } else {
+            0L
+        }
+
         return GitPublicKeyStats(
             totalKeys = allKeys.size,
             activeKeys = activeKeys.size,
@@ -400,7 +405,7 @@ open class GitPublicKeyServiceImpl(
             keyTypeDistribution = keyTypeDistribution,
             algorithmDistribution = algorithmDistribution,
             recentlyUsedKeys = recentlyUsed.size,
-            averageKeyAge = averageAge
+            averageKeyAge = averageAge,
         )
     }
 }

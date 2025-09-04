@@ -92,7 +92,8 @@ data class GitPublicKey(
  */
 enum class GitKeyType {
     SSH,
-    GPG;
+    GPG,
+    ;
 
     fun displayName(): String {
         return when (this) {

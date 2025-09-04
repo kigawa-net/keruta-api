@@ -4,8 +4,8 @@
 package net.kigawa.keruta.core.usecase.session
 
 import net.kigawa.keruta.core.domain.model.Session
-import net.kigawa.keruta.core.domain.model.SessionStatus
 import net.kigawa.keruta.core.domain.model.SessionLogLevel
+import net.kigawa.keruta.core.domain.model.SessionStatus
 import net.kigawa.keruta.core.usecase.repository.SessionRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -45,8 +45,8 @@ open class SessionServiceImpl(
                     metadata = mapOf(
                         "sessionName" to createdSession.name,
                         "sessionStatus" to createdSession.status.name,
-                        "tags" to createdSession.tags
-                    )
+                        "tags" to createdSession.tags,
+                    ),
                 )
             } catch (e: Exception) {
                 logger.error("Failed to create session log for session creation: {}", createdSession.id, e)
@@ -91,8 +91,8 @@ open class SessionServiceImpl(
                         "sessionName" to savedSession.name,
                         "sessionStatus" to savedSession.status.name,
                         "tags" to savedSession.tags,
-                        "templateConfigChanged" to templateConfigChanged
-                    )
+                        "templateConfigChanged" to templateConfigChanged,
+                    ),
                 )
             } catch (e: Exception) {
                 logger.error("Failed to create session log for session update: {}", id, e)
@@ -102,7 +102,7 @@ open class SessionServiceImpl(
         if (templateConfigChanged) {
             try {
                 sessionEventListener.onSessionTemplateChanged(savedSession, existingSession)
-                
+
                 // Log template configuration change
                 sessionLogService?.let { logService ->
                     try {
@@ -117,8 +117,8 @@ open class SessionServiceImpl(
                                 "previousTemplateId" to existingSession.templateConfig?.templateId,
                                 "newTemplateId" to savedSession.templateConfig?.templateId,
                                 "previousTemplatePath" to existingSession.templateConfig?.templatePath,
-                                "newTemplatePath" to savedSession.templateConfig?.templatePath
-                            )
+                                "newTemplatePath" to savedSession.templateConfig?.templatePath,
+                            ),
                         )
                     } catch (e: Exception) {
                         logger.error("Failed to create session log for template change: {}", id, e)
@@ -163,7 +163,7 @@ open class SessionServiceImpl(
         // Verify session exists before deletion
         val session = getSessionById(id)
         logger.info("Found session to delete: id={} name={} status={}", id, session.name, session.status)
-        
+
         // Log session deletion before actual deletion
         sessionLogService?.let { logService ->
             try {
@@ -177,14 +177,14 @@ open class SessionServiceImpl(
                     metadata = mapOf(
                         "sessionName" to session.name,
                         "sessionStatus" to session.status.name,
-                        "tags" to session.tags
-                    )
+                        "tags" to session.tags,
+                    ),
                 )
             } catch (e: Exception) {
                 logger.error("Failed to create session log for session deletion: {}", id, e)
             }
         }
-        
+
         try {
             sessionEventListener.onSessionDeleted(id)
         } catch (e: Exception) {
@@ -238,8 +238,8 @@ open class SessionServiceImpl(
                         metadata = mapOf(
                             "previousStatus" to previousStatus.name,
                             "newStatus" to status.name,
-                            "sessionName" to savedSession.name
-                        )
+                            "sessionName" to savedSession.name,
+                        ),
                     )
                 } catch (e: Exception) {
                     logger.error("Failed to create session log for status change: {}", id, e)

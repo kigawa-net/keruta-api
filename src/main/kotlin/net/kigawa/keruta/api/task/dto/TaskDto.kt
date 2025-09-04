@@ -50,6 +50,13 @@ data class UpdateTaskStatusRequest(
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+data class UpdateTaskRequest(
+    val name: String? = null,
+    val description: String? = null,
+    val script: String? = null,
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class CreateSubTaskRequest(
     val name: String,
     val description: String? = null,

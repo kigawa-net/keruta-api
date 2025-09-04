@@ -76,7 +76,7 @@ open class TaskServiceImpl(
 
         logger.info("Updating task $id status to $status: $message")
         val savedTask = taskRepository.save(updatedTask)
-        
+
         // Handle submodule operations when task is completed
         if (status == TaskStatus.COMPLETED) {
             try {
@@ -85,8 +85,26 @@ open class TaskServiceImpl(
                 logger.error("Failed to handle submodule operations for completed task: $id", e)
             }
         }
-        
+
         return savedTask
+    }
+
+    override suspend fun updateTask(id: String, name: String?, description: String?, script: String?): Task? {
+        val existingTask = taskRepository.findById(id) ?: return null
+
+        val updatedTask = existingTask.copy(
+            name = name ?: existingTask.name,
+            description = description ?: existingTask.description,
+            script = script ?: existingTask.script,
+            updatedAt = LocalDateTime.now(),
+        )
+
+        logger.info(
+            "Updating task $id: name=${name ?: "unchanged"}, " +
+                "description=${if (description != null) "updated" else "unchanged"}, " +
+                "script=${if (script != null) "updated" else "unchanged"}",
+        )
+        return taskRepository.save(updatedTask)
     }
 
     override suspend fun deleteTask(id: String) {
@@ -127,7 +145,7 @@ open class TaskServiceImpl(
 
     override suspend fun createSubTask(parentTaskId: String, subTask: Task): Task {
         logger.info("Creating subtask for parent task: $parentTaskId")
-        
+
         // Verify parent task exists
         val parentTask = taskRepository.findById(parentTaskId)
             ?: throw IllegalArgumentException("Parent task not found: $parentTaskId")
@@ -141,7 +159,7 @@ open class TaskServiceImpl(
         )
 
         logger.info("Creating subtask: ${newSubTask.id} for parent task: $parentTaskId")
-        
+
         return try {
             val savedSubTask = taskRepository.save(newSubTask)
             logger.info("Subtask saved successfully: ${savedSubTask.id}")

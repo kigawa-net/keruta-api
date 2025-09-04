@@ -1,7 +1,6 @@
 package net.kigawa.keruta.core.usecase.submodule
 
 import net.kigawa.keruta.core.domain.model.Task
-import net.kigawa.keruta.core.domain.model.TaskStatus
 
 interface SubmoduleService {
     /**
@@ -9,7 +8,7 @@ interface SubmoduleService {
      * @param task The completed task
      */
     suspend fun handleTaskCompletion(task: Task)
-    
+
     /**
      * Commit and push changes to specific submodules
      * @param submodulePaths List of submodule paths to process
@@ -17,7 +16,7 @@ interface SubmoduleService {
      * @return Boolean indicating success
      */
     suspend fun commitAndPushSubmodules(submodulePaths: List<String>, commitMessage: String): Boolean
-    
+
     /**
      * Get list of submodules that should be updated for a given task
      * @param task The task to analyze

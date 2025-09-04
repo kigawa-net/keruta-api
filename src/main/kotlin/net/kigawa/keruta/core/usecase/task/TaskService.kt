@@ -16,6 +16,7 @@ interface TaskService {
         progress: Int = 0,
         errorCode: String = "",
     ): Task?
+    suspend fun updateTask(id: String, name: String?, description: String?, script: String?): Task?
     suspend fun deleteTask(id: String)
     suspend fun sendTaskLog(taskId: String, level: String, message: String)
     suspend fun getTaskScript(taskId: String): String?

@@ -23,10 +23,10 @@ data class SessionLog(
  * Represents the severity level of a session log entry.
  */
 enum class SessionLogLevel {
-    TRACE,   // Very detailed debug information
-    DEBUG,   // Debug information
-    INFO,    // General information
-    WARN,    // Warning messages
-    ERROR,   // Error messages
-    FATAL,   // Critical errors
+    TRACE, // Very detailed debug information
+    DEBUG, // Debug information
+    INFO, // General information
+    WARN, // Warning messages
+    ERROR, // Error messages
+    FATAL, // Critical errors
 }

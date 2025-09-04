@@ -31,7 +31,9 @@ class GitPublicKeyController(
         return try {
             val keys = when {
                 !search.isNullOrBlank() -> gitPublicKeyService.searchGitPublicKeys(search)
-                !keyType.isNullOrBlank() -> gitPublicKeyService.getGitPublicKeysByType(GitKeyType.valueOf(keyType.uppercase()))
+                !keyType.isNullOrBlank() -> gitPublicKeyService.getGitPublicKeysByType(
+                    GitKeyType.valueOf(keyType.uppercase()),
+                )
                 !repository.isNullOrBlank() -> gitPublicKeyService.getGitPublicKeysForRepository(repository)
                 activeOnly -> gitPublicKeyService.getActiveGitPublicKeys()
                 else -> gitPublicKeyService.getAllGitPublicKeys()
@@ -130,7 +132,7 @@ class GitPublicKeyController(
                         success = true,
                         message = "Git public key deleted successfully",
                         keyId = id,
-                    )
+                    ),
                 )
             } else {
                 ResponseEntity.internalServerError().body(
@@ -138,7 +140,7 @@ class GitPublicKeyController(
                         success = false,
                         message = "Failed to delete Git public key",
                         keyId = id,
-                    )
+                    ),
                 )
             }
         } catch (e: Exception) {
@@ -162,7 +164,12 @@ class GitPublicKeyController(
         } catch (e: NoSuchElementException) {
             ResponseEntity.notFound().build()
         } catch (e: Exception) {
-            logger.error("Failed to associate key with repository: keyId={}, repository={}", id, request.repositoryUrl, e)
+            logger.error(
+                "Failed to associate key with repository: keyId={}, repository={}",
+                id,
+                request.repositoryUrl,
+                e,
+            )
             ResponseEntity.internalServerError().build()
         }
     }
@@ -221,8 +228,8 @@ class GitPublicKeyController(
                     algorithm = result.algorithm,
                     keySize = result.keySize,
                     fingerprint = result.fingerprint,
-                    error = result.error
-                )
+                    error = result.error,
+                ),
             )
         } catch (e: IllegalArgumentException) {
             logger.error("Invalid key type parameter: {}", keyType, e)
@@ -251,8 +258,8 @@ class GitPublicKeyController(
             ResponseEntity.ok(
                 GenerateGitKeyPairResponse(
                     publicKey = GitPublicKeyResponse.fromDomain(result.publicKey),
-                    privateKey = result.privateKey
-                )
+                    privateKey = result.privateKey,
+                ),
             )
         } catch (e: IllegalArgumentException) {
             logger.error("Invalid request for generating Git key pair: {}", e.message)

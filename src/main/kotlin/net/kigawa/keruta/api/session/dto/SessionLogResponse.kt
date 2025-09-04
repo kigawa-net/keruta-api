@@ -16,7 +16,7 @@ data class SessionLogResponse(
     val details: String? = null,
     val metadata: Map<String, Any?> = emptyMap(),
     val userId: String? = null,
-    val timestamp: LocalDateTime
+    val timestamp: LocalDateTime,
 ) {
     companion object {
         /**
@@ -33,7 +33,7 @@ data class SessionLogResponse(
                 details = domain.details,
                 metadata = domain.metadata,
                 userId = domain.userId,
-                timestamp = domain.timestamp
+                timestamp = domain.timestamp,
             )
         }
     }

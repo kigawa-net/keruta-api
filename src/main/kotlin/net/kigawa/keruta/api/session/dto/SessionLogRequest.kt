@@ -14,7 +14,7 @@ data class CreateSessionLogRequest(
     val message: String,
     val details: String? = null,
     val metadata: Map<String, Any?> = emptyMap(),
-    val userId: String? = null
+    val userId: String? = null,
 ) {
     /**
      * Convert to domain model
@@ -29,7 +29,7 @@ data class CreateSessionLogRequest(
             message = message,
             details = details,
             metadata = metadata,
-            userId = userId
+            userId = userId,
         )
     }
 }
