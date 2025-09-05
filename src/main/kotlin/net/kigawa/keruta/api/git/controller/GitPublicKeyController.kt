@@ -310,4 +310,25 @@ class GitPublicKeyController(
             ResponseEntity.internalServerError().build()
         }
     }
+
+    @GetMapping("/health")
+    @Operation(
+        summary = "Git鍵管理エンドポイントヘルスチェック",
+        description = "Git鍵管理コントローラが正常に動作していることを確認します",
+    )
+    fun getHealthCheck(): ResponseEntity<Map<String, Any>> {
+        return ResponseEntity.ok(
+            mapOf(
+                "status" to "OK",
+                "controller" to "GitPublicKeyController",
+                "endpoints" to listOf(
+                    "GET /api/v1/git/keys",
+                    "POST /api/v1/git/keys",
+                    "POST /api/v1/git/keys/generate",
+                    "POST /api/v1/git/keys/validate"
+                ),
+                "timestamp" to java.time.LocalDateTime.now(),
+            )
+        )
+    }
 }
