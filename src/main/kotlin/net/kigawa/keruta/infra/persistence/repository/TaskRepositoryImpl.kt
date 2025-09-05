@@ -25,7 +25,7 @@ open class TaskRepositoryImpl(
     }
 
     override suspend fun findAll(): List<Task> {
-        return Mono.fromCallable { mongoTaskRepository.findAll().toList() }
+        return Mono.fromCallable { mongoTaskRepository.findAllByOrderByCreatedAtDesc() }
             .awaitSingle()
             .map { it.toDomain() }
     }
@@ -37,19 +37,19 @@ open class TaskRepositoryImpl(
     }
 
     override suspend fun findBySessionIdAndStatus(sessionId: String, status: TaskStatus): List<Task> {
-        return Mono.fromCallable { mongoTaskRepository.findBySessionIdAndStatus(sessionId, status) }
+        return Mono.fromCallable { mongoTaskRepository.findBySessionIdAndStatusOrderByCreatedAtDesc(sessionId, status) }
             .awaitSingle()
             .map { it.toDomain() }
     }
 
     override suspend fun findByStatus(status: TaskStatus): List<Task> {
-        return Mono.fromCallable { mongoTaskRepository.findByStatus(status) }
+        return Mono.fromCallable { mongoTaskRepository.findByStatusOrderByCreatedAtDesc(status) }
             .awaitSingle()
             .map { it.toDomain() }
     }
 
     override suspend fun findByParentTaskId(parentTaskId: String): List<Task> {
-        return Mono.fromCallable { mongoTaskRepository.findByParentTaskId(parentTaskId) }
+        return Mono.fromCallable { mongoTaskRepository.findByParentTaskIdOrderByCreatedAtDesc(parentTaskId) }
             .awaitSingle()
             .map { it.toDomain() }
     }

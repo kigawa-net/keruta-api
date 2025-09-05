@@ -11,6 +11,7 @@ import net.kigawa.keruta.api.task.dto.TaskResponse
 import net.kigawa.keruta.api.workspace.dto.CoderWorkspaceResponse
 import net.kigawa.keruta.core.domain.model.Session as DomainSession
 import net.kigawa.keruta.core.domain.model.TaskStatus
+import io.swagger.v3.oas.annotations.Operation
 import net.kigawa.keruta.core.usecase.executor.CoderWorkspaceTemplate
 import net.kigawa.keruta.core.usecase.executor.CreateCoderWorkspaceRequest
 import net.kigawa.keruta.core.usecase.executor.ExecutorClient
@@ -28,15 +29,39 @@ class SessionController(
     private val executorClient: ExecutorClient,
     private val taskService: TaskService,
 ) : SessionApi {
+    
+    override fun updateSession(sessionId: String, sessionUpdateRequest: SessionUpdateRequest): ResponseEntity<Session> {
+        logger.info("Updating session: {}", sessionId)
+        return try {
+            // Get current session to preserve status
+            val currentSession = sessionService.getSessionById(sessionId)
+            val updatedDomainSession = currentSession.copy(
+                name = sessionUpdateRequest.name ?: currentSession.name,
+                description = sessionUpdateRequest.description ?: currentSession.description,
+                tags = sessionUpdateRequest.tags ?: currentSession.tags
+            )
+            val result = sessionService.updateSession(sessionId, updatedDomainSession)
+            ResponseEntity.ok(result.toGenerated())
+        } catch (e: NoSuchElementException) {
+            ResponseEntity.notFound().build()
+        } catch (e: Exception) {
+            logger.error("Failed to update session", e)
+            ResponseEntity.internalServerError().build()
+        }
+    }
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     override fun createSession(sessionCreateRequest: SessionCreateRequest): ResponseEntity<Session> {
-        logger.info("Creating new session: {}", request)
+        logger.info("Creating new session: {}", sessionCreateRequest)
         try {
-            val session = request.toDomain()
+            val session = CreateSessionRequest(
+                name = sessionCreateRequest.name,
+                description = sessionCreateRequest.description,
+                tags = sessionCreateRequest.tags ?: emptyList()
+            ).toDomain()
             val createdSession = sessionService.createSession(session)
             logger.info("Session created successfully: id={}", createdSession.id)
-            return ResponseEntity.ok(SessionResponse.fromDomain(createdSession))
+            return ResponseEntity.ok(createdSession.toGenerated())
         } catch (e: Exception) {
             logger.error("Failed to create session", e)
             return ResponseEntity.internalServerError().build()
@@ -44,12 +69,27 @@ class SessionController(
     }
 
     override fun getAllSessions(): ResponseEntity<List<Session>> {
-        return sessionService.getAllSessions().map { SessionResponse.fromDomain(it) }
+        return try {
+            val sessions = sessionService.getAllSessions().map { it.toGenerated() }
+            ResponseEntity.ok(sessions)
+        } catch (e: Exception) {
+            logger.error("Failed to get all sessions", e)
+            ResponseEntity.internalServerError().build()
+        }
+    }
+
+    override fun getSessionById(sessionId: String): ResponseEntity<Session> {
+        return try {
+            val session = sessionService.getSessionById(sessionId)
+            ResponseEntity.ok(session.toGenerated())
+        } catch (e: NoSuchElementException) {
+            ResponseEntity.notFound().build()
+        }
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get session by ID", description = "Retrieves a specific session by its ID")
-    suspend fun getSessionById(@PathVariable id: String): ResponseEntity<SessionResponse> {
+    suspend fun getSessionByIdDetailed(@PathVariable id: String): ResponseEntity<SessionResponse> {
         return try {
             val session = sessionService.getSessionById(id)
             ResponseEntity.ok(SessionResponse.fromDomain(session))
@@ -78,9 +118,18 @@ class SessionController(
         }
     }
 
+    override fun deleteSession(sessionId: String): ResponseEntity<Unit> {
+        return try {
+            sessionService.deleteSession(sessionId)
+            ResponseEntity.noContent().build()
+        } catch (e: NoSuchElementException) {
+            ResponseEntity.notFound().build()
+        }
+    }
+
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete session", description = "Deletes a specific session")
-    suspend fun deleteSession(@PathVariable id: String): ResponseEntity<Void> {
+    suspend fun deleteSessionDetailed(@PathVariable id: String): ResponseEntity<Void> {
         return try {
             sessionService.deleteSession(id)
             ResponseEntity.noContent().build()
@@ -456,7 +505,7 @@ class SessionController(
      */
     private fun selectBestTemplateForSession(
         templates: List<CoderWorkspaceTemplate>,
-        session: Session,
+        session: DomainSession,
     ): CoderWorkspaceTemplate? {
         if (templates.isEmpty()) {
             logger.warn("No templates available for workspace creation")
@@ -464,10 +513,10 @@ class SessionController(
         }
 
         // First, try to find a template that matches session tags
-        for (tag in session.tags) {
+        for (tag in session.tags ?: emptyList()) {
             val matchingTemplate = templates.find { template ->
-                template.name.contains(tag, ignoreCase = true) ||
-                    template.description?.contains(tag, ignoreCase = true) == true
+                template.name.contains(tag.toString(), ignoreCase = true) ||
+                    template.description?.contains(tag.toString(), ignoreCase = true) == true
             }
             if (matchingTemplate != null) {
                 logger.info("Found template matching tag '{}': templateId={}", tag, matchingTemplate.id)
@@ -497,19 +546,18 @@ class SessionController(
      * - Must start with a lowercase letter
      * - Must be between 1-32 characters
      */
-    private fun generateWorkspaceNameForSession(session: Session): String {
+    private fun generateWorkspaceNameForSession(session: DomainSession): String {
         // Start with a letter as required by Coder
         val prefix = "ws"
 
         // Use shortened session ID (8 chars) for uniqueness
-        val sessionIdShort = session.id.take(8).lowercase()
+        val sessionIdShort = session.id?.take(8)?.lowercase() ?: "unknown"
 
         // Sanitize session name: only lowercase alphanumeric, max 10 chars
-        val sanitizedName = session.name
-            .lowercase()
-            .replace("[^a-z0-9]".toRegex(), "")
-            .take(10)
-            .ifEmpty { "session" }
+        val sanitizedName = session.name?.lowercase()
+            ?.replace("[^a-z0-9]".toRegex(), "")
+            ?.take(10)
+            ?.ifEmpty { "session" } ?: "session"
 
         // Add short timestamp for uniqueness (4 digits)
         val timestamp = (System.currentTimeMillis() % 10000).toString().padStart(4, '0')
