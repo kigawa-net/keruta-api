@@ -21,6 +21,8 @@ import net.kigawa.keruta.core.usecase.task.TaskService
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import kotlinx.coroutines.runBlocking
+import java.time.ZoneOffset
 
 @RestController
 class SessionController(
@@ -30,17 +32,32 @@ class SessionController(
     private val taskService: TaskService,
 ) : SessionApi {
     
+    private fun DomainSession.toGenerated(): Session {
+        return Session(
+            id = this.id,
+            name = this.name,
+            status = when(this.status) {
+                net.kigawa.keruta.core.domain.model.SessionStatus.ACTIVE -> Session.Status.rUNNING
+                net.kigawa.keruta.core.domain.model.SessionStatus.COMPLETED -> Session.Status.cOMPLETED
+                net.kigawa.keruta.core.domain.model.SessionStatus.INACTIVE -> Session.Status.pENDING
+                net.kigawa.keruta.core.domain.model.SessionStatus.ARCHIVED -> Session.Status.fAILED
+            },
+            createdAt = this.createdAt.atOffset(ZoneOffset.UTC),
+            updatedAt = this.updatedAt.atOffset(ZoneOffset.UTC),
+            tags = this.tags
+        )
+    }
+    
     override fun updateSession(sessionId: String, sessionUpdateRequest: SessionUpdateRequest): ResponseEntity<Session> {
         logger.info("Updating session: {}", sessionId)
         return try {
             // Get current session to preserve status
-            val currentSession = sessionService.getSessionById(sessionId)
+            val currentSession = runBlocking { sessionService.getSessionById(sessionId) }
             val updatedDomainSession = currentSession.copy(
                 name = sessionUpdateRequest.name ?: currentSession.name,
-                description = sessionUpdateRequest.description ?: currentSession.description,
                 tags = sessionUpdateRequest.tags ?: currentSession.tags
             )
-            val result = sessionService.updateSession(sessionId, updatedDomainSession)
+            val result = runBlocking { sessionService.updateSession(sessionId, updatedDomainSession) }
             ResponseEntity.ok(result.toGenerated())
         } catch (e: NoSuchElementException) {
             ResponseEntity.notFound().build()
@@ -56,10 +73,9 @@ class SessionController(
         try {
             val session = CreateSessionRequest(
                 name = sessionCreateRequest.name,
-                description = sessionCreateRequest.description,
                 tags = sessionCreateRequest.tags ?: emptyList()
             ).toDomain()
-            val createdSession = sessionService.createSession(session)
+            val createdSession = runBlocking { sessionService.createSession(session) }
             logger.info("Session created successfully: id={}", createdSession.id)
             return ResponseEntity.ok(createdSession.toGenerated())
         } catch (e: Exception) {
@@ -70,7 +86,7 @@ class SessionController(
 
     override fun getAllSessions(): ResponseEntity<List<Session>> {
         return try {
-            val sessions = sessionService.getAllSessions().map { it.toGenerated() }
+            val sessions = runBlocking { sessionService.getAllSessions() }.map { it.toGenerated() }
             ResponseEntity.ok(sessions)
         } catch (e: Exception) {
             logger.error("Failed to get all sessions", e)
@@ -80,7 +96,7 @@ class SessionController(
 
     override fun getSessionById(sessionId: String): ResponseEntity<Session> {
         return try {
-            val session = sessionService.getSessionById(sessionId)
+            val session = runBlocking { sessionService.getSessionById(sessionId) }
             ResponseEntity.ok(session.toGenerated())
         } catch (e: NoSuchElementException) {
             ResponseEntity.notFound().build()
@@ -120,7 +136,7 @@ class SessionController(
 
     override fun deleteSession(sessionId: String): ResponseEntity<Unit> {
         return try {
-            sessionService.deleteSession(sessionId)
+            runBlocking { sessionService.deleteSession(sessionId) }
             ResponseEntity.noContent().build()
         } catch (e: NoSuchElementException) {
             ResponseEntity.notFound().build()
