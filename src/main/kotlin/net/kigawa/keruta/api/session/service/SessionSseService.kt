@@ -42,7 +42,12 @@ open class SessionSseService(
     /**
      * Register SSE emitter for session updates
      */
-    fun registerEmitter(sessionId: String?, emitter: SseEmitter) {
+    fun registerEmitter(sessionId: String?, emitter: SseEmitter?) {
+        if (emitter == null) {
+            logger.error("Cannot register null emitter for sessionId: {}", sessionId ?: "all")
+            return
+        }
+        
         val key = sessionId ?: ALL_SESSIONS_KEY
         sessionEmitters.computeIfAbsent(key) { ConcurrentHashMap.newKeySet() }.add(emitter)
         emitterToSession[emitter] = key
