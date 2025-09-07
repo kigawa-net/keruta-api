@@ -8,7 +8,6 @@ import net.kigawa.keruta.api.session.dto.SessionResponse
 import net.kigawa.keruta.api.session.dto.UpdateSessionRequest
 import net.kigawa.keruta.api.task.dto.TaskResponse
 import net.kigawa.keruta.api.workspace.dto.CoderWorkspaceResponse
-import net.kigawa.keruta.core.domain.exception.SessionNameAlreadyExistsException
 import net.kigawa.keruta.core.domain.model.TaskStatus
 import net.kigawa.keruta.core.usecase.executor.CoderWorkspaceTemplate
 import net.kigawa.keruta.core.usecase.executor.CreateCoderWorkspaceRequest
@@ -65,7 +64,7 @@ class SessionController(
             ResponseEntity.ok(result.toGenerated())
         } catch (e: NoSuchElementException) {
             ResponseEntity.notFound().build()
-        } catch (e: SessionNameAlreadyExistsException) {
+        } catch (e: IllegalArgumentException) {
             logger.warn("Session update failed due to duplicate name: {}", sessionUpdateRequest.name)
             ResponseEntity.status(HttpStatus.CONFLICT).build()
         } catch (e: Exception) {
@@ -84,7 +83,7 @@ class SessionController(
             val createdSession = runBlocking { sessionService.createSession(session) }
             logger.info("Session created successfully: id={}", createdSession.id)
             return ResponseEntity.ok(createdSession.toGenerated())
-        } catch (e: SessionNameAlreadyExistsException) {
+        } catch (e: IllegalArgumentException) {
             logger.warn("Session creation failed due to duplicate name: {}", sessionCreateRequest.name)
             return ResponseEntity.status(HttpStatus.CONFLICT).build()
         } catch (e: Exception) {
@@ -137,7 +136,7 @@ class SessionController(
             ResponseEntity.ok(SessionResponse.fromDomain(updatedSession))
         } catch (e: NoSuchElementException) {
             ResponseEntity.notFound().build()
-        } catch (e: SessionNameAlreadyExistsException) {
+        } catch (e: IllegalArgumentException) {
             logger.warn("Session update failed due to duplicate name: {}", request.name)
             ResponseEntity.status(HttpStatus.CONFLICT).build()
         } catch (e: Exception) {
