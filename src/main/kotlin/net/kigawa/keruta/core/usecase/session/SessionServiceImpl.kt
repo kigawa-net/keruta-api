@@ -3,7 +3,6 @@
  */
 package net.kigawa.keruta.core.usecase.session
 
-import net.kigawa.keruta.core.domain.exception.SessionNameAlreadyExistsException
 import net.kigawa.keruta.core.domain.model.Session
 import net.kigawa.keruta.core.domain.model.SessionLogLevel
 import net.kigawa.keruta.core.domain.model.SessionStatus
@@ -36,7 +35,7 @@ open class SessionServiceImpl(
         // Check if session name already exists
         if (sessionRepository.existsByName(session.name)) {
             logger.warn("Attempt to create session with duplicate name: {}", session.name)
-            throw SessionNameAlreadyExistsException(session.name)
+            throw IllegalArgumentException("Session name already exists: ${session.name}")
         }
 
         val createdSession = sessionRepository.save(session)
@@ -78,7 +77,7 @@ open class SessionServiceImpl(
         // Check if the session name is being changed and if the new name already exists
         if (existingSession.name != session.name && sessionRepository.existsByName(session.name)) {
             logger.warn("Attempt to update session {} with duplicate name: {}", id, session.name)
-            throw SessionNameAlreadyExistsException(session.name)
+            throw IllegalArgumentException("Session name already exists: ${session.name}")
         }
 
         // Check if template configuration has changed
