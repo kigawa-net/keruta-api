@@ -150,4 +150,17 @@ class SessionRepositoryImpl(private val mongoSessionRepository: MongoSessionRepo
             throw e
         }
     }
+
+    override suspend fun existsByName(name: String): Boolean {
+        logger.debug("SessionRepositoryImpl: Checking if session name exists: {}", name)
+        try {
+            val entity = mongoSessionRepository.findByName(name)
+            val exists = entity != null
+            logger.debug("SessionRepositoryImpl: Session name '{}' exists: {}", name, exists)
+            return exists
+        } catch (e: Exception) {
+            logger.error("SessionRepositoryImpl: Failed to check if session name exists: {}", name, e)
+            throw e
+        }
+    }
 }

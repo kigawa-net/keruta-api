@@ -70,4 +70,12 @@ interface SessionRepository {
      * @return List of sessions with IDs starting with the partial ID
      */
     suspend fun findByPartialId(partialId: String): List<Session>
+
+    /**
+     * Checks if a session with the specified name already exists.
+     *
+     * @param name The session name to check
+     * @return true if a session with this name exists, false otherwise
+     */
+    suspend fun existsByName(name: String): Boolean
 }
