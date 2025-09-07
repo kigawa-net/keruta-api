@@ -21,11 +21,11 @@ class WebMvcConfig : WebMvcConfigurer {
         registry.addResourceHandler("/static/**")
             .addResourceLocations("classpath:/static/")
             .setCachePeriod(3600)
-        
+
         registry.addResourceHandler("/webjars/**")
             .addResourceLocations("classpath:/META-INF/resources/webjars/")
             .setCachePeriod(3600)
-            
+
         // Swagger UI resources
         registry.addResourceHandler("/swagger-ui/**")
             .addResourceLocations("classpath:/META-INF/resources/webjars/swagger-ui/")

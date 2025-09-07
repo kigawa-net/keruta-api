@@ -1,28 +1,28 @@
 package net.kigawa.keruta.api.session.controller
 
+import io.swagger.v3.oas.annotations.Operation
+import kotlinx.coroutines.runBlocking
 import net.kigawa.keruta.api.generated.SessionApi
-import net.kigawa.keruta.model.generated.Session
-import net.kigawa.keruta.model.generated.SessionCreateRequest
-import net.kigawa.keruta.model.generated.SessionUpdateRequest
 import net.kigawa.keruta.api.session.dto.CreateSessionRequest
 import net.kigawa.keruta.api.session.dto.SessionResponse
 import net.kigawa.keruta.api.session.dto.UpdateSessionRequest
 import net.kigawa.keruta.api.task.dto.TaskResponse
 import net.kigawa.keruta.api.workspace.dto.CoderWorkspaceResponse
-import net.kigawa.keruta.core.domain.model.Session as DomainSession
 import net.kigawa.keruta.core.domain.model.TaskStatus
-import io.swagger.v3.oas.annotations.Operation
 import net.kigawa.keruta.core.usecase.executor.CoderWorkspaceTemplate
 import net.kigawa.keruta.core.usecase.executor.CreateCoderWorkspaceRequest
 import net.kigawa.keruta.core.usecase.executor.ExecutorClient
 import net.kigawa.keruta.core.usecase.session.SessionService
 import net.kigawa.keruta.core.usecase.session.SessionServiceImpl
 import net.kigawa.keruta.core.usecase.task.TaskService
+import net.kigawa.keruta.model.generated.Session
+import net.kigawa.keruta.model.generated.SessionCreateRequest
+import net.kigawa.keruta.model.generated.SessionUpdateRequest
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import kotlinx.coroutines.runBlocking
 import java.time.ZoneOffset
+import net.kigawa.keruta.core.domain.model.Session as DomainSession
 
 @RestController
 class SessionController(
@@ -31,12 +31,12 @@ class SessionController(
     private val executorClient: ExecutorClient,
     private val taskService: TaskService,
 ) : SessionApi {
-    
+
     private fun DomainSession.toGenerated(): Session {
         return Session(
             id = this.id,
             name = this.name,
-            status = when(this.status) {
+            status = when (this.status) {
                 net.kigawa.keruta.core.domain.model.SessionStatus.ACTIVE -> Session.Status.rUNNING
                 net.kigawa.keruta.core.domain.model.SessionStatus.COMPLETED -> Session.Status.cOMPLETED
                 net.kigawa.keruta.core.domain.model.SessionStatus.INACTIVE -> Session.Status.pENDING
@@ -44,10 +44,10 @@ class SessionController(
             },
             createdAt = this.createdAt.atOffset(ZoneOffset.UTC),
             updatedAt = this.updatedAt.atOffset(ZoneOffset.UTC),
-            tags = this.tags
+            tags = this.tags,
         )
     }
-    
+
     override fun updateSession(sessionId: String, sessionUpdateRequest: SessionUpdateRequest): ResponseEntity<Session> {
         logger.info("Updating session: {}", sessionId)
         return try {
@@ -55,7 +55,7 @@ class SessionController(
             val currentSession = runBlocking { sessionService.getSessionById(sessionId) }
             val updatedDomainSession = currentSession.copy(
                 name = sessionUpdateRequest.name ?: currentSession.name,
-                tags = sessionUpdateRequest.tags ?: currentSession.tags
+                tags = sessionUpdateRequest.tags ?: currentSession.tags,
             )
             val result = runBlocking { sessionService.updateSession(sessionId, updatedDomainSession) }
             ResponseEntity.ok(result.toGenerated())
@@ -73,7 +73,7 @@ class SessionController(
         try {
             val session = CreateSessionRequest(
                 name = sessionCreateRequest.name,
-                tags = sessionCreateRequest.tags ?: emptyList()
+                tags = sessionCreateRequest.tags ?: emptyList(),
             ).toDomain()
             val createdSession = runBlocking { sessionService.createSession(session) }
             logger.info("Session created successfully: id={}", createdSession.id)
@@ -177,20 +177,25 @@ class SessionController(
         description = "Searches sessions by partial UUID (useful for finding sessions from workspace names)",
     )
     suspend fun searchSessionsByPartialId(@RequestParam partialId: String): ResponseEntity<List<SessionResponse>> {
-        logger.debug("Searching sessions by partial ID: {}", partialId)
+        logger.info("Searching sessions by partial ID: {}", partialId)
 
         // Validate input
         if (partialId.isBlank() || partialId.length < 4) {
-            logger.debug("Invalid partial ID: too short or blank")
+            logger.warn("Invalid partial ID: too short or blank - partialId: '{}'", partialId)
             return ResponseEntity.badRequest().build()
         }
 
         return try {
+            logger.info("Calling sessionService.searchSessionsByPartialId with partialId: {}", partialId)
             val sessions = sessionService.searchSessionsByPartialId(partialId)
-            logger.debug("Found {} sessions matching partial ID: {}", sessions.size, partialId)
+            logger.info("Found {} sessions matching partial ID: {}", sessions.size, partialId)
 
             val responses = sessions.map { SessionResponse.fromDomain(it) }
+            logger.info("Successfully converted {} sessions to responses", responses.size)
             ResponseEntity.ok(responses)
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Invalid partial ID format: {}", partialId, e)
+            ResponseEntity.badRequest().build()
         } catch (e: Exception) {
             logger.error("Failed to search sessions by partial ID: {}", partialId, e)
             ResponseEntity.internalServerError().build()

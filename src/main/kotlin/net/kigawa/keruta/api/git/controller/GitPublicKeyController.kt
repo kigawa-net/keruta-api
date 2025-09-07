@@ -325,10 +325,10 @@ class GitPublicKeyController(
                     "GET /api/v1/git/keys",
                     "POST /api/v1/git/keys",
                     "POST /api/v1/git/keys/generate",
-                    "POST /api/v1/git/keys/validate"
+                    "POST /api/v1/git/keys/validate",
                 ),
                 "timestamp" to java.time.LocalDateTime.now(),
-            )
+            ),
         )
     }
 }

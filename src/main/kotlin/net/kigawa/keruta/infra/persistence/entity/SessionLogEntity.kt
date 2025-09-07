@@ -38,11 +38,11 @@ data class SessionLogEntity(
                 details = domain.details,
                 metadata = domain.metadata,
                 userId = domain.userId,
-                timestamp = domain.timestamp
+                timestamp = domain.timestamp,
             )
         }
     }
-    
+
     /**
      * Convert entity to domain model
      */
@@ -52,7 +52,7 @@ data class SessionLogEntity(
         } catch (e: IllegalArgumentException) {
             SessionLogLevel.INFO // Fallback to INFO level
         }
-        
+
         return SessionLog(
             id = id,
             sessionId = sessionId,
@@ -63,7 +63,7 @@ data class SessionLogEntity(
             details = details,
             metadata = metadata,
             userId = userId,
-            timestamp = timestamp
+            timestamp = timestamp,
         )
     }
 }

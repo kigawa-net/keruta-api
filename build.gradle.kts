@@ -93,14 +93,16 @@ openApiGenerate {
     apiPackage.set("net.kigawa.keruta.api.generated")
     modelPackage.set("net.kigawa.keruta.model.generated")
     packageName.set("net.kigawa.keruta.generated")
-    configOptions.set(mapOf(
-        "dateLibrary" to "java8",
-        "interfaceOnly" to "true",
-        "useTags" to "true",
-        "skipDefaultInterface" to "true",
-        "documentationProvider" to "springdoc",
-        "useSpringBoot3" to "true"
-    ))
+    configOptions.set(
+        mapOf(
+            "dateLibrary" to "java8",
+            "interfaceOnly" to "true",
+            "useTags" to "true",
+            "skipDefaultInterface" to "true",
+            "documentationProvider" to "springdoc",
+            "useSpringBoot3" to "true",
+        ),
+    )
 }
 
 // Add generated sources to compilation

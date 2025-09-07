@@ -35,7 +35,7 @@ open class SessionRealtimeController(
                 logger.error("Failed to create SSE emitter for sessionId: {}", sessionId ?: "all")
                 throw RuntimeException("Failed to create SSE emitter")
             }
-            
+
             sseService.registerEmitter(sessionId, emitter)
             emitter
         } catch (e: Exception) {

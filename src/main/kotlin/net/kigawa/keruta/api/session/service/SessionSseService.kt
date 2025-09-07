@@ -47,7 +47,7 @@ open class SessionSseService(
             logger.error("Cannot register null emitter for sessionId: {}", sessionId ?: "all")
             return
         }
-        
+
         val key = sessionId ?: ALL_SESSIONS_KEY
         sessionEmitters.computeIfAbsent(key) { ConcurrentHashMap.newKeySet() }.add(emitter)
         emitterToSession[emitter] = key
