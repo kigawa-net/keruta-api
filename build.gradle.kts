@@ -70,8 +70,9 @@ configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
     ignoreFailures.set(false)
     enableExperimentalRules.set(true)
     filter {
+        include("src/**/*.kt")
         exclude("**/generated/**")
-        include("**/kotlin/**")
+        exclude("**/build/**")
     }
 }
 
@@ -88,8 +89,8 @@ tasks.withType<Test> {
 // OpenAPI Code Generation Configuration
 openApiGenerate {
     generatorName.set("kotlin-spring")
-    inputSpec.set("$rootDir/src/main/resources/openapi.yaml")
-    outputDir.set("$buildDir/generated")
+    inputSpec.set("${project.rootDir}/src/main/resources/openapi.yaml")
+    outputDir.set("${layout.buildDirectory.get()}/generated")
     apiPackage.set("net.kigawa.keruta.api.generated")
     modelPackage.set("net.kigawa.keruta.model.generated")
     packageName.set("net.kigawa.keruta.generated")
@@ -99,7 +100,7 @@ openApiGenerate {
             "interfaceOnly" to "true",
             "useTags" to "true",
             "skipDefaultInterface" to "true",
-            "documentationProvider" to "springdoc",
+            "documentationProvider" to "none", // Disable SpringDoc to avoid SpringDocConfiguration.kt
             "useSpringBoot3" to "true",
         ),
     )
@@ -109,12 +110,23 @@ openApiGenerate {
 sourceSets {
     main {
         kotlin {
-            srcDir("$buildDir/generated/src/main/kotlin")
+            srcDir("${layout.buildDirectory.get()}/generated/src/main/kotlin")
         }
     }
 }
 
-// Ensure code generation runs before compilation
+// Ensure code generation runs before compilation and ktlint
 tasks.named("compileKotlin") {
     dependsOn("openApiGenerate")
+}
+
+// Ensure ktlint runs after code generation and exclude generated files
+tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask> {
+    dependsOn("openApiGenerate")
+    setSource(files("src"))
+}
+
+tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask> {
+    dependsOn("openApiGenerate")
+    setSource(files("src"))
 }

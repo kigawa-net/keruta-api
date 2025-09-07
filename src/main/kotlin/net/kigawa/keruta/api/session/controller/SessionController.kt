@@ -8,6 +8,7 @@ import net.kigawa.keruta.api.session.dto.SessionResponse
 import net.kigawa.keruta.api.session.dto.UpdateSessionRequest
 import net.kigawa.keruta.api.task.dto.TaskResponse
 import net.kigawa.keruta.api.workspace.dto.CoderWorkspaceResponse
+import net.kigawa.keruta.core.domain.exception.SessionNameAlreadyExistsException
 import net.kigawa.keruta.core.domain.model.TaskStatus
 import net.kigawa.keruta.core.usecase.executor.CoderWorkspaceTemplate
 import net.kigawa.keruta.core.usecase.executor.CreateCoderWorkspaceRequest
@@ -19,6 +20,7 @@ import net.kigawa.keruta.model.generated.Session
 import net.kigawa.keruta.model.generated.SessionCreateRequest
 import net.kigawa.keruta.model.generated.SessionUpdateRequest
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.time.ZoneOffset
@@ -31,6 +33,8 @@ class SessionController(
     private val executorClient: ExecutorClient,
     private val taskService: TaskService,
 ) : SessionApi {
+
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     private fun DomainSession.toGenerated(): Session {
         return Session(
@@ -61,12 +65,14 @@ class SessionController(
             ResponseEntity.ok(result.toGenerated())
         } catch (e: NoSuchElementException) {
             ResponseEntity.notFound().build()
+        } catch (e: SessionNameAlreadyExistsException) {
+            logger.warn("Session update failed due to duplicate name: {}", sessionUpdateRequest.name)
+            ResponseEntity.status(HttpStatus.CONFLICT).build()
         } catch (e: Exception) {
             logger.error("Failed to update session", e)
             ResponseEntity.internalServerError().build()
         }
     }
-    private val logger = LoggerFactory.getLogger(this::class.java)
 
     override fun createSession(sessionCreateRequest: SessionCreateRequest): ResponseEntity<Session> {
         logger.info("Creating new session: {}", sessionCreateRequest)
@@ -78,6 +84,9 @@ class SessionController(
             val createdSession = runBlocking { sessionService.createSession(session) }
             logger.info("Session created successfully: id={}", createdSession.id)
             return ResponseEntity.ok(createdSession.toGenerated())
+        } catch (e: SessionNameAlreadyExistsException) {
+            logger.warn("Session creation failed due to duplicate name: {}", sessionCreateRequest.name)
+            return ResponseEntity.status(HttpStatus.CONFLICT).build()
         } catch (e: Exception) {
             logger.error("Failed to create session", e)
             return ResponseEntity.internalServerError().build()
@@ -128,6 +137,9 @@ class SessionController(
             ResponseEntity.ok(SessionResponse.fromDomain(updatedSession))
         } catch (e: NoSuchElementException) {
             ResponseEntity.notFound().build()
+        } catch (e: SessionNameAlreadyExistsException) {
+            logger.warn("Session update failed due to duplicate name: {}", request.name)
+            ResponseEntity.status(HttpStatus.CONFLICT).build()
         } catch (e: Exception) {
             logger.error("Failed to update session", e)
             ResponseEntity.internalServerError().build()
