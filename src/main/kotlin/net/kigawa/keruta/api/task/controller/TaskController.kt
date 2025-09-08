@@ -4,6 +4,7 @@ import net.kigawa.keruta.api.task.dto.*
 import net.kigawa.keruta.core.domain.model.Task
 import net.kigawa.keruta.core.domain.model.TaskStatus
 import net.kigawa.keruta.core.usecase.task.TaskService
+import net.kigawa.keruta.infra.app.service.WorkspaceEnsureService
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/v1/tasks")
 open class TaskController(
     private val taskService: TaskService,
+    private val workspaceEnsureService: WorkspaceEnsureService,
 ) {
     private val logger = LoggerFactory.getLogger(TaskController::class.java)
 
@@ -23,6 +25,17 @@ open class TaskController(
 
         return try {
             val task = request.toDomain()
+
+            // タスク作成前にワークスペースが起動していることを確保
+            try {
+                logger.info("Ensuring workspace is running for session: ${task.sessionId}")
+                workspaceEnsureService.ensureWorkspaceRunning(task.sessionId)
+                logger.info("Workspace ensured for session: ${task.sessionId}")
+            } catch (e: Exception) {
+                logger.warn("Failed to ensure workspace is running for session ${task.sessionId}: ${e.message}", e)
+                // ワークスペースの起動に失敗してもタスクの作成は続行
+            }
+
             val createdTask = taskService.createTask(task)
 
             logger.info("Task created successfully with ID: ${createdTask.id}")
