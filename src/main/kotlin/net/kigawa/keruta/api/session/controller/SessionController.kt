@@ -93,6 +93,8 @@ class SessionController(
         }
     }
 
+    @GetMapping
+    @Operation(summary = "Get all sessions", description = "Retrieves all sessions")
     override fun getAllSessions(): ResponseEntity<List<Session>> {
         return try {
             val sessions = runBlocking { sessionService.getAllSessions() }.map { it.toGenerated() }
