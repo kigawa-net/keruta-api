@@ -4,7 +4,7 @@ on:
     inputs:
       name:
         description: 'docker image name'
-        required: true
+        required: false
         type: string
       harborProject:
         required: true
@@ -24,7 +24,7 @@ jobs:
       harborUser: robot$kigawa-net
       dir: "./"
       dockerFile: "./Dockerfile"
-      name: ${{ inputs.name }}
+      name: ${{ inputs.name || 'keruta-api' }}
       dockerRepository: harbor.kigawa.net/${{ inputs.harborProject }}
     steps:
       # checkout
