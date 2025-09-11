@@ -7,7 +7,7 @@ jobs:
   cd:
     uses: ./.github/workflows/release.yml
     with:
-        manifestFile: ./keruta/beta/keruta-admin.yaml
+        manifestFile: ./keruta/beta/keruta-api.yaml
         harborProject: "library"
         repository: "kigawa-net/kigawa-net-k8s"
 
