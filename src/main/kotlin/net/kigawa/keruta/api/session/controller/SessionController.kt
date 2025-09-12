@@ -1,13 +1,13 @@
 package net.kigawa.keruta.api.session.controller
 
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.tags.Tag
+import kotlinx.coroutines.runBlocking
+import net.kigawa.keruta.api.generated.SessionApi
 import net.kigawa.keruta.api.session.dto.CreateSessionRequest
 import net.kigawa.keruta.api.session.dto.SessionResponse
 import net.kigawa.keruta.api.session.dto.UpdateSessionRequest
 import net.kigawa.keruta.api.task.dto.TaskResponse
 import net.kigawa.keruta.api.workspace.dto.CoderWorkspaceResponse
-import net.kigawa.keruta.core.domain.model.Session
 import net.kigawa.keruta.core.domain.model.TaskStatus
 import net.kigawa.keruta.core.usecase.executor.CoderWorkspaceTemplate
 import net.kigawa.keruta.core.usecase.executor.CreateCoderWorkspaceRequest
@@ -15,30 +15,78 @@ import net.kigawa.keruta.core.usecase.executor.ExecutorClient
 import net.kigawa.keruta.core.usecase.session.SessionService
 import net.kigawa.keruta.core.usecase.session.SessionServiceImpl
 import net.kigawa.keruta.core.usecase.task.TaskService
+import net.kigawa.keruta.model.generated.Session
+import net.kigawa.keruta.model.generated.SessionCreateRequest
+import net.kigawa.keruta.model.generated.SessionUpdateRequest
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.time.ZoneOffset
+import net.kigawa.keruta.core.domain.model.Session as DomainSession
 
 @RestController
 @RequestMapping("/api/v1/sessions")
-@Tag(name = "Session", description = "Session management API")
 class SessionController(
     private val sessionService: SessionService,
     private val sessionServiceImpl: SessionServiceImpl,
     private val executorClient: ExecutorClient,
     private val taskService: TaskService,
-) {
+) : SessionApi {
+
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    @PostMapping
-    @Operation(summary = "Create a new session", description = "Creates a new session in the system")
-    suspend fun createSession(@RequestBody request: CreateSessionRequest): ResponseEntity<SessionResponse> {
-        logger.info("Creating new session: {}", request)
+    private fun DomainSession.toGenerated(): Session {
+        return Session(
+            id = this.id,
+            name = this.name,
+            status = when (this.status) {
+                net.kigawa.keruta.core.domain.model.SessionStatus.ACTIVE -> Session.Status.rUNNING
+                net.kigawa.keruta.core.domain.model.SessionStatus.COMPLETED -> Session.Status.cOMPLETED
+                net.kigawa.keruta.core.domain.model.SessionStatus.INACTIVE -> Session.Status.pENDING
+                net.kigawa.keruta.core.domain.model.SessionStatus.ARCHIVED -> Session.Status.fAILED
+            },
+            createdAt = this.createdAt.atOffset(ZoneOffset.UTC),
+            updatedAt = this.updatedAt.atOffset(ZoneOffset.UTC),
+            tags = this.tags,
+        )
+    }
+
+    override fun updateSession(sessionId: String, sessionUpdateRequest: SessionUpdateRequest): ResponseEntity<Session> {
+        logger.info("Updating session: {}", sessionId)
+        return try {
+            // Get current session to preserve status
+            val currentSession = runBlocking { sessionService.getSessionById(sessionId) }
+            val updatedDomainSession = currentSession.copy(
+                name = sessionUpdateRequest.name ?: currentSession.name,
+                tags = sessionUpdateRequest.tags ?: currentSession.tags,
+            )
+            val result = runBlocking { sessionService.updateSession(sessionId, updatedDomainSession) }
+            ResponseEntity.ok(result.toGenerated())
+        } catch (e: NoSuchElementException) {
+            ResponseEntity.notFound().build()
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Session update failed due to duplicate name: {}", sessionUpdateRequest.name)
+            ResponseEntity.status(HttpStatus.CONFLICT).build()
+        } catch (e: Exception) {
+            logger.error("Failed to update session", e)
+            ResponseEntity.internalServerError().build()
+        }
+    }
+
+    override fun createSession(sessionCreateRequest: SessionCreateRequest): ResponseEntity<Session> {
+        logger.info("Creating new session: {}", sessionCreateRequest)
         try {
-            val session = request.toDomain()
-            val createdSession = sessionService.createSession(session)
+            val session = CreateSessionRequest(
+                name = sessionCreateRequest.name,
+                tags = sessionCreateRequest.tags ?: emptyList(),
+            ).toDomain()
+            val createdSession = runBlocking { sessionService.createSession(session) }
             logger.info("Session created successfully: id={}", createdSession.id)
-            return ResponseEntity.ok(SessionResponse.fromDomain(createdSession))
+            return ResponseEntity.ok(createdSession.toGenerated())
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Session creation failed due to duplicate name: {}", sessionCreateRequest.name)
+            return ResponseEntity.status(HttpStatus.CONFLICT).build()
         } catch (e: Exception) {
             logger.error("Failed to create session", e)
             return ResponseEntity.internalServerError().build()
@@ -46,14 +94,29 @@ class SessionController(
     }
 
     @GetMapping
-    @Operation(summary = "Get all sessions", description = "Retrieves all sessions in the system")
-    suspend fun getAllSessions(): List<SessionResponse> {
-        return sessionService.getAllSessions().map { SessionResponse.fromDomain(it) }
+    @Operation(summary = "Get all sessions", description = "Retrieves all sessions")
+    override fun getAllSessions(): ResponseEntity<List<Session>> {
+        return try {
+            val sessions = runBlocking { sessionService.getAllSessions() }.map { it.toGenerated() }
+            ResponseEntity.ok(sessions)
+        } catch (e: Exception) {
+            logger.error("Failed to get all sessions", e)
+            ResponseEntity.internalServerError().build()
+        }
+    }
+
+    override fun getSessionById(sessionId: String): ResponseEntity<Session> {
+        return try {
+            val session = runBlocking { sessionService.getSessionById(sessionId) }
+            ResponseEntity.ok(session.toGenerated())
+        } catch (e: NoSuchElementException) {
+            ResponseEntity.notFound().build()
+        }
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get session by ID", description = "Retrieves a specific session by its ID")
-    suspend fun getSessionById(@PathVariable id: String): ResponseEntity<SessionResponse> {
+    suspend fun getSessionByIdDetailed(@PathVariable id: String): ResponseEntity<SessionResponse> {
         return try {
             val session = sessionService.getSessionById(id)
             ResponseEntity.ok(SessionResponse.fromDomain(session))
@@ -76,15 +139,27 @@ class SessionController(
             ResponseEntity.ok(SessionResponse.fromDomain(updatedSession))
         } catch (e: NoSuchElementException) {
             ResponseEntity.notFound().build()
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Session update failed due to duplicate name: {}", request.name)
+            ResponseEntity.status(HttpStatus.CONFLICT).build()
         } catch (e: Exception) {
             logger.error("Failed to update session", e)
             ResponseEntity.internalServerError().build()
         }
     }
 
+    override fun deleteSession(sessionId: String): ResponseEntity<Unit> {
+        return try {
+            runBlocking { sessionService.deleteSession(sessionId) }
+            ResponseEntity.noContent().build()
+        } catch (e: NoSuchElementException) {
+            ResponseEntity.notFound().build()
+        }
+    }
+
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete session", description = "Deletes a specific session")
-    suspend fun deleteSession(@PathVariable id: String): ResponseEntity<Void> {
+    suspend fun deleteSessionDetailed(@PathVariable id: String): ResponseEntity<Void> {
         return try {
             sessionService.deleteSession(id)
             ResponseEntity.noContent().build()
@@ -116,20 +191,25 @@ class SessionController(
         description = "Searches sessions by partial UUID (useful for finding sessions from workspace names)",
     )
     suspend fun searchSessionsByPartialId(@RequestParam partialId: String): ResponseEntity<List<SessionResponse>> {
-        logger.debug("Searching sessions by partial ID: {}", partialId)
+        logger.info("Searching sessions by partial ID: {}", partialId)
 
         // Validate input
         if (partialId.isBlank() || partialId.length < 4) {
-            logger.debug("Invalid partial ID: too short or blank")
+            logger.warn("Invalid partial ID: too short or blank - partialId: '{}'", partialId)
             return ResponseEntity.badRequest().build()
         }
 
         return try {
+            logger.info("Calling sessionService.searchSessionsByPartialId with partialId: {}", partialId)
             val sessions = sessionService.searchSessionsByPartialId(partialId)
-            logger.debug("Found {} sessions matching partial ID: {}", sessions.size, partialId)
+            logger.info("Found {} sessions matching partial ID: {}", sessions.size, partialId)
 
             val responses = sessions.map { SessionResponse.fromDomain(it) }
+            logger.info("Successfully converted {} sessions to responses", responses.size)
             ResponseEntity.ok(responses)
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Invalid partial ID format: {}", partialId, e)
+            ResponseEntity.badRequest().build()
         } catch (e: Exception) {
             logger.error("Failed to search sessions by partial ID: {}", partialId, e)
             ResponseEntity.internalServerError().build()
@@ -460,7 +540,7 @@ class SessionController(
      */
     private fun selectBestTemplateForSession(
         templates: List<CoderWorkspaceTemplate>,
-        session: Session,
+        session: DomainSession,
     ): CoderWorkspaceTemplate? {
         if (templates.isEmpty()) {
             logger.warn("No templates available for workspace creation")
@@ -468,10 +548,10 @@ class SessionController(
         }
 
         // First, try to find a template that matches session tags
-        for (tag in session.tags) {
+        for (tag in session.tags ?: emptyList()) {
             val matchingTemplate = templates.find { template ->
-                template.name.contains(tag, ignoreCase = true) ||
-                    template.description?.contains(tag, ignoreCase = true) == true
+                template.name.contains(tag.toString(), ignoreCase = true) ||
+                    template.description?.contains(tag.toString(), ignoreCase = true) == true
             }
             if (matchingTemplate != null) {
                 logger.info("Found template matching tag '{}': templateId={}", tag, matchingTemplate.id)
@@ -501,19 +581,18 @@ class SessionController(
      * - Must start with a lowercase letter
      * - Must be between 1-32 characters
      */
-    private fun generateWorkspaceNameForSession(session: Session): String {
+    private fun generateWorkspaceNameForSession(session: DomainSession): String {
         // Start with a letter as required by Coder
         val prefix = "ws"
 
         // Use shortened session ID (8 chars) for uniqueness
-        val sessionIdShort = session.id.take(8).lowercase()
+        val sessionIdShort = session.id?.take(8)?.lowercase() ?: "unknown"
 
         // Sanitize session name: only lowercase alphanumeric, max 10 chars
-        val sanitizedName = session.name
-            .lowercase()
-            .replace("[^a-z0-9]".toRegex(), "")
-            .take(10)
-            .ifEmpty { "session" }
+        val sanitizedName = session.name?.lowercase()
+            ?.replace("[^a-z0-9]".toRegex(), "")
+            ?.take(10)
+            ?.ifEmpty { "session" } ?: "session"
 
         // Add short timestamp for uniqueness (4 digits)
         val timestamp = (System.currentTimeMillis() % 10000).toString().padStart(4, '0')

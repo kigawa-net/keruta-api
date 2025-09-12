@@ -41,4 +41,13 @@ interface MongoSessionRepository : MongoRepository<SessionEntity, String> {
      * @return List of sessions with IDs starting with the partial ID
      */
     fun findByIdStartingWithIgnoreCase(partialId: String): List<SessionEntity>
+
+    /**
+     * Finds a session by exact name match.
+     * Used for checking if a session name already exists.
+     *
+     * @param name The exact session name to search for
+     * @return The session entity if found, null otherwise
+     */
+    fun findByName(name: String): SessionEntity?
 }

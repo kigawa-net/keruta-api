@@ -29,10 +29,19 @@ open class SessionRealtimeController(
     ): SseEmitter {
         logger.info("Creating SSE connection for sessionId: {}", sessionId ?: "all")
 
-        val emitter = SseEmitter(Long.MAX_VALUE) // Long-lived connection
-        sseService.registerEmitter(sessionId, emitter)
+        return try {
+            val emitter = SseEmitter(Long.MAX_VALUE) // Long-lived connection
+            if (emitter == null) {
+                logger.error("Failed to create SSE emitter for sessionId: {}", sessionId ?: "all")
+                throw RuntimeException("Failed to create SSE emitter")
+            }
 
-        return emitter
+            sseService.registerEmitter(sessionId, emitter)
+            emitter
+        } catch (e: Exception) {
+            logger.error("Error creating SSE connection for sessionId: {}", sessionId ?: "all", e)
+            throw e
+        }
     }
 
     /**

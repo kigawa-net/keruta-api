@@ -1,0 +1,251 @@
+openapi: 3.0.3
+info:
+  title: Keruta API
+  description: Keruta project management API
+  version: 0.0.1-SNAPSHOT
+servers:
+  - url: http://localhost:8080
+    description: Development server
+paths:
+  /api/v1/health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Returns the health status of the application
+      operationId: getHealth
+      responses:
+        '200':
+          description: Application is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: UP
+  
+  /api/v1/sessions:
+    get:
+      tags:
+        - Session
+      summary: Get all sessions
+      description: Retrieves all sessions in the system
+      operationId: getAllSessions
+      responses:
+        '200':
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Session'
+    post:
+      tags:
+        - Session
+      summary: Create a new session
+      description: Creates a new session in the system
+      operationId: createSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionCreateRequest'
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+
+  /api/v1/sessions/{sessionId}:
+    get:
+      tags:
+        - Session
+      summary: Get session by ID
+      description: Retrieves a specific session by its ID
+      operationId: getSessionById
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '404':
+          description: Session not found
+    put:
+      tags:
+        - Session
+      summary: Update session
+      description: Updates an existing session
+      operationId: updateSession
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionUpdateRequest'
+      responses:
+        '200':
+          description: Session updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '404':
+          description: Session not found
+    delete:
+      tags:
+        - Session
+      summary: Delete session
+      description: Deletes a specific session
+      operationId: deleteSession
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Session deleted successfully
+        '404':
+          description: Session not found
+
+  /api/v1/repositories:
+    get:
+      tags:
+        - Repository Management
+      summary: Get all repositories
+      description: Retrieves all repositories
+      operationId: getAllRepositories
+      responses:
+        '200':
+          description: List of repositories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Repository'
+    post:
+      tags:
+        - Repository Management
+      summary: Create repository
+      description: Creates a new repository
+      operationId: createRepository
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RepositoryCreateRequest'
+      responses:
+        '201':
+          description: Repository created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repository'
+
+components:
+  schemas:
+    Session:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the session
+        name:
+          type: string
+          description: Session name
+        status:
+          type: string
+          enum: [PENDING, RUNNING, COMPLETED, FAILED]
+          description: Current status of the session
+        createdAt:
+          type: string
+          format: date-time
+          description: Session creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Session last update timestamp
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags associated with the session
+    
+    SessionCreateRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Session name
+        tags:
+          type: array
+          items:
+            type: string
+          description: Initial tags for the session
+    
+    SessionUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Updated session name
+        tags:
+          type: array
+          items:
+            type: string
+          description: Updated tags for the session
+    
+    Repository:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the repository
+        name:
+          type: string
+          description: Repository name
+        url:
+          type: string
+          description: Repository URL
+        createdAt:
+          type: string
+          format: date-time
+          description: Repository creation timestamp
+    
+    RepositoryCreateRequest:
+      type: object
+      required:
+        - name
+        - url
+      properties:
+        name:
+          type: string
+          description: Repository name
+        url:
+          type: string
+          description: Repository URL

@@ -14,15 +14,19 @@ import java.time.LocalDateTime
  */
 @Component
 class SessionLogRepositoryImpl(
-    private val mongoSessionLogRepository: MongoSessionLogRepository
+    private val mongoSessionLogRepository: MongoSessionLogRepository,
 ) : SessionLogRepository {
-    
+
     private val logger = LoggerFactory.getLogger(this::class.java)
-    
+
     override suspend fun save(sessionLog: SessionLog): SessionLog {
-        logger.debug("Saving session log: sessionId={}, level={}, action={}", 
-            sessionLog.sessionId, sessionLog.level, sessionLog.action)
-        
+        logger.debug(
+            "Saving session log: sessionId={}, level={}, action={}",
+            sessionLog.sessionId,
+            sessionLog.level,
+            sessionLog.action,
+        )
+
         try {
             val entity = SessionLogEntity.fromDomain(sessionLog)
             val savedEntity = mongoSessionLogRepository.save(entity)
@@ -33,7 +37,7 @@ class SessionLogRepositoryImpl(
             throw e
         }
     }
-    
+
     override suspend fun findById(id: String): SessionLog? {
         return try {
             mongoSessionLogRepository.findById(id).orElse(null)?.toDomain()
@@ -42,19 +46,19 @@ class SessionLogRepositoryImpl(
             null
         }
     }
-    
+
     override suspend fun findBySessionId(sessionId: String): List<SessionLog> {
         return try {
             mongoSessionLogRepository.findBySessionId(
-                sessionId, 
-                Sort.by(Sort.Direction.DESC, "timestamp")
+                sessionId,
+                Sort.by(Sort.Direction.DESC, "timestamp"),
             ).map { it.toDomain() }
         } catch (e: Exception) {
             logger.error("Failed to find session logs by sessionId: {}", sessionId, e)
             emptyList()
         }
     }
-    
+
     override suspend fun findBySessionIdWithFilters(
         sessionId: String,
         level: SessionLogLevel?,
@@ -63,7 +67,7 @@ class SessionLogRepositoryImpl(
         startTime: LocalDateTime?,
         endTime: LocalDateTime?,
         limit: Int?,
-        offset: Int?
+        offset: Int?,
     ): List<SessionLog> {
         return try {
             val sort = Sort.by(Sort.Direction.DESC, "timestamp")
@@ -96,64 +100,64 @@ class SessionLogRepositoryImpl(
                     mongoSessionLogRepository.findBySessionId(sessionId, sort)
                 }
             }
-            
+
             // Apply time filters if needed
             if (startTime != null && endTime == null) {
                 results = results.filter { it.timestamp.isAfter(startTime) || it.timestamp.isEqual(startTime) }
             } else if (endTime != null && startTime == null) {
                 results = results.filter { it.timestamp.isBefore(endTime) || it.timestamp.isEqual(endTime) }
             }
-            
+
             // Apply pagination
             offset?.let { results = results.drop(it) }
             limit?.let { results = results.take(it) }
-            
+
             results.map { it.toDomain() }
         } catch (e: Exception) {
             logger.error("Failed to find session logs with filters", e)
             emptyList()
         }
     }
-    
+
     override suspend fun findBySessionIdAndLevel(sessionId: String, level: SessionLogLevel): List<SessionLog> {
         return try {
             mongoSessionLogRepository.findBySessionIdAndLevel(
-                sessionId, 
-                level.name, 
-                Sort.by(Sort.Direction.DESC, "timestamp")
+                sessionId,
+                level.name,
+                Sort.by(Sort.Direction.DESC, "timestamp"),
             ).map { it.toDomain() }
         } catch (e: Exception) {
             logger.error("Failed to find session logs by sessionId and level", e)
             emptyList()
         }
     }
-    
+
     override suspend fun findBySessionIdAndSource(sessionId: String, source: String): List<SessionLog> {
         return try {
             mongoSessionLogRepository.findBySessionIdAndSource(
-                sessionId, 
-                source, 
-                Sort.by(Sort.Direction.DESC, "timestamp")
+                sessionId,
+                source,
+                Sort.by(Sort.Direction.DESC, "timestamp"),
             ).map { it.toDomain() }
         } catch (e: Exception) {
             logger.error("Failed to find session logs by sessionId and source", e)
             emptyList()
         }
     }
-    
+
     override suspend fun findBySessionIdAndAction(sessionId: String, action: String): List<SessionLog> {
         return try {
             mongoSessionLogRepository.findBySessionIdAndAction(
-                sessionId, 
-                action, 
-                Sort.by(Sort.Direction.DESC, "timestamp")
+                sessionId,
+                action,
+                Sort.by(Sort.Direction.DESC, "timestamp"),
             ).map { it.toDomain() }
         } catch (e: Exception) {
             logger.error("Failed to find session logs by sessionId and action", e)
             emptyList()
         }
     }
-    
+
     override suspend fun countBySessionId(sessionId: String): Long {
         return try {
             mongoSessionLogRepository.countBySessionId(sessionId)
@@ -162,14 +166,14 @@ class SessionLogRepositoryImpl(
             0L
         }
     }
-    
+
     override suspend fun countBySessionIdWithFilters(
         sessionId: String,
         level: SessionLogLevel?,
         source: String?,
         action: String?,
         startTime: LocalDateTime?,
-        endTime: LocalDateTime?
+        endTime: LocalDateTime?,
     ): Long {
         return try {
             // For complex counting, we'll use the find method and count the results
@@ -180,7 +184,7 @@ class SessionLogRepositoryImpl(
             0L
         }
     }
-    
+
     override suspend fun deleteBySessionId(sessionId: String) {
         try {
             mongoSessionLogRepository.deleteBySessionId(sessionId)
@@ -190,7 +194,7 @@ class SessionLogRepositoryImpl(
             throw e
         }
     }
-    
+
     override suspend fun deleteOlderThan(dateTime: LocalDateTime) {
         try {
             mongoSessionLogRepository.deleteByTimestampLessThan(dateTime)
@@ -200,7 +204,7 @@ class SessionLogRepositoryImpl(
             throw e
         }
     }
-    
+
     override suspend fun findRecentLogs(limit: Int): List<SessionLog> {
         return try {
             mongoSessionLogRepository.findByOrderByTimestampDesc()
@@ -211,12 +215,12 @@ class SessionLogRepositoryImpl(
             emptyList()
         }
     }
-    
+
     override suspend fun findByLevel(level: SessionLogLevel, limit: Int): List<SessionLog> {
         return try {
             mongoSessionLogRepository.findByLevel(
                 level.name,
-                Sort.by(Sort.Direction.DESC, "timestamp")
+                Sort.by(Sort.Direction.DESC, "timestamp"),
             ).take(limit).map { it.toDomain() }
         } catch (e: Exception) {
             logger.error("Failed to find logs by level: {}", level, e)

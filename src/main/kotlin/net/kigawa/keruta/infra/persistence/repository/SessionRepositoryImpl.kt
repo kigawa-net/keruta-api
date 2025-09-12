@@ -110,28 +110,56 @@ class SessionRepositoryImpl(private val mongoSessionRepository: MongoSessionRepo
     }
 
     override suspend fun findByPartialId(partialId: String): List<Session> {
-        logger.debug("Finding sessions by partial ID: {}", partialId)
+        logger.info("SessionRepositoryImpl: Finding sessions by partial ID: {}", partialId)
         try {
+            logger.info("SessionRepositoryImpl: Calling mongoSessionRepository.findByIdStartingWithIgnoreCase")
             val entities = mongoSessionRepository.findByIdStartingWithIgnoreCase(partialId)
-            logger.debug("Found {} session entities with partial ID: {}", entities.size, partialId)
+            logger.info(
+                "SessionRepositoryImpl: Found {} session entities with partial ID: {}",
+                entities.size,
+                partialId,
+            )
+
+            if (entities.isEmpty()) {
+                logger.info("SessionRepositoryImpl: No entities found, returning empty list")
+                return emptyList()
+            }
 
             val sessions = entities.mapNotNull { entity ->
                 try {
+                    logger.debug("SessionRepositoryImpl: Converting entity with ID: {}", entity.id)
                     entity.toDomain()
                 } catch (e: Exception) {
-                    logger.error("Failed to convert session entity to domain object: {}", entity.id, e)
+                    logger.error(
+                        "SessionRepositoryImpl: Failed to convert session entity to domain object: {}",
+                        entity.id,
+                        e,
+                    )
                     null
                 }
             }
 
-            logger.debug(
-                "Successfully converted {} session entities to domain objects for partial ID: {}",
+            logger.info(
+                "SessionRepositoryImpl: Successfully converted {} session entities to domain objects for partial ID: {}",
                 sessions.size,
                 partialId,
             )
             return sessions
         } catch (e: Exception) {
-            logger.error("Failed to find sessions by partial ID: {}", partialId, e)
+            logger.error("SessionRepositoryImpl: Failed to find sessions by partial ID: {}", partialId, e)
+            throw e
+        }
+    }
+
+    override suspend fun existsByName(name: String): Boolean {
+        logger.debug("SessionRepositoryImpl: Checking if session name exists: {}", name)
+        try {
+            val entity = mongoSessionRepository.findByName(name)
+            val exists = entity != null
+            logger.debug("SessionRepositoryImpl: Session name '{}' exists: {}", name, exists)
+            return exists
+        } catch (e: Exception) {
+            logger.error("SessionRepositoryImpl: Failed to check if session name exists: {}", name, e)
             throw e
         }
     }

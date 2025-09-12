@@ -42,10 +42,15 @@ open class SessionSseService(
     /**
      * Register SSE emitter for session updates
      */
-    fun registerEmitter(sessionId: String?, emitter: SseEmitter) {
+    fun registerEmitter(sessionId: String?, emitter: SseEmitter?) {
+        if (emitter == null) {
+            logger.error("Cannot register null emitter for sessionId: {}", sessionId ?: "all")
+            return
+        }
+
         val key = sessionId ?: ALL_SESSIONS_KEY
         sessionEmitters.computeIfAbsent(key) { ConcurrentHashMap.newKeySet() }.add(emitter)
-        emitterToSession[emitter] = sessionId
+        emitterToSession[emitter] = key
 
         emitter.onCompletion {
             removeEmitter(emitter)
@@ -82,14 +87,16 @@ open class SessionSseService(
      * Remove SSE emitter
      */
     fun removeEmitter(emitter: SseEmitter) {
-        val sessionId = emitterToSession.remove(emitter)
-        val key = sessionId ?: ALL_SESSIONS_KEY
-        sessionEmitters[key]?.remove(emitter)
+        val key = emitterToSession.remove(emitter)
+        if (key != null) {
+            sessionEmitters[key]?.remove(emitter)
 
-        if (sessionEmitters[key]?.isEmpty() == true) {
-            sessionEmitters.remove(key)
+            if (sessionEmitters[key]?.isEmpty() == true) {
+                sessionEmitters.remove(key)
+            }
         }
 
+        val sessionId = if (key == ALL_SESSIONS_KEY) null else key
         logger.debug("Removed SSE emitter for sessionId: {}", sessionId ?: "all")
     }
 

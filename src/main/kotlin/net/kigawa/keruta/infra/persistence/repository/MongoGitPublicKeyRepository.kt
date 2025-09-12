@@ -39,7 +39,9 @@ interface MongoGitPublicKeyRepository : MongoRepository<GitPublicKeyEntity, Stri
     /**
      * 名前またはフィンガープリントで部分検索する
      */
-    @Query("{ \$or: [ { 'name': { \$regex: ?0, \$options: 'i' } }, { 'fingerprint': { \$regex: ?0, \$options: 'i' } }, { 'algorithm': { \$regex: ?0, \$options: 'i' } } ] }")
+    @Query(
+        "{ \$or: [ { 'name': { \$regex: ?0, \$options: 'i' } }, { 'fingerprint': { \$regex: ?0, \$options: 'i' } }, { 'algorithm': { \$regex: ?0, \$options: 'i' } } ] }",
+    )
     fun findByNameOrFingerprintOrAlgorithmContaining(query: String): List<GitPublicKeyEntity>
 
     /**

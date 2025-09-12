@@ -30,6 +30,14 @@ open class SessionServiceImpl(
     }
 
     override suspend fun createSession(session: Session): Session {
+        logger.info("Creating session with name: {}", session.name)
+
+        // Check if session name already exists
+        if (sessionRepository.existsByName(session.name)) {
+            logger.warn("Attempt to create session with duplicate name: {}", session.name)
+            throw IllegalArgumentException("Session name already exists: ${session.name}")
+        }
+
         val createdSession = sessionRepository.save(session)
 
         // Log session creation
@@ -65,6 +73,12 @@ open class SessionServiceImpl(
     override suspend fun updateSession(id: String, session: Session): Session {
         logger.info("Updating session: id={}", id)
         val existingSession = getSessionById(id)
+
+        // Check if the session name is being changed and if the new name already exists
+        if (existingSession.name != session.name && sessionRepository.existsByName(session.name)) {
+            logger.warn("Attempt to update session {} with duplicate name: {}", id, session.name)
+            throw IllegalArgumentException("Session name already exists: ${session.name}")
+        }
 
         // Check if template configuration has changed
         val templateConfigChanged = hasTemplateConfigChanged(existingSession, session)
@@ -284,28 +298,29 @@ open class SessionServiceImpl(
     }
 
     override suspend fun searchSessionsByPartialId(partialId: String): List<Session> {
-        logger.debug("Searching sessions by partial ID: {}", partialId)
+        logger.info("SessionServiceImpl: Searching sessions by partial ID: {}", partialId)
 
         // Validate partial ID (should be at least 4 characters)
         if (partialId.length < 4) {
-            logger.debug("Partial ID too short: {}", partialId)
+            logger.warn("SessionServiceImpl: Partial ID too short: {}", partialId)
             return emptyList()
         }
 
         // Ensure partial ID contains only valid UUID characters
         val validUuidPattern = Regex("^[0-9a-fA-F-]+$")
         if (!validUuidPattern.matches(partialId)) {
-            logger.debug("Invalid partial ID format: {}", partialId)
+            logger.warn("SessionServiceImpl: Invalid partial ID format: {}", partialId)
             return emptyList()
         }
 
         try {
+            logger.info("SessionServiceImpl: Calling sessionRepository.findByPartialId with partialId: {}", partialId)
             val sessions = sessionRepository.findByPartialId(partialId)
-            logger.debug("Found {} sessions matching partial ID: {}", sessions.size, partialId)
+            logger.info("SessionServiceImpl: Found {} sessions matching partial ID: {}", sessions.size, partialId)
             return sessions
         } catch (e: Exception) {
-            logger.error("Failed to search sessions by partial ID: {}", partialId, e)
-            return emptyList()
+            logger.error("SessionServiceImpl: Failed to search sessions by partial ID: {}", partialId, e)
+            throw e
         }
     }
 }

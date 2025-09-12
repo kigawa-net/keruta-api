@@ -3,8 +3,8 @@ package net.kigawa.keruta.infra.persistence.entity
 import net.kigawa.keruta.core.domain.model.GitKeyType
 import net.kigawa.keruta.core.domain.model.GitPublicKey
 import org.springframework.data.annotation.Id
-import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.index.Indexed
+import org.springframework.data.mongodb.core.mapping.Document
 import java.time.LocalDateTime
 
 /**
@@ -14,30 +14,30 @@ import java.time.LocalDateTime
 data class GitPublicKeyEntity(
     @Id
     val id: String,
-    
+
     @Indexed
     val name: String,
-    
+
     val keyType: String,
-    
+
     val publicKey: String,
-    
+
     @Indexed
     val fingerprint: String,
-    
+
     val algorithm: String,
-    
+
     val keySize: Int? = null,
-    
+
     val associatedRepositories: List<String> = emptyList(),
-    
+
     @Indexed
     val isActive: Boolean = true,
-    
+
     val lastUsed: LocalDateTime? = null,
-    
+
     val createdAt: LocalDateTime,
-    
+
     val updatedAt: LocalDateTime,
 ) {
     companion object {

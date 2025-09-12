@@ -4,6 +4,7 @@ import net.kigawa.keruta.core.domain.model.Session
 import net.kigawa.keruta.core.domain.model.SessionStatus
 import net.kigawa.keruta.core.domain.model.SessionTemplateConfig
 import org.springframework.data.annotation.Id
+import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
 import java.time.LocalDateTime
 
@@ -11,6 +12,7 @@ import java.time.LocalDateTime
 data class SessionEntity(
     @Id
     val id: String,
+    @Indexed(unique = true)
     val name: String,
     val description: String? = null,
     val status: String = SessionStatus.ACTIVE.name,

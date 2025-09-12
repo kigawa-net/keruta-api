@@ -1,34 +1,34 @@
-
-
+name: release.yml
 on:
-  push:
+  workflow_call:
+    inputs:
+      name:
+        description: 'docker image name'
+        required: false
+        type: string
+      harborProject:
+        required: true
+        type: string
+      manifestFile:
+        required: true
+        type: string
+      repository:
+        required: true
+        type: string
+
 
 jobs:
-#  test:
-#    uses: ./.github/workflows/test.yml
-  cd:
-#    needs: [test]
-    if: github.ref == 'refs/heads/main'
-    strategy:
-      matrix:
-        conf:
-          - name: keruta
-            dockerFile: Dockerfile
-            manifestFile: ./keruta/keruta.yaml
-            repository: kigawa-net/kigawa-net-k8s
-            harborProject: "library"
+  release:
     runs-on: ubuntu-latest
     env:
       harborUser: robot$kigawa-net
       dir: "./"
-      name: ${{ matrix.conf.name }}
-      dockerRepository: harbor.kigawa.net/${{ matrix.conf.harborProject }}
+      dockerFile: "./Dockerfile"
+      name: ${{ inputs.name || 'keruta-api' }}
+      dockerRepository: harbor.kigawa.net/${{ inputs.harborProject }}
     steps:
       # checkout
       - uses: actions/checkout@v4
-      - name: preBuild
-        if: ${{ matrix.conf.preDockerBuildCmd }}
-        run: ${{ matrix.conf.preDockerBuildCmd }}
 
       # docker
       - name: Set up Docker Buildx
@@ -47,7 +47,6 @@ jobs:
           images: |
             ${{ env.dockerRepository }}/${{ env.name }}
           # generate Docker tags based on the following events/attributes
-          #  type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
           tags: |
             type=raw,value=latest
             type=ref,event=branch
@@ -61,21 +60,19 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: ${{ env.dockerArg }}
-
 
       # argo
       - name: checkout manifest repository
         uses: actions/checkout@v3
         with:
-          repository: ${{ matrix.conf.repository }}
+          repository: ${{ inputs.repository }}
           ref: main
           token: ${{ secrets.GIT_TOKEN }}
 
       - name: Update YAML File
         run: |
-          yq -i '.spec.template.spec.containers[0].image = "harbor.kigawa.net/library/${{ matrix.conf.name }}:${{ github.ref_name }}-${{ github.sha }}"' \
-          ${{ matrix.conf.manifestFile }}
+          yq -i '.spec.template.spec.containers[0].image = "harbor.kigawa.net/library/${{ inputs.name }}:${{ github.ref_name }}-${{ github.sha }}"' \
+          ${{ inputs.manifestFile }}
 
       - name: push
         run: |
@@ -84,3 +81,4 @@ jobs:
           git add .
           git commit --author=. -m "update rev"
           git push
+

@@ -4,6 +4,7 @@ plugins {
     id("org.springframework.boot") version "3.2.0"
     id("io.spring.dependency-management") version "1.1.4"
     id("org.jlleitschuh.gradle.ktlint") version "11.6.1"
+    id("org.openapi.generator") version "7.1.0"
 }
 
 group = "net.kigawa"
@@ -69,8 +70,9 @@ configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
     ignoreFailures.set(false)
     enableExperimentalRules.set(true)
     filter {
+        include("src/**/*.kt")
         exclude("**/generated/**")
-        include("**/kotlin/**")
+        exclude("**/build/**")
     }
 }
 
@@ -82,4 +84,49 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+// OpenAPI Code Generation Configuration
+openApiGenerate {
+    generatorName.set("kotlin-spring")
+    inputSpec.set("${project.rootDir}/src/main/resources/openapi.yaml")
+    outputDir.set("${layout.buildDirectory.get()}/generated")
+    apiPackage.set("net.kigawa.keruta.api.generated")
+    modelPackage.set("net.kigawa.keruta.model.generated")
+    packageName.set("net.kigawa.keruta.generated")
+    configOptions.set(
+        mapOf(
+            "dateLibrary" to "java8",
+            "interfaceOnly" to "true",
+            "useTags" to "true",
+            "skipDefaultInterface" to "true",
+            "documentationProvider" to "none", // Disable SpringDoc to avoid SpringDocConfiguration.kt
+            "useSpringBoot3" to "true",
+        ),
+    )
+}
+
+// Add generated sources to compilation
+sourceSets {
+    main {
+        kotlin {
+            srcDir("${layout.buildDirectory.get()}/generated/src/main/kotlin")
+        }
+    }
+}
+
+// Ensure code generation runs before compilation and ktlint
+tasks.named("compileKotlin") {
+    dependsOn("openApiGenerate")
+}
+
+// Ensure ktlint runs after code generation and exclude generated files
+tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask> {
+    dependsOn("openApiGenerate")
+    setSource(files("src"))
+}
+
+tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask> {
+    dependsOn("openApiGenerate")
+    setSource(files("src"))
 }
