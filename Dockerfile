@@ -17,6 +17,7 @@ RUN ./gradlew dependencies --no-daemon
 
 # Copy source code
 COPY ./src src
+COPY ./generated-api generated-api
 
 # Build the application
 RUN ./gradlew bootJar --no-daemon
