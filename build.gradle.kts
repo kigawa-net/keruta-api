@@ -16,6 +16,9 @@ repositories {
 }
 
 dependencies {
+    // Generated API
+    implementation(project(":generated-api"))
+
     // Kotlin
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
@@ -90,7 +93,7 @@ tasks.withType<Test> {
 openApiGenerate {
     generatorName.set("kotlin-spring")
     inputSpec.set("${project.rootDir}/src/main/resources/openapi.yaml")
-    outputDir.set("${layout.buildDirectory.get()}/generated")
+    outputDir.set("${project.rootDir}/generated-api")
     apiPackage.set("net.kigawa.keruta.api.generated")
     modelPackage.set("net.kigawa.keruta.model.generated")
     packageName.set("net.kigawa.keruta.generated")
@@ -106,18 +109,9 @@ openApiGenerate {
     )
 }
 
-// Add generated sources to compilation
-sourceSets {
-    main {
-        kotlin {
-            srcDir("${layout.buildDirectory.get()}/generated/src/main/kotlin")
-        }
-    }
-}
-
-// Ensure code generation runs before compilation and ktlint
+// Ensure code generation runs before compilation
 tasks.named("compileKotlin") {
-    dependsOn("openApiGenerate")
+    dependsOn("openApiGenerate", ":generated-api:compileKotlin")
 }
 
 // Ensure ktlint runs after code generation and exclude generated files
