@@ -111,7 +111,7 @@ openApiGenerate {
 
 // Ensure code generation runs before compilation
 tasks.named("compileKotlin") {
-    dependsOn("openApiGenerate", ":generated-api:compileKotlin")
+    dependsOn("openApiGenerate")
 }
 
 // Ensure ktlint runs after code generation and exclude generated files

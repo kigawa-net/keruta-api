@@ -1,40 +1,47 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-group = "org.openapitools"
-version = "1.0.0"
-java.sourceCompatibility = JavaVersion.VERSION_17
+plugins {
+    kotlin("jvm") version "1.9.25"
+    kotlin("plugin.spring") version "1.9.25"
+    id("java-library")
+    id("io.spring.dependency-management") version "1.1.4"
+}
+
+group = "net.kigawa"
+version = "0.0.1-SNAPSHOT"
+java.sourceCompatibility = JavaVersion.VERSION_21
 
 repositories {
     mavenCentral()
-    maven { url = uri("https://repo.spring.io/milestone") }
+}
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.boot:spring-boot-dependencies:3.2.0")
+    }
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "17"
-}
-
-plugins {
-    val kotlinVersion = "1.7.10"
-    id("org.jetbrains.kotlin.jvm") version kotlinVersion
-    id("org.jetbrains.kotlin.plugin.jpa") version kotlinVersion
-    id("org.jetbrains.kotlin.plugin.spring") version kotlinVersion
-    id("org.springframework.boot") version "3.0.2"
-    id("io.spring.dependency-management") version "1.0.14.RELEASE"
+    kotlinOptions.jvmTarget = "21"
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-        implementation("org.springframework.boot:spring-boot-starter-web")
+    // Kotlin
+    api("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    api("org.jetbrains.kotlin:kotlin-reflect")
 
-    implementation("com.google.code.findbugs:jsr305:3.0.2")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    implementation("jakarta.validation:jakarta.validation-api")
-    implementation("jakarta.annotation:jakarta.annotation-api:2.1.0")
+    // Spring Boot (minimal for API)
+    api("org.springframework.boot:spring-boot-starter-web")
 
+    // Jackson for JSON handling
+    api("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    api("com.fasterxml.jackson.module:jackson-module-kotlin")
+
+    // Validation
+    api("jakarta.validation:jakarta.validation-api")
+    api("jakarta.annotation:jakarta.annotation-api")
+
+    // Testing
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(module = "junit")
