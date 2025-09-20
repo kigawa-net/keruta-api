@@ -23,6 +23,7 @@ dependencyManagement {
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "21"
+    dependsOn(":openApiGenerate")
 }
 
 dependencies {
