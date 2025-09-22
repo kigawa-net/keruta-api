@@ -26,6 +26,24 @@ repositories {
     mavenCentral()
 }
 
+// Security: Force resolution strategy for vulnerable dependencies
+configurations.all {
+    resolutionStrategy {
+        // Force latest available version for CVE-2025-48924
+        force("org.apache.commons:commons-lang3:3.18.0")
+
+        // Enable dependency verification for security vulnerabilities
+        eachDependency {
+            if (requested.group == "org.apache.commons" && requested.name == "commons-lang3") {
+                if (requested.version!! < "3.18.0") {
+                    useVersion("3.18.0")
+                    because("CVE-2025-48924 security mitigation - using latest available")
+                }
+            }
+        }
+    }
+}
+
 dependencies {
     // Generated API
     implementation(project(":generated-api"))
@@ -58,7 +76,13 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     // Swagger/OpenAPI
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0") {
+        exclude(group = "org.apache.commons", module = "commons-lang3")
+    }
+
+    // Security: CVE-2025-48924 affects commons-lang3 up to 3.18.0
+    // Waiting for patched version > 3.18.0 or using runtime protections
+    implementation("org.apache.commons:commons-lang3:3.18.0")
 
     // Logging
     implementation("net.logstash.logback:logstash-logback-encoder:7.3")
@@ -103,8 +127,8 @@ tasks.withType<Test> {
 // OpenAPI Code Generation Configuration
 openApiGenerate {
     generatorName.set("kotlin-spring")
-    inputSpec.set("${project.rootDir}/src/main/resources/openapi.yaml")
-    outputDir.set("${project.rootDir}/generated-api")
+    inputSpec.set("${projectDir}/src/main/resources/openapi.yaml")
+    outputDir.set("${projectDir}/generated-api")
     apiPackage.set("net.kigawa.keruta.api.generated")
     modelPackage.set("net.kigawa.keruta.model.generated")
     packageName.set("net.kigawa.keruta.generated")
