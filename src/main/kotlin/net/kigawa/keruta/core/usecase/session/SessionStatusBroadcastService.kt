@@ -65,10 +65,12 @@ interface SessionBroadcastListener {
 
 /**
  * Implementation of SessionStatusBroadcastService
- * DISABLED - Real-time broadcasting is currently disabled
+ * Dynamically enabled/disabled based on admin configuration
  */
 @Service
-open class SessionStatusBroadcastServiceImpl : SessionStatusBroadcastService {
+open class SessionStatusBroadcastServiceImpl(
+    private val realtimeConfigService: net.kigawa.keruta.core.usecase.admin.RealtimeConfigService
+) : SessionStatusBroadcastService {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
     private val listeners = ConcurrentHashMap.newKeySet<SessionBroadcastListener>()
@@ -84,41 +86,123 @@ open class SessionStatusBroadcastServiceImpl : SessionStatusBroadcastService {
     }
 
     override fun broadcastSessionUpdate(session: Session, previousStatus: String?) {
-        // DISABLED: Real-time broadcasting is disabled
-        logger.debug("Broadcasting disabled for session update: sessionId={}, status={}", session.id, session.status)
+        if (!realtimeConfigService.isRealtimeEnabled()) {
+            logger.debug("Broadcasting disabled for session update: sessionId={}, status={}", session.id, session.status)
+            return
+        }
+
+        logger.debug("Broadcasting session update: sessionId={}, status={}", session.id, session.status)
+
+        val updateData = mapOf(
+            "sessionId" to session.id,
+            "name" to session.name,
+            "status" to session.status.name,
+            "previousStatus" to previousStatus,
+            "updatedAt" to session.updatedAt.toString(),
+            "description" to session.description,
+            "tags" to session.tags,
+            "templateConfig" to session.templateConfig?.let { config ->
+                mapOf(
+                    "templateId" to config.templateId,
+                    "parameters" to config.parameters,
+                )
+            },
+        )
+
+        notifyListeners(session.id, "session_update", updateData)
     }
 
     override fun broadcastSessionCreated(session: Session) {
-        // DISABLED: Real-time broadcasting is disabled
-        logger.debug("Broadcasting disabled for session created: sessionId={}", session.id)
+        if (!realtimeConfigService.isRealtimeEnabled()) {
+            logger.debug("Broadcasting disabled for session created: sessionId={}", session.id)
+            return
+        }
+
+        logger.info("Broadcasting session created: sessionId={}", session.id)
+
+        val creationData = mapOf(
+            "sessionId" to session.id,
+            "name" to session.name,
+            "status" to session.status.name,
+            "createdAt" to session.createdAt.toString(),
+            "description" to session.description,
+            "tags" to session.tags,
+        )
+
+        notifyListeners(session.id, "session_created", creationData)
     }
 
     override fun broadcastSessionDeleted(sessionId: String) {
-        // DISABLED: Real-time broadcasting is disabled
-        logger.debug("Broadcasting disabled for session deleted: sessionId={}", sessionId)
+        if (!realtimeConfigService.isRealtimeEnabled()) {
+            logger.debug("Broadcasting disabled for session deleted: sessionId={}", sessionId)
+            return
+        }
+
+        logger.info("Broadcasting session deleted: sessionId={}", sessionId)
+
+        val deletionData = mapOf(
+            "sessionId" to sessionId,
+            "deletedAt" to LocalDateTime.now().toString(),
+        )
+
+        notifyListeners(sessionId, "session_deleted", deletionData)
     }
 
     override fun broadcastSessionMetadataUpdate(session: Session) {
-        // DISABLED: Real-time broadcasting is disabled
-        logger.debug("Broadcasting disabled for session metadata update: sessionId={}", session.id)
+        if (!realtimeConfigService.isRealtimeEnabled()) {
+            logger.debug("Broadcasting disabled for session metadata update: sessionId={}", session.id)
+            return
+        }
+
+        logger.debug("Broadcasting session metadata update: sessionId={}", session.id)
+
+        val metadataData = mapOf(
+            "sessionId" to session.id,
+            "name" to session.name,
+            "description" to session.description,
+            "tags" to session.tags,
+            "updatedAt" to session.updatedAt.toString(),
+        )
+
+        notifyListeners(session.id, "session_metadata_update", metadataData)
     }
 
     override fun broadcastSessionTemplateChanged(newSession: Session, oldSession: Session) {
-        // DISABLED: Real-time broadcasting is disabled
-        logger.debug("Broadcasting disabled for session template changed: sessionId={}", newSession.id)
+        if (!realtimeConfigService.isRealtimeEnabled()) {
+            logger.debug("Broadcasting disabled for session template changed: sessionId={}", newSession.id)
+            return
+        }
+
+        logger.info("Broadcasting session template changed: sessionId={}", newSession.id)
+
+        val updateData = mapOf(
+            "sessionId" to newSession.id,
+            "eventType" to "template_changed",
+            "oldTemplateId" to oldSession.templateConfig?.templateId,
+            "newTemplateId" to newSession.templateConfig?.templateId,
+            "changedAt" to LocalDateTime.now().toString(),
+        )
+
+        notifyListeners(newSession.id, "session_template_changed", updateData)
     }
 
     override fun broadcastSessionUpdate(sessionId: String, eventType: String, data: Map<String, Any?>) {
-        // DISABLED: Real-time broadcasting is disabled
-        logger.debug("Broadcasting disabled for custom session event: sessionId={}, eventType={}", sessionId, eventType)
+        if (!realtimeConfigService.isRealtimeEnabled()) {
+            logger.debug("Broadcasting disabled for custom session event: sessionId={}, eventType={}", sessionId, eventType)
+            return
+        }
+
+        logger.debug("Broadcasting custom session event: sessionId={}, eventType={}", sessionId, eventType)
+        notifyListeners(sessionId, eventType, data)
     }
 
     override fun getBroadcastStats(): BroadcastStats {
+        val isEnabled = realtimeConfigService.isRealtimeEnabled()
         return BroadcastStats(
-            totalConnections = 0,
-            activeSubscriptions = 0,
+            totalConnections = if (isEnabled) listeners.size else 0,
+            activeSubscriptions = if (isEnabled) listeners.size else 0,
             lastBroadcastAt = LocalDateTime.now(),
-            broadcasterStatus = "DISABLED",
+            broadcasterStatus = if (isEnabled) "ACTIVE" else "DISABLED",
         )
     }
 

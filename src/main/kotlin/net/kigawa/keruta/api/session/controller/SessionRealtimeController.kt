@@ -10,14 +10,15 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 
 /**
  * REST API Controller for session real-time status management using Server-Sent Events
- * DISABLED - Real-time updates are currently disabled
+ * Dynamically enabled/disabled based on admin configuration
  */
-// @RestController
-// @RequestMapping("/api/v1/sessions/realtime")
-// @CrossOrigin(origins = ["*"])
+@RestController
+@RequestMapping("/api/v1/sessions/realtime")
+@CrossOrigin(origins = ["*"])
 open class SessionRealtimeController(
     private val broadcastService: SessionStatusBroadcastService,
     private val sseService: SessionSseService,
+    private val realtimeConfigService: net.kigawa.keruta.core.usecase.admin.RealtimeConfigService,
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -27,7 +28,19 @@ open class SessionRealtimeController(
     @GetMapping("/events", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
     fun streamSessionEvents(
         @RequestParam(required = false) sessionId: String?,
-    ): SseEmitter {
+    ): ResponseEntity<Any> {
+        // Check if real-time updates are enabled
+        if (!realtimeConfigService.isRealtimeEnabled()) {
+            logger.info("SSE connection rejected - real-time updates are disabled")
+            return ResponseEntity.status(503).body(
+                mapOf(
+                    "error" to "Real-time updates are disabled",
+                    "message" to "Contact administrator to enable real-time updates",
+                    "code" to "REALTIME_DISABLED"
+                )
+            )
+        }
+
         logger.info("Creating SSE connection for sessionId: {}", sessionId ?: "all")
 
         return try {
@@ -38,10 +51,16 @@ open class SessionRealtimeController(
             }
 
             sseService.registerEmitter(sessionId, emitter)
-            emitter
+            ResponseEntity.ok(emitter)
         } catch (e: Exception) {
             logger.error("Error creating SSE connection for sessionId: {}", sessionId ?: "all", e)
-            throw e
+            ResponseEntity.status(500).body(
+                mapOf(
+                    "error" to "Failed to create SSE connection",
+                    "message" to e.message,
+                    "code" to "SSE_CONNECTION_FAILED"
+                )
+            )
         }
     }
 
