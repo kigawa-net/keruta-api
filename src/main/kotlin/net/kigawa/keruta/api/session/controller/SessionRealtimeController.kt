@@ -32,13 +32,15 @@ open class SessionRealtimeController(
         // Check if real-time updates are enabled
         if (!realtimeConfigService.isRealtimeEnabled()) {
             logger.info("SSE connection rejected - real-time updates are disabled")
-            return ResponseEntity.status(503).body(
-                mapOf(
-                    "error" to "Real-time updates are disabled",
-                    "message" to "Contact administrator to enable real-time updates",
-                    "code" to "REALTIME_DISABLED"
+            return ResponseEntity.status(503)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(
+                    mapOf(
+                        "error" to "Real-time updates are disabled",
+                        "message" to "Contact administrator to enable real-time updates",
+                        "code" to "REALTIME_DISABLED"
+                    )
                 )
-            )
         }
 
         logger.info("Creating SSE connection for sessionId: {}", sessionId ?: "all")
@@ -54,13 +56,15 @@ open class SessionRealtimeController(
             ResponseEntity.ok(emitter)
         } catch (e: Exception) {
             logger.error("Error creating SSE connection for sessionId: {}", sessionId ?: "all", e)
-            ResponseEntity.status(500).body(
-                mapOf(
-                    "error" to "Failed to create SSE connection",
-                    "message" to e.message,
-                    "code" to "SSE_CONNECTION_FAILED"
+            ResponseEntity.status(500)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(
+                    mapOf(
+                        "error" to "Failed to create SSE connection",
+                        "message" to e.message,
+                        "code" to "SSE_CONNECTION_FAILED"
+                    )
                 )
-            )
         }
     }
 
@@ -122,12 +126,14 @@ open class SessionRealtimeController(
             )
         } catch (e: Exception) {
             logger.error("Failed to send test broadcast", e)
-            ResponseEntity.internalServerError().body(
-                mapOf<String, Any>(
-                    "success" to false,
-                    "message" to "Failed to send test broadcast: ${e.message}",
-                ),
-            )
+            ResponseEntity.internalServerError()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(
+                    mapOf<String, Any>(
+                        "success" to false,
+                        "message" to "Failed to send test broadcast: ${e.message}",
+                    )
+                )
         }
     }
 
@@ -177,11 +183,13 @@ open class SessionRealtimeController(
             }
         } catch (e: Exception) {
             logger.error("Health check failed", e)
-            ResponseEntity.status(503).body(
-                mapOf<String, Any>(
-                    "status" to "DOWN",
-                    "error" to (e.message ?: "Unknown error"),
-                ),
+            ResponseEntity.status(503)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(
+                    mapOf<String, Any>(
+                        "status" to "DOWN",
+                        "error" to (e.message ?: "Unknown error"),
+                    )
             )
         }
     }
