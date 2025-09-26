@@ -69,7 +69,7 @@ interface SessionBroadcastListener {
  */
 @Service
 open class SessionStatusBroadcastServiceImpl(
-    private val realtimeConfigService: net.kigawa.keruta.core.usecase.admin.RealtimeConfigService
+    private val realtimeConfigService: net.kigawa.keruta.core.usecase.admin.RealtimeConfigService,
 ) : SessionStatusBroadcastService {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -87,7 +87,11 @@ open class SessionStatusBroadcastServiceImpl(
 
     override fun broadcastSessionUpdate(session: Session, previousStatus: String?) {
         if (!realtimeConfigService.isRealtimeEnabled()) {
-            logger.debug("Broadcasting disabled for session update: sessionId={}, status={}", session.id, session.status)
+            logger.debug(
+                "Broadcasting disabled for session update: sessionId={}, status={}",
+                session.id,
+                session.status,
+            )
             return
         }
 
@@ -188,7 +192,11 @@ open class SessionStatusBroadcastServiceImpl(
 
     override fun broadcastSessionUpdate(sessionId: String, eventType: String, data: Map<String, Any?>) {
         if (!realtimeConfigService.isRealtimeEnabled()) {
-            logger.debug("Broadcasting disabled for custom session event: sessionId={}, eventType={}", sessionId, eventType)
+            logger.debug(
+                "Broadcasting disabled for custom session event: sessionId={}, eventType={}",
+                sessionId,
+                eventType,
+            )
             return
         }
 

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/admin/api/realtime")
 @CrossOrigin(origins = ["*"])
 open class AdminRealtimeController(
-    private val realtimeConfigService: RealtimeConfigService
+    private val realtimeConfigService: RealtimeConfigService,
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -40,8 +40,8 @@ open class AdminRealtimeController(
             mapOf(
                 "success" to true,
                 "message" to "Real-time updates enabled",
-                "config" to config
-            )
+                "config" to config,
+            ),
         )
     }
 
@@ -58,8 +58,8 @@ open class AdminRealtimeController(
             mapOf(
                 "success" to true,
                 "message" to "Real-time updates disabled",
-                "config" to config
-            )
+                "config" to config,
+            ),
         )
     }
 
@@ -77,8 +77,8 @@ open class AdminRealtimeController(
                 "success" to true,
                 "message" to "Real-time updates ${if (newState) "enabled" else "disabled"}",
                 "enabled" to newState,
-                "config" to config
-            )
+                "config" to config,
+            ),
         )
     }
 
@@ -95,8 +95,8 @@ open class AdminRealtimeController(
             mapOf(
                 "success" to true,
                 "message" to "Real-time configuration updated",
-                "config" to config
-            )
+                "config" to config,
+            ),
         )
     }
 }
@@ -105,5 +105,5 @@ open class AdminRealtimeController(
  * Request for updating real-time configuration
  */
 data class UpdateRealtimeConfigRequest(
-    val enabled: Boolean
+    val enabled: Boolean,
 )

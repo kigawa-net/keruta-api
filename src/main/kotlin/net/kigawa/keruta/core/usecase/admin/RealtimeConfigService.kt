@@ -58,7 +58,7 @@ open class RealtimeConfigServiceImpl : RealtimeConfigService {
             enabled = realtimeEnabled.get(),
             lastModifiedAt = lastModifiedAt,
             modifiedBy = modifiedBy,
-            description = if (realtimeEnabled.get()) "Real-time updates are active" else "Real-time updates are disabled"
+            description = if (realtimeEnabled.get()) "Real-time updates are active" else "Real-time updates are disabled",
         )
     }
 
@@ -76,5 +76,5 @@ data class RealtimeConfiguration(
     val enabled: Boolean,
     val lastModifiedAt: LocalDateTime,
     val modifiedBy: String,
-    val description: String
+    val description: String,
 )

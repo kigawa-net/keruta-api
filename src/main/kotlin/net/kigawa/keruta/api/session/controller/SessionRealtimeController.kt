@@ -38,8 +38,8 @@ open class SessionRealtimeController(
                     mapOf(
                         "error" to "Real-time updates are disabled",
                         "message" to "Contact administrator to enable real-time updates",
-                        "code" to "REALTIME_DISABLED"
-                    )
+                        "code" to "REALTIME_DISABLED",
+                    ),
                 )
         }
 
@@ -62,8 +62,8 @@ open class SessionRealtimeController(
                     mapOf(
                         "error" to "Failed to create SSE connection",
                         "message" to e.message,
-                        "code" to "SSE_CONNECTION_FAILED"
-                    )
+                        "code" to "SSE_CONNECTION_FAILED",
+                    ),
                 )
         }
     }
@@ -132,7 +132,7 @@ open class SessionRealtimeController(
                     mapOf<String, Any>(
                         "success" to false,
                         "message" to "Failed to send test broadcast: ${e.message}",
-                    )
+                    ),
                 )
         }
     }
@@ -189,8 +189,8 @@ open class SessionRealtimeController(
                     mapOf<String, Any>(
                         "status" to "DOWN",
                         "error" to (e.message ?: "Unknown error"),
-                    )
-            )
+                    ),
+                )
         }
     }
 }

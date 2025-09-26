@@ -22,7 +22,7 @@ class CorsConfig : WebMvcConfigurer {
                 "http://localhost:3000",
                 "http://localhost:3001",
                 "https://keruta.kigawa.net",
-                "https://keruta-dev-api.kigawa.net"
+                "https://keruta-dev-api.kigawa.net",
             )
             .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
             .allowedHeaders("*")
