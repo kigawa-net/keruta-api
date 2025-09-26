@@ -10,10 +10,11 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 
 /**
  * REST API Controller for session real-time status management using Server-Sent Events
+ * DISABLED - Real-time updates are currently disabled
  */
-@RestController
-@RequestMapping("/api/v1/sessions/realtime")
-@CrossOrigin(origins = ["*"])
+// @RestController
+// @RequestMapping("/api/v1/sessions/realtime")
+// @CrossOrigin(origins = ["*"])
 open class SessionRealtimeController(
     private val broadcastService: SessionStatusBroadcastService,
     private val sseService: SessionSseService,
