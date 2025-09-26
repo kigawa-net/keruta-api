@@ -22,7 +22,7 @@ class ApiSecurityConfig(private val securityConfig: SecurityConfig) {
         http
             .securityMatcher("/api/**") // Only apply this configuration to API endpoints
             .csrf { it.disable() }
-            .cors { it.configurationSource(securityConfig.corsConfigurationSource()) }
+            .cors { it.disable() } // CORS is handled by WebMvcConfigurer
             .authorizeHttpRequests { auth ->
                 auth
                     // Allow all API requests

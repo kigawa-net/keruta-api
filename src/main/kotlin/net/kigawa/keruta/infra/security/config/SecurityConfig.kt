@@ -10,10 +10,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
-import org.springframework.web.cors.CorsConfiguration
-import org.springframework.web.cors.CorsConfigurationSource
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource
-import org.springframework.web.filter.CorsFilter
 
 @Configuration
 @EnableWebSecurity
@@ -41,7 +37,7 @@ class SecurityConfig {
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .csrf { it.disable() }
-            .cors { it.configurationSource(corsConfigurationSource()) }
+            .cors { it.disable() } // CORS is handled by WebMvcConfigurer
             .authorizeHttpRequests { auth ->
                 auth
                     // Allow all requests
@@ -52,43 +48,7 @@ class SecurityConfig {
     }
 
     @Bean
-    fun corsConfigurationSource(): CorsConfigurationSource {
-        val configuration = CorsConfiguration()
-
-        // Always include specific origins that need to be allowed
-        val specificOrigins = specificOriginsString.split(",").map { it.trim() }
-
-        // If allowedOrigins contains a wildcard, replace it with specific origins
-        // Otherwise, add the specific origins to the existing list
-        if (allowedOrigins.contains("*")) {
-            configuration.allowedOrigins = specificOrigins
-        } else {
-            val configuredOrigins = allowedOrigins.split(",").map { it.trim() }
-            configuration.allowedOrigins = (configuredOrigins + specificOrigins).distinct()
-        }
-
-        configuration.allowedMethods = allowedMethods.split(",").map { it.trim() }
-        configuration.allowedHeaders = allowedHeaders.split(",").map { it.trim() }
-        configuration.allowCredentials = true // Always allow credentials
-        configuration.maxAge = maxAge
-
-        val source = UrlBasedCorsConfigurationSource()
-        source.registerCorsConfiguration("/**", configuration)
-        return source
-    }
-
-    @Bean
     fun passwordEncoder(): PasswordEncoder {
         return BCryptPasswordEncoder()
-    }
-
-    /**
-     * Creates a CorsFilter bean with a high order to ensure it's applied early in the filter chain.
-     * This ensures that CORS headers are applied to all responses, including error responses.
-     */
-    @Bean
-    @Order(Ordered.HIGHEST_PRECEDENCE)
-    fun corsFilter(): CorsFilter {
-        return CorsFilter(corsConfigurationSource())
     }
 }
