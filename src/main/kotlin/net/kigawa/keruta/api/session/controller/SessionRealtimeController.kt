@@ -28,7 +28,7 @@ open class SessionRealtimeController(
     @GetMapping("/events", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
     fun streamSessionEvents(
         @RequestParam(required = false) sessionId: String?,
-    ): ResponseEntity<Any> {
+    ): Any {
         // Check if real-time updates are enabled
         if (!realtimeConfigService.isRealtimeEnabled()) {
             logger.info("SSE connection rejected - real-time updates are disabled")
@@ -53,7 +53,7 @@ open class SessionRealtimeController(
             }
 
             sseService.registerEmitter(sessionId, emitter)
-            ResponseEntity.ok(emitter)
+            emitter
         } catch (e: Exception) {
             logger.error("Error creating SSE connection for sessionId: {}", sessionId ?: "all", e)
             ResponseEntity.status(500)
