@@ -40,12 +40,15 @@ class SessionController(
         return Session(
             id = this.id,
             name = this.name,
+            description = this.description,
             status = when (this.status) {
                 net.kigawa.keruta.core.domain.model.SessionStatus.ACTIVE -> Session.Status.rUNNING
                 net.kigawa.keruta.core.domain.model.SessionStatus.COMPLETED -> Session.Status.cOMPLETED
                 net.kigawa.keruta.core.domain.model.SessionStatus.INACTIVE -> Session.Status.pENDING
                 net.kigawa.keruta.core.domain.model.SessionStatus.ARCHIVED -> Session.Status.fAILED
             },
+            repositoryUrl = this.repositoryUrl,
+            repositoryRef = this.repositoryRef,
             createdAt = this.createdAt.atOffset(ZoneOffset.UTC),
             updatedAt = this.updatedAt.atOffset(ZoneOffset.UTC),
             tags = this.tags,
@@ -59,6 +62,9 @@ class SessionController(
             val currentSession = runBlocking { sessionService.getSessionById(sessionId) }
             val updatedDomainSession = currentSession.copy(
                 name = sessionUpdateRequest.name ?: currentSession.name,
+                description = sessionUpdateRequest.description ?: currentSession.description,
+                repositoryUrl = sessionUpdateRequest.repositoryUrl ?: currentSession.repositoryUrl,
+                repositoryRef = sessionUpdateRequest.repositoryRef ?: currentSession.repositoryRef,
                 tags = sessionUpdateRequest.tags ?: currentSession.tags,
             )
             val result = runBlocking { sessionService.updateSession(sessionId, updatedDomainSession) }
@@ -79,7 +85,10 @@ class SessionController(
         try {
             val session = CreateSessionRequest(
                 name = sessionCreateRequest.name,
+                description = sessionCreateRequest.description,
                 tags = sessionCreateRequest.tags ?: emptyList(),
+                repositoryUrl = sessionCreateRequest.repositoryUrl,
+                repositoryRef = sessionCreateRequest.repositoryRef ?: "main",
             ).toDomain()
             val createdSession = runBlocking { sessionService.createSession(session) }
             logger.info("Session created successfully: id={}", createdSession.id)

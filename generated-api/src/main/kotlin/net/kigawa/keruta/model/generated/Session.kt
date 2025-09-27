@@ -17,7 +17,10 @@ import jakarta.validation.Valid
  * 
  * @param id Unique identifier for the session
  * @param name Session name
+ * @param description Session description
  * @param status Current status of the session
+ * @param repositoryUrl Git repository URL
+ * @param repositoryRef Git repository reference (branch, tag, or commit)
  * @param createdAt Session creation timestamp
  * @param updatedAt Session last update timestamp
  * @param tags Tags associated with the session
@@ -28,7 +31,13 @@ data class Session(
 
     @get:JsonProperty("name") val name: kotlin.String? = null,
 
+    @get:JsonProperty("description") val description: kotlin.String? = null,
+
     @get:JsonProperty("status") val status: Session.Status? = null,
+
+    @get:JsonProperty("repositoryUrl") val repositoryUrl: kotlin.String? = null,
+
+    @get:JsonProperty("repositoryRef") val repositoryRef: kotlin.String? = "main",
 
     @get:JsonProperty("createdAt") val createdAt: java.time.OffsetDateTime? = null,
 

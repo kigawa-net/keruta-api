@@ -176,10 +176,22 @@ components:
         name:
           type: string
           description: Session name
+        description:
+          type: string
+          description: Session description
+          nullable: true
         status:
           type: string
           enum: [PENDING, RUNNING, COMPLETED, FAILED]
           description: Current status of the session
+        repositoryUrl:
+          type: string
+          description: Git repository URL
+          nullable: true
+        repositoryRef:
+          type: string
+          description: Git repository reference (branch, tag, or commit)
+          default: main
         createdAt:
           type: string
           format: date-time
@@ -202,6 +214,16 @@ components:
         name:
           type: string
           description: Session name
+        description:
+          type: string
+          description: Session description
+        repositoryUrl:
+          type: string
+          description: Git repository URL
+        repositoryRef:
+          type: string
+          description: Git repository reference (branch, tag, or commit)
+          default: main
         tags:
           type: array
           items:
@@ -214,6 +236,15 @@ components:
         name:
           type: string
           description: Updated session name
+        description:
+          type: string
+          description: Updated session description
+        repositoryUrl:
+          type: string
+          description: Updated Git repository URL
+        repositoryRef:
+          type: string
+          description: Updated Git repository reference (branch, tag, or commit)
         tags:
           type: array
           items:

@@ -15,11 +15,20 @@ import jakarta.validation.Valid
 /**
  * 
  * @param name Session name
+ * @param description Session description
+ * @param repositoryUrl Git repository URL
+ * @param repositoryRef Git repository reference (branch, tag, or commit)
  * @param tags Initial tags for the session
  */
 data class SessionCreateRequest(
 
     @get:JsonProperty("name", required = true) val name: kotlin.String,
+
+    @get:JsonProperty("description") val description: kotlin.String? = null,
+
+    @get:JsonProperty("repositoryUrl") val repositoryUrl: kotlin.String? = null,
+
+    @get:JsonProperty("repositoryRef") val repositoryRef: kotlin.String? = "main",
 
     @get:JsonProperty("tags") val tags: kotlin.collections.List<kotlin.String>? = null
 ) {
