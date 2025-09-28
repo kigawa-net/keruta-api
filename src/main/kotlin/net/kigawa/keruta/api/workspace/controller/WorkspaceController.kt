@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*
  */
 @RestController
 @RequestMapping("/api/v1/workspaces")
-@CrossOrigin(origins = ["*"])
 class WorkspaceController(
     private val executorClient: ExecutorClient,
 ) {

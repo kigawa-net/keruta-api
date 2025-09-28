@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*
  */
 @RestController
 @RequestMapping("/admin/api/realtime")
-@CrossOrigin(origins = ["*"])
 open class AdminRealtimeController(
     private val realtimeConfigService: RealtimeConfigService,
 ) {

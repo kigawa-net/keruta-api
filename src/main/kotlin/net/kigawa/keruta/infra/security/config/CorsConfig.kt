@@ -8,7 +8,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 @Configuration
 class CorsConfig : WebMvcConfigurer {
 
-    @Value("\${cors.allowed-origins:http://localhost:3000,http://localhost:3001,https://keruta.kigawa.net,https://keruta-dev.kigawa.net,https://keruta-dev-api.kigawa.net}")
+    @Value(
+        "\${cors.allowed-origins:http://localhost:3000,http://localhost:3001,https://keruta.kigawa.net,https://keruta-dev.kigawa.net,https://keruta-dev-api.kigawa.net}",
+    )
     private lateinit var allowedOrigins: String
 
     @Value("\${cors.allow-credentials:true}")
@@ -16,6 +18,9 @@ class CorsConfig : WebMvcConfigurer {
 
     override fun addCorsMappings(registry: CorsRegistry) {
         val origins = allowedOrigins.split(",").map { it.trim() }.toTypedArray()
+        println("DEBUG: CORS allowedOrigins: $allowedOrigins")
+        println("DEBUG: CORS origins array: ${origins.contentToString()}")
+        println("DEBUG: CORS allowCredentials: $allowCredentials")
         // SSE endpoints - specific origins only
         registry.addMapping("/api/v1/sessions/realtime/**")
             .allowedOrigins(*origins)

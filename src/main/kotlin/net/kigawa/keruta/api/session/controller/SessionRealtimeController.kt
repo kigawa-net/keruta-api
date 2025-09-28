@@ -14,7 +14,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
  */
 @RestController
 @RequestMapping("/api/v1/sessions/realtime")
-@CrossOrigin(origins = ["*"])
 open class SessionRealtimeController(
     private val broadcastService: SessionStatusBroadcastService,
     private val sseService: SessionSseService,
