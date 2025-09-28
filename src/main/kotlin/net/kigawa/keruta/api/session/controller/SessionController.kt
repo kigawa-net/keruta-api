@@ -26,7 +26,6 @@ import java.time.ZoneOffset
 import net.kigawa.keruta.core.domain.model.Session as DomainSession
 
 @RestController
-@RequestMapping("/api/v1/sessions")
 class SessionController(
     private val sessionService: SessionService,
     private val sessionServiceImpl: SessionServiceImpl,
