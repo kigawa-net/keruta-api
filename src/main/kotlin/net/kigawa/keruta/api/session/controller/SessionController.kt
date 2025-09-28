@@ -123,8 +123,11 @@ class SessionController(
         }
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Get session by ID", description = "Retrieves a specific session by its ID")
+    @GetMapping("/{id}/detailed")
+    @Operation(
+        summary = "Get session by ID with detailed information",
+        description = "Retrieves a specific session by its ID with detailed information",
+    )
     suspend fun getSessionByIdDetailed(@PathVariable id: String): ResponseEntity<SessionResponse> {
         return try {
             val session = sessionService.getSessionById(id)
@@ -134,9 +137,12 @@ class SessionController(
         }
     }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Update session", description = "Updates an existing session (status changes are not allowed)")
-    suspend fun updateSession(
+    @PutMapping("/{id}/detailed")
+    @Operation(
+        summary = "Update session with detailed response",
+        description = "Updates an existing session with detailed response (status changes are not allowed)",
+    )
+    suspend fun updateSessionDetailed(
         @PathVariable id: String,
         @RequestBody request: UpdateSessionRequest,
     ): ResponseEntity<SessionResponse> {
@@ -166,8 +172,11 @@ class SessionController(
         }
     }
 
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Delete session", description = "Deletes a specific session")
+    @DeleteMapping("/{id}/detailed")
+    @Operation(
+        summary = "Delete session with detailed logging",
+        description = "Deletes a specific session with detailed logging",
+    )
     suspend fun deleteSessionDetailed(@PathVariable id: String): ResponseEntity<Void> {
         return try {
             sessionService.deleteSession(id)
