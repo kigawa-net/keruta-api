@@ -55,7 +55,7 @@ class SessionController(
         )
     }
 
-    override fun updateSession(sessionId: String, sessionUpdateRequest: SessionUpdateRequest): ResponseEntity<Session> {
+    override fun updateSession(@PathVariable sessionId: String, @RequestBody sessionUpdateRequest: SessionUpdateRequest): ResponseEntity<Session> {
         logger.info("Updating session: {}", sessionId)
         return try {
             // Get current session to preserve status
@@ -80,7 +80,7 @@ class SessionController(
         }
     }
 
-    override fun createSession(sessionCreateRequest: SessionCreateRequest): ResponseEntity<Session> {
+    override fun createSession(@RequestBody sessionCreateRequest: SessionCreateRequest): ResponseEntity<Session> {
         logger.info("Creating new session: {}", sessionCreateRequest)
         try {
             val session = CreateSessionRequest(
@@ -114,7 +114,7 @@ class SessionController(
         }
     }
 
-    override fun getSessionById(sessionId: String): ResponseEntity<Session> {
+    override fun getSessionById(@PathVariable sessionId: String): ResponseEntity<Session> {
         return try {
             val session = runBlocking { sessionService.getSessionById(sessionId) }
             ResponseEntity.ok(session.toGenerated())
@@ -163,7 +163,7 @@ class SessionController(
         }
     }
 
-    override fun deleteSession(sessionId: String): ResponseEntity<Unit> {
+    override fun deleteSession(@PathVariable sessionId: String): ResponseEntity<Unit> {
         return try {
             runBlocking { sessionService.deleteSession(sessionId) }
             ResponseEntity.noContent().build()
