@@ -10,8 +10,12 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
+import org.springframework.web.client.RestClientException
+import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
 import java.time.LocalDateTime
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Client for communicating with keruta-executor service.
@@ -21,8 +25,100 @@ class ExecutorClientImpl(
     private val restTemplate: RestTemplate,
     @Value("\${keruta.executor.base-url:http://localhost:8081}")
     private val executorBaseUrl: String,
+    @Value("\${keruta.executor.circuit-breaker.failure-threshold:5}")
+    private val circuitBreakerFailureThreshold: Int = 5,
+    @Value("\${keruta.executor.circuit-breaker.timeout-ms:60000}")
+    private val circuitBreakerTimeoutMs: Long = 60000,
 ) : net.kigawa.keruta.core.usecase.executor.ExecutorClient {
     private val logger = LoggerFactory.getLogger(ExecutorClientImpl::class.java)
+
+    // Simple circuit breaker state
+    private val failureCount = AtomicLong(0)
+    private val lastFailureTime = AtomicLong(0)
+    private val circuitOpen = AtomicBoolean(false)
+
+    /**
+     * Checks if the circuit breaker is open and should block requests.
+     */
+    private fun isCircuitOpen(): Boolean {
+        if (!circuitOpen.get()) return false
+
+        val timeSinceLastFailure = System.currentTimeMillis() - lastFailureTime.get()
+        if (timeSinceLastFailure > circuitBreakerTimeoutMs) {
+            logger.info("Circuit breaker timeout exceeded, attempting to close circuit")
+            circuitOpen.set(false)
+            failureCount.set(0)
+            return false
+        }
+        return true
+    }
+
+    /**
+     * Records a failure and potentially opens the circuit.
+     */
+    private fun recordFailure(operation: String, exception: Exception) {
+        val currentFailures = failureCount.incrementAndGet()
+        lastFailureTime.set(System.currentTimeMillis())
+
+        if (currentFailures >= circuitBreakerFailureThreshold && !circuitOpen.get()) {
+            circuitOpen.set(true)
+            logger.warn(
+                "Circuit breaker opened for executor after {} failures. Operation: {} Error: {}",
+                currentFailures,
+                operation,
+                exception.message,
+            )
+        } else {
+            logger.warn(
+                "Executor failure #{} for operation: {} Error: {}",
+                currentFailures,
+                operation,
+                exception.message,
+            )
+        }
+    }
+
+    /**
+     * Records a success and resets failure count.
+     */
+    private fun recordSuccess() {
+        if (failureCount.get() > 0 || circuitOpen.get()) {
+            logger.info("Executor operation successful, resetting circuit breaker")
+            failureCount.set(0)
+            circuitOpen.set(false)
+        }
+    }
+
+    /**
+     * Executes an operation with circuit breaker protection.
+     */
+    private fun <T> executeWithCircuitBreaker(operation: String, fallback: T, block: () -> T): T {
+        if (isCircuitOpen()) {
+            logger.warn("Circuit breaker is open, returning fallback for operation: {}", operation)
+            return fallback
+        }
+
+        return try {
+            val result = block()
+            recordSuccess()
+            result
+        } catch (e: ResourceAccessException) {
+            // Network/connection issues - count as failure
+            recordFailure(operation, e)
+            logger.error("Network error during executor operation: {} - {}", operation, e.message)
+            fallback
+        } catch (e: RestClientException) {
+            // HTTP errors - count as failure
+            recordFailure(operation, e)
+            logger.error("REST client error during executor operation: {} - {}", operation, e.message)
+            fallback
+        } catch (e: Exception) {
+            // Unexpected errors - count as failure
+            recordFailure(operation, e)
+            logger.error("Unexpected error during executor operation: {}", operation, e)
+            fallback
+        }
+    }
 
     /**
      * Fetches Coder templates from the executor service.
@@ -110,38 +206,38 @@ class ExecutorClientImpl(
     }
 
     override fun getWorkspacesBySessionId(sessionId: String): List<CoderWorkspace> {
-        logger.info("Fetching workspaces by session ID from executor: sessionId=$sessionId")
+        logger.debug("Fetching workspaces by session ID from executor: sessionId=$sessionId")
 
-        return try {
+        return executeWithCircuitBreaker(
+            operation = "getWorkspacesBySessionId",
+            fallback = emptyList()
+        ) {
             val url = "$executorBaseUrl/api/v1/workspaces?sessionId=$sessionId"
             val typeReference = object : ParameterizedTypeReference<List<ExecutorCoderWorkspaceDto>>() {}
             val response = restTemplate.exchange(url, HttpMethod.GET, null, typeReference)
 
             val workspaces = response.body ?: emptyList()
-            logger.info("Successfully fetched {} workspaces from executor for session: $sessionId", workspaces.size)
+            logger.debug("Successfully fetched {} workspaces from executor for session: $sessionId", workspaces.size)
 
             workspaces.map { it.toDomain() }
-        } catch (e: Exception) {
-            logger.error("Failed to fetch workspaces from executor for session: $sessionId", e)
-            emptyList()
         }
     }
 
     override fun getAllWorkspaces(): List<CoderWorkspace> {
-        logger.info("Fetching all workspaces from executor")
+        logger.debug("Fetching all workspaces from executor")
 
-        return try {
+        return executeWithCircuitBreaker(
+            operation = "getAllWorkspaces",
+            fallback = emptyList()
+        ) {
             val url = "$executorBaseUrl/api/v1/workspaces"
             val typeReference = object : ParameterizedTypeReference<List<ExecutorCoderWorkspaceDto>>() {}
             val response = restTemplate.exchange(url, HttpMethod.GET, null, typeReference)
 
             val workspaces = response.body ?: emptyList()
-            logger.info("Successfully fetched {} workspaces from executor", workspaces.size)
+            logger.debug("Successfully fetched {} workspaces from executor", workspaces.size)
 
             workspaces.map { it.toDomain() }
-        } catch (e: Exception) {
-            logger.error("Failed to fetch workspaces from executor", e)
-            emptyList()
         }
     }
 
@@ -217,21 +313,33 @@ class ExecutorClientImpl(
     }
 
     override fun getWorkspaceTemplates(): List<CoderWorkspaceTemplate> {
-        logger.info("Fetching workspace templates from executor")
+        logger.debug("Fetching workspace templates from executor")
 
-        return try {
+        return executeWithCircuitBreaker(
+            operation = "getWorkspaceTemplates",
+            fallback = emptyList()
+        ) {
             val url = "$executorBaseUrl/api/v1/workspaces/templates"
             val typeReference = object : ParameterizedTypeReference<List<ExecutorCoderWorkspaceTemplateDto>>() {}
             val response = restTemplate.exchange(url, HttpMethod.GET, null, typeReference)
 
             val templates = response.body ?: emptyList()
-            logger.info("Successfully fetched {} workspace templates from executor", templates.size)
+            logger.debug("Successfully fetched {} workspace templates from executor", templates.size)
 
             templates.map { it.toDomain() }
-        } catch (e: Exception) {
-            logger.error("Failed to fetch workspace templates from executor", e)
-            emptyList()
         }
+    }
+
+    /**
+     * Gets the circuit breaker status for monitoring.
+     */
+    fun getCircuitBreakerStatus(): Map<String, Any> {
+        return mapOf(
+            "isOpen" to circuitOpen.get(),
+            "failureCount" to failureCount.get(),
+            "lastFailureTime" to if (lastFailureTime.get() == 0L) null else lastFailureTime.get(),
+            "executorBaseUrl" to executorBaseUrl
+        )
     }
 }
 
