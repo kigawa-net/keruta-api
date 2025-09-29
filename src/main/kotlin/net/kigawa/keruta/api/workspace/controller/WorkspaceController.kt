@@ -4,6 +4,7 @@ import net.kigawa.keruta.api.workspace.dto.CoderWorkspaceResponse
 import net.kigawa.keruta.api.workspace.dto.CoderWorkspaceTemplateResponse
 import net.kigawa.keruta.api.workspace.dto.CreateCoderWorkspaceRequest
 import net.kigawa.keruta.core.usecase.executor.ExecutorClient
+import net.kigawa.keruta.infra.app.service.WebSocketNotificationService
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/v1/workspaces")
 class WorkspaceController(
     private val executorClient: ExecutorClient,
+    private val webSocketNotificationService: WebSocketNotificationService,
 ) {
 
     private val logger = LoggerFactory.getLogger(WorkspaceController::class.java)
@@ -82,6 +84,14 @@ class WorkspaceController(
             )
 
             val workspace = executorClient.createWorkspace(domainRequest)
+
+            // Send WebSocket notification for workspace creation
+            try {
+                webSocketNotificationService.notifyWorkspaceCreated(workspace)
+            } catch (e: Exception) {
+                logger.error("Failed to send WebSocket notification for workspace creation: ${workspace.id}", e)
+            }
+
             ResponseEntity.ok(CoderWorkspaceResponse.fromDomain(workspace))
         } catch (e: Exception) {
             logger.error("Failed to create workspace via executor: ${request.name}", e)
@@ -98,6 +108,14 @@ class WorkspaceController(
 
         return try {
             val workspace = executorClient.startWorkspace(id)
+
+            // Send WebSocket notification for workspace status change
+            try {
+                webSocketNotificationService.notifyWorkspaceStatusChange(workspace)
+            } catch (e: Exception) {
+                logger.error("Failed to send WebSocket notification for workspace start: $id", e)
+            }
+
             ResponseEntity.ok(CoderWorkspaceResponse.fromDomain(workspace))
         } catch (e: Exception) {
             logger.error("Failed to start workspace via executor: $id", e)
@@ -114,6 +132,14 @@ class WorkspaceController(
 
         return try {
             val workspace = executorClient.stopWorkspace(id)
+
+            // Send WebSocket notification for workspace status change
+            try {
+                webSocketNotificationService.notifyWorkspaceStatusChange(workspace)
+            } catch (e: Exception) {
+                logger.error("Failed to send WebSocket notification for workspace stop: $id", e)
+            }
+
             ResponseEntity.ok(CoderWorkspaceResponse.fromDomain(workspace))
         } catch (e: Exception) {
             logger.error("Failed to stop workspace via executor: $id", e)

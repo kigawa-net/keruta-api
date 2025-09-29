@@ -7,6 +7,7 @@ import net.kigawa.keruta.core.domain.model.Session
 import net.kigawa.keruta.core.domain.model.SessionLogLevel
 import net.kigawa.keruta.core.domain.model.SessionStatus
 import net.kigawa.keruta.core.usecase.repository.SessionRepository
+import net.kigawa.keruta.infra.app.service.WebSocketNotificationService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -17,6 +18,7 @@ open class SessionServiceImpl(
     open val sessionEventListener: SessionEventListener,
     private val broadcastService: SessionStatusBroadcastService? = null,
     private val sessionLogService: SessionLogService? = null,
+    private val webSocketNotificationService: WebSocketNotificationService? = null,
 ) : SessionService {
 
     open val logger = LoggerFactory.getLogger(SessionServiceImpl::class.java)
@@ -65,6 +67,13 @@ open class SessionServiceImpl(
             sessionEventListener.onSessionCreated(createdSession)
         } catch (e: Exception) {
             logger.error("Failed to handle session creation event for session: {}", createdSession.id, e)
+        }
+
+        // Send WebSocket notification for session creation
+        try {
+            webSocketNotificationService?.notifySessionCreated(createdSession)
+        } catch (e: Exception) {
+            logger.error("Failed to send WebSocket notification for session creation: {}", createdSession.id, e)
         }
 
         return createdSession
@@ -260,7 +269,12 @@ open class SessionServiceImpl(
                 }
             }
 
-            // Status change notifications are handled by keruta-executor
+            // Send WebSocket notification for status change
+            try {
+                webSocketNotificationService?.notifySessionStatusChange(savedSession)
+            } catch (e: Exception) {
+                logger.error("Failed to send WebSocket notification for session status change: {}", id, e)
+            }
 
             logger.info("Session status updated successfully: id={} status={}", id, status)
             return savedSession
