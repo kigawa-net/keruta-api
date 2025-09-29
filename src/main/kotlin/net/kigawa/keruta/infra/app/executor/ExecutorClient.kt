@@ -10,8 +10,8 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
-import org.springframework.web.client.RestClientException
 import org.springframework.web.client.ResourceAccessException
+import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicBoolean
@@ -210,7 +210,7 @@ class ExecutorClientImpl(
 
         return executeWithCircuitBreaker(
             operation = "getWorkspacesBySessionId",
-            fallback = emptyList()
+            fallback = emptyList(),
         ) {
             val url = "$executorBaseUrl/api/v1/workspaces?sessionId=$sessionId"
             val typeReference = object : ParameterizedTypeReference<List<ExecutorCoderWorkspaceDto>>() {}
@@ -228,7 +228,7 @@ class ExecutorClientImpl(
 
         return executeWithCircuitBreaker(
             operation = "getAllWorkspaces",
-            fallback = emptyList()
+            fallback = emptyList(),
         ) {
             val url = "$executorBaseUrl/api/v1/workspaces"
             val typeReference = object : ParameterizedTypeReference<List<ExecutorCoderWorkspaceDto>>() {}
@@ -317,7 +317,7 @@ class ExecutorClientImpl(
 
         return executeWithCircuitBreaker(
             operation = "getWorkspaceTemplates",
-            fallback = emptyList()
+            fallback = emptyList(),
         ) {
             val url = "$executorBaseUrl/api/v1/workspaces/templates"
             val typeReference = object : ParameterizedTypeReference<List<ExecutorCoderWorkspaceTemplateDto>>() {}
@@ -333,12 +333,12 @@ class ExecutorClientImpl(
     /**
      * Gets the circuit breaker status for monitoring.
      */
-    fun getCircuitBreakerStatus(): Map<String, Any> {
+    fun getCircuitBreakerStatus(): Map<String, Any?> {
         return mapOf(
             "isOpen" to circuitOpen.get(),
             "failureCount" to failureCount.get(),
             "lastFailureTime" to if (lastFailureTime.get() == 0L) null else lastFailureTime.get(),
-            "executorBaseUrl" to executorBaseUrl
+            "executorBaseUrl" to executorBaseUrl,
         )
     }
 }
