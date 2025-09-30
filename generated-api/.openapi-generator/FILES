@@ -1,4 +1,7 @@
 README.md
+build.gradle.kts
+pom.xml
+settings.gradle
 src/main/kotlin/net/kigawa/keruta/api/generated/ApiUtil.kt
 src/main/kotlin/net/kigawa/keruta/api/generated/Exceptions.kt
 src/main/kotlin/net/kigawa/keruta/api/generated/HealthApi.kt

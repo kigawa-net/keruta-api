@@ -45,8 +45,6 @@ configurations.all {
 }
 
 dependencies {
-    // Generated API
-    implementation(project(":generated-api"))
 
     // Kotlin
     implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -130,7 +128,7 @@ tasks.withType<Test> {
 openApiGenerate {
     generatorName.set("kotlin-spring")
     inputSpec.set("${projectDir}/src/main/resources/openapi.yaml")
-    outputDir.set("${projectDir}/generated-api")
+    outputDir.set("${projectDir}/build/generated/openapi")
     apiPackage.set("net.kigawa.keruta.api.generated")
     modelPackage.set("net.kigawa.keruta.model.generated")
     packageName.set("net.kigawa.keruta.generated")
@@ -142,8 +140,18 @@ openApiGenerate {
             "skipDefaultInterface" to "true",
             "documentationProvider" to "none", // Disable SpringDoc to avoid SpringDocConfiguration.kt
             "useSpringBoot3" to "true",
+            "serializationLibrary" to "jackson",
         ),
     )
+}
+
+// Add generated sources to source set
+sourceSets {
+    main {
+        kotlin {
+            srcDir("${layout.buildDirectory.get()}/generated/openapi/src/main/kotlin")
+        }
+    }
 }
 
 // Ensure code generation runs before compilation
