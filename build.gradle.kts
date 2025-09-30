@@ -45,6 +45,8 @@ configurations.all {
 }
 
 dependencies {
+    // Generated API code
+    implementation(project(":generated-api"))
 
     // Kotlin
     implementation("org.jetbrains.kotlin:kotlin-reflect")
