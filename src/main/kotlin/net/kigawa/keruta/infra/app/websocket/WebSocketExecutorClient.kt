@@ -17,11 +17,11 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
-import javax.annotation.PostConstruct
-import javax.annotation.PreDestroy
+import jakarta.annotation.PostConstruct
+import jakarta.annotation.PreDestroy
 
 @Component
-open class WebSocketExecutorClient(
+class WebSocketExecutorClient(
     private val objectMapper: ObjectMapper,
     @Value("\${keruta.executor.websocket-url:ws://localhost:8081/api/ws/executor}")
     private val executorWebSocketUrl: String,
@@ -60,13 +60,16 @@ open class WebSocketExecutorClient(
                 logger.info("WebSocket connection established to executor: {}", executorWebSocketUrl)
             }
 
-            override fun handleMessage(session: WebSocketSession, message: WebSocketMessage) {
+            override fun handleMessage(session: WebSocketSession, message: org.springframework.web.socket.WebSocketMessage<*>) {
                 when (message) {
                     is TextMessage -> {
                         try {
                             val wsMessage = objectMapper.readValue(message.payload, WebSocketMessage::class.java)
                             when (wsMessage) {
-                                is WebSocketResponse, is WebSocketError -> {
+                                is WebSocketResponse -> {
+                                    pendingRequests.remove(wsMessage.id)?.complete(wsMessage)
+                                }
+                                is WebSocketError -> {
                                     pendingRequests.remove(wsMessage.id)?.complete(wsMessage)
                                 }
                             }
@@ -101,7 +104,8 @@ open class WebSocketExecutorClient(
 
         withContext(Dispatchers.IO) {
             try {
-                client.doHandshake(handler, null, URI.create(executorWebSocketUrl)).get(10, TimeUnit.SECONDS)
+                @Suppress("DEPRECATION")
+                client.doHandshake(handler, WebSocketHttpHeaders(), URI.create(executorWebSocketUrl)).get(10, TimeUnit.SECONDS)
             } catch (e: Exception) {
                 logger.error("Failed to connect to WebSocket: {}", executorWebSocketUrl, e)
                 throw e
@@ -192,6 +196,7 @@ open class WebSocketExecutorClient(
                 val response = sendRequest("POST", "/coder/templates/deploy", data = mapOf("templateId" to templateId))
                 when (response) {
                     is WebSocketResponse -> {
+                        @Suppress("UNCHECKED_CAST")
                         val resultData = response.data as? Map<String, Any>
                         TemplateDeploymentResult(
                             success = resultData?.get("success") as? Boolean ?: false,

@@ -12,7 +12,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 @Component
-open class DocumentWebSocketHandler(
+class DocumentWebSocketHandler(
     private val objectMapper: ObjectMapper,
 ) : TextWebSocketHandler() {
 
@@ -68,7 +68,6 @@ open class DocumentWebSocketHandler(
                         title = documentData["title"] as? String ?: "",
                         content = documentData["content"] as? String ?: "",
                         tags = (documentData["tags"] as? List<*>)?.map { it.toString() } ?: emptyList(),
-                        sessionId = documentData["sessionId"] as? String,
                         createdAt = LocalDateTime.now(),
                         updatedAt = LocalDateTime.now(),
                     )
@@ -127,6 +126,7 @@ open class DocumentWebSocketHandler(
         }
     }
 
+    @Suppress("unused")
     fun broadcastDocumentUpdate(document: Document) {
         val message = WebSocketResponse("broadcast", 200, mapOf("event" to "document_updated", "data" to document))
         val messageText = objectMapper.writeValueAsString(message)
