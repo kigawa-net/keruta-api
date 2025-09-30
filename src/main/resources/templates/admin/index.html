@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keruta 管理パネル</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .status-card {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+        }
+        .status-card.error {
+            border-left-color: #dc3545;
+        }
+        .status-card.success {
+            border-left-color: #28a745;
+        }
+        .status-card.warning {
+            border-left-color: #ffc107;
+        }
+        .logs-container {
+            background: #1e1e1e;
+            color: #ffffff;
+            padding: 20px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            word-wrap: break-word;
+        }
+        .log-entry.error {
+            color: #ff6b6b;
+        }
+        .log-entry.warn {
+            color: #ffa726;
+        }
+        .log-entry.info {
+            color: #4fc3f7;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-weight: 500;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .timestamp {
+            color: #888;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Keruta 管理パネル</h1>
+            <div class="timestamp" id="currentTime"></div>
+        </div>
+
+        <div class="status-grid">
+            <div class="status-card" id="apiStatus">
+                <h3>API サーバー</h3>
+                <div id="apiStatusText">確認中...</div>
+            </div>
+            <div class="status-card" id="executorStatus">
+                <h3>Executor サービス</h3>
+                <div id="executorStatusText">確認中...</div>
+            </div>
+            <div class="status-card" id="dbStatus">
+                <h3>MongoDB</h3>
+                <div id="dbStatusText">確認中...</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="startLogging()">ログ監視開始</button>
+            <button class="btn btn-secondary" onclick="stopLogging()">ログ監視停止</button>
+            <button class="btn btn-danger" onclick="clearLogs()">ログクリア</button>
+            <label>
+                <input type="checkbox" id="autoScroll" checked> 自動スクロール
+            </label>
+        </div>
+
+        <h2>タスクログ（リアルタイム追記）</h2>
+        <div class="logs-container" id="logsContainer">
+            <div class="log-entry info">ログ監視を開始してください...</div>
+        </div>
+    </div>
+
+    <script>
+        let loggingActive = false;
+        let eventSource;
+        let logBuffer = [];
+
+        // 現在時刻の更新
+        function updateCurrentTime() {
+            document.getElementById('currentTime').textContent = new Date().toLocaleString('ja-JP');
+        }
+        setInterval(updateCurrentTime, 1000);
+        updateCurrentTime();
+
+        // ログエントリを追加（追記形式）
+        function appendLogEntry(message, level = 'info', timestamp = null) {
+            const container = document.getElementById('logsContainer');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${level}`;
+
+            const displayTimestamp = timestamp || new Date().toLocaleTimeString();
+            entry.innerHTML = `<span class="timestamp">[${displayTimestamp}]</span> ${message}`;
+
+            // 追記
+            container.appendChild(entry);
+
+            // 自動スクロール
+            if (document.getElementById('autoScroll').checked) {
+                container.scrollTop = container.scrollHeight;
+            }
+
+            // バッファに保存（最大1000件）
+            logBuffer.push({timestamp: new Date(), message, level});
+            if (logBuffer.length > 1000) {
+                logBuffer.shift();
+                // 古いログエントリを削除
+                const entries = container.querySelectorAll('.log-entry');
+                if (entries.length > 1000) {
+                    entries[0].remove();
+                }
+            }
+        }
+
+        // サービス状態をチェック
+        async function checkServiceStatus() {
+            try {
+                // API サーバー状態
+                const apiResponse = await fetch('/api/v1/sessions');
+                const apiCard = document.getElementById('apiStatus');
+                const apiText = document.getElementById('apiStatusText');
+
+                if (apiResponse.ok) {
+                    apiCard.className = 'status-card success';
+                    apiText.textContent = '正常稼働中 (ポート8080)';
+                } else {
+                    apiCard.className = 'status-card error';
+                    apiText.textContent = `エラー (Status: ${apiResponse.status})`;
+                }
+            } catch (error) {
+                const apiCard = document.getElementById('apiStatus');
+                const apiText = document.getElementById('apiStatusText');
+                apiCard.className = 'status-card error';
+                apiText.textContent = '接続不可';
+            }
+
+            try {
+                // Executor サービス状態
+                const executorResponse = await fetch('http://localhost:8081/actuator/health');
+                const executorCard = document.getElementById('executorStatus');
+                const executorText = document.getElementById('executorStatusText');
+
+                if (executorResponse.ok) {
+                    executorCard.className = 'status-card success';
+                    executorText.textContent = '正常稼働中 (ポート8081)';
+                } else {
+                    executorCard.className = 'status-card error';
+                    executorText.textContent = `エラー (Status: ${executorResponse.status})`;
+                }
+            } catch (error) {
+                const executorCard = document.getElementById('executorStatus');
+                const executorText = document.getElementById('executorStatusText');
+                executorCard.className = 'status-card warning';
+                executorText.textContent = '接続不可 (CORS制限の可能性)';
+            }
+
+            // MongoDB状態（API経由で確認）
+            try {
+                const dbResponse = await fetch('/api/v1/sessions');
+                const dbCard = document.getElementById('dbStatus');
+                const dbText = document.getElementById('dbStatusText');
+
+                if (dbResponse.ok) {
+                    dbCard.className = 'status-card success';
+                    dbText.textContent = '接続正常';
+                } else {
+                    dbCard.className = 'status-card warning';
+                    dbText.textContent = 'DB接続問題の可能性';
+                }
+            } catch (error) {
+                const dbCard = document.getElementById('dbStatus');
+                const dbText = document.getElementById('dbStatusText');
+                dbCard.className = 'status-card error';
+                dbText.textContent = '状態不明';
+            }
+        }
+
+        // ログ監視開始（SSE使用）
+        function startLogging() {
+            if (loggingActive) return;
+
+            loggingActive = true;
+            appendLogEntry('ログ監視を開始しました', 'info');
+
+            // Server-Sent Events でリアルタイムログを受信
+            eventSource = new EventSource('/admin/api/logs/stream');
+
+            eventSource.onmessage = function(event) {
+                try {
+                    const logEntry = JSON.parse(event.data);
+                    const timestamp = new Date(logEntry.timestamp).toLocaleTimeString();
+                    appendLogEntry(logEntry.message, logEntry.level, timestamp);
+                } catch (error) {
+                    console.error('Failed to parse log entry:', error);
+                }
+            };
+
+            eventSource.onerror = function(error) {
+                console.error('EventSource failed:', error);
+                appendLogEntry('ログストリーミングエラーが発生しました', 'error');
+
+                // 自動再接続を試行
+                if (loggingActive) {
+                    setTimeout(() => {
+                        if (loggingActive) {
+                            eventSource.close();
+                            startLogging();
+                        }
+                    }, 5000);
+                }
+            };
+
+            eventSource.onopen = function() {
+                appendLogEntry('リアルタイムログストリーミングが開始されました', 'info');
+            };
+        }
+
+        // ログ監視停止
+        function stopLogging() {
+            loggingActive = false;
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+            appendLogEntry('ログ監視を停止しました', 'warn');
+        }
+
+        // ログクリア
+        function clearLogs() {
+            const container = document.getElementById('logsContainer');
+            container.innerHTML = '<div class="log-entry info">ログをクリアしました</div>';
+            logBuffer = [];
+        }
+
+        // 初期化
+        checkServiceStatus();
+        setInterval(checkServiceStatus, 30000); // 30秒ごとに状態チェック
+    </script>
+</body>
+</html>
