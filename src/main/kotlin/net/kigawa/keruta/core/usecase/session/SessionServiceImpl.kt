@@ -77,7 +77,7 @@ open class SessionServiceImpl(
             try {
                 val event = SessionCreatedEvent(
                     sessionId = createdSession.id,
-                    sessionName = createdSession.name
+                    sessionName = createdSession.name,
                 )
                 publisher.publishSessionEvent(event)
             } catch (e: Exception) {
@@ -294,7 +294,7 @@ open class SessionServiceImpl(
                     val event = SessionStatusChangedEvent(
                         sessionId = id,
                         previousStatus = previousStatus,
-                        newStatus = status
+                        newStatus = status,
                     )
                     publisher.publishSessionEvent(event)
                 } catch (e: Exception) {

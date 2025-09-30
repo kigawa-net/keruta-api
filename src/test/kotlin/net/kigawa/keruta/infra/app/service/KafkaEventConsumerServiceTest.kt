@@ -32,7 +32,7 @@ class KafkaEventConsumerServiceTest {
         val event = SessionStatusChangedEvent(
             sessionId = "test-id",
             previousStatus = SessionStatus.INACTIVE,
-            newStatus = SessionStatus.ACTIVE
+            newStatus = SessionStatus.ACTIVE,
         )
 
         whenever(objectMapper.readValue(eventJson, Any::class.java)).thenReturn(event)
@@ -43,7 +43,7 @@ class KafkaEventConsumerServiceTest {
             "keruta.sessions",
             0,
             100L,
-            acknowledgment
+            acknowledgment,
         )
 
         // Then
@@ -59,8 +59,8 @@ class KafkaEventConsumerServiceTest {
             SessionStatusChangedEvent(
                 sessionId = "test-id",
                 previousStatus = null,
-                newStatus = SessionStatus.ACTIVE
-            )
+                newStatus = SessionStatus.ACTIVE,
+            ),
         )
 
         // When
@@ -69,7 +69,7 @@ class KafkaEventConsumerServiceTest {
             "keruta.workspaces",
             0,
             100L,
-            acknowledgment
+            acknowledgment,
         )
 
         // Then
@@ -85,8 +85,8 @@ class KafkaEventConsumerServiceTest {
             SessionStatusChangedEvent(
                 sessionId = "test-id",
                 previousStatus = null,
-                newStatus = SessionStatus.ACTIVE
-            )
+                newStatus = SessionStatus.ACTIVE,
+            ),
         )
 
         // When
@@ -95,7 +95,7 @@ class KafkaEventConsumerServiceTest {
             "keruta.tasks",
             0,
             100L,
-            acknowledgment
+            acknowledgment,
         )
 
         // Then

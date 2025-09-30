@@ -12,7 +12,7 @@ data class WorkspaceCreatedEvent(
     val workspaceName: String,
     val sessionId: String,
     val templateId: String? = null,
-    val userId: String? = null
+    val userId: String? = null,
 ) : Event()
 
 data class WorkspaceStartedEvent(
@@ -22,7 +22,7 @@ data class WorkspaceStartedEvent(
     override val correlationId: String? = null,
     val workspaceId: String,
     val sessionId: String,
-    val userId: String? = null
+    val userId: String? = null,
 ) : Event()
 
 data class WorkspaceStoppedEvent(
@@ -33,7 +33,7 @@ data class WorkspaceStoppedEvent(
     val workspaceId: String,
     val sessionId: String,
     val reason: String? = null,
-    val userId: String? = null
+    val userId: String? = null,
 ) : Event()
 
 data class WorkspaceDeletedEvent(
@@ -43,5 +43,5 @@ data class WorkspaceDeletedEvent(
     override val correlationId: String? = null,
     val workspaceId: String,
     val sessionId: String,
-    val userId: String? = null
+    val userId: String? = null,
 ) : Event()

@@ -13,7 +13,7 @@ data class SessionStatusChangedEvent(
     val previousStatus: SessionStatus?,
     val newStatus: SessionStatus,
     val userId: String? = null,
-    val reason: String? = null
+    val reason: String? = null,
 ) : Event()
 
 data class SessionCreatedEvent(
@@ -23,7 +23,7 @@ data class SessionCreatedEvent(
     override val correlationId: String? = null,
     val sessionId: String,
     val sessionName: String,
-    val userId: String? = null
+    val userId: String? = null,
 ) : Event()
 
 data class SessionDeletedEvent(
@@ -32,5 +32,5 @@ data class SessionDeletedEvent(
     override val source: String = "keruta-api",
     override val correlationId: String? = null,
     val sessionId: String,
-    val userId: String? = null
+    val userId: String? = null,
 ) : Event()

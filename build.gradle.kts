@@ -73,6 +73,7 @@ dependencies {
     testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
     testImplementation("org.apache.curator:curator-test:5.5.0")
     testImplementation("org.springframework.kafka:spring-kafka-test")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 }
 
 configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {

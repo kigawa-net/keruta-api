@@ -7,7 +7,7 @@ import java.time.LocalDateTime
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.PROPERTY,
-    property = "eventType"
+    property = "eventType",
 )
 @JsonSubTypes(
     JsonSubTypes.Type(value = SessionStatusChangedEvent::class, name = "sessionStatusChanged"),
@@ -15,7 +15,7 @@ import java.time.LocalDateTime
     JsonSubTypes.Type(value = WorkspaceStartedEvent::class, name = "workspaceStarted"),
     JsonSubTypes.Type(value = WorkspaceStoppedEvent::class, name = "workspaceStopped"),
     JsonSubTypes.Type(value = TaskCreatedEvent::class, name = "taskCreated"),
-    JsonSubTypes.Type(value = TaskStatusChangedEvent::class, name = "taskStatusChanged")
+    JsonSubTypes.Type(value = TaskStatusChangedEvent::class, name = "taskStatusChanged"),
 )
 abstract class Event {
     abstract val eventId: String

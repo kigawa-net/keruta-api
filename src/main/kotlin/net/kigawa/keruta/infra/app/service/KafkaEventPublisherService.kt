@@ -18,7 +18,7 @@ interface EventPublisherService {
 @Service
 open class KafkaEventPublisherService(
     private val kafkaTemplate: KafkaTemplate<String, String>,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
 ) : EventPublisherService {
 
     companion object {
@@ -34,26 +34,41 @@ open class KafkaEventPublisherService(
             val eventJson = objectMapper.writeValueAsString(event)
             val eventKey = generateEventKey(event)
 
-            logger.info("Publishing event to topic '{}': eventId={}, type={}",
-                topicName, event.eventId, event::class.simpleName)
+            logger.info(
+                "Publishing event to topic '{}': eventId={}, type={}",
+                topicName,
+                event.eventId,
+                event::class.simpleName,
+            )
 
             val future: CompletableFuture<SendResult<String, String>> =
                 kafkaTemplate.send(topicName, eventKey, eventJson)
 
             future.whenComplete { result, exception ->
                 if (exception != null) {
-                    logger.error("Failed to publish event to topic '{}': eventId={}",
-                        topicName, event.eventId, exception)
+                    logger.error(
+                        "Failed to publish event to topic '{}': eventId={}",
+                        topicName,
+                        event.eventId,
+                        exception,
+                    )
                 } else {
-                    logger.debug("Successfully published event to topic '{}': eventId={}, partition={}, offset={}",
-                        topicName, event.eventId,
+                    logger.debug(
+                        "Successfully published event to topic '{}': eventId={}, partition={}, offset={}",
+                        topicName,
+                        event.eventId,
                         result.recordMetadata.partition(),
-                        result.recordMetadata.offset())
+                        result.recordMetadata.offset(),
+                    )
                 }
             }
         } catch (e: Exception) {
-            logger.error("Error publishing event to topic '{}': eventId={}",
-                topicName, event.eventId, e)
+            logger.error(
+                "Error publishing event to topic '{}': eventId={}",
+                topicName,
+                event.eventId,
+                e,
+            )
             throw e
         }
     }

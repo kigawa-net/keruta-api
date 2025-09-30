@@ -1,6 +1,7 @@
 package net.kigawa.keruta.infra.app.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import kotlinx.coroutines.test.runTest
 import net.kigawa.keruta.core.domain.event.SessionStatusChangedEvent
 import net.kigawa.keruta.core.domain.model.SessionStatus
 import org.junit.jupiter.api.Test
@@ -29,12 +30,12 @@ class KafkaEventPublisherServiceTest {
     private lateinit var kafkaEventPublisherService: KafkaEventPublisherService
 
     @Test
-    fun `publishSessionEvent should send event to session topic`() {
+    fun `publishSessionEvent should send event to session topic`() = runTest {
         // Given
         val event = SessionStatusChangedEvent(
             sessionId = "test-session-id",
             previousStatus = SessionStatus.INACTIVE,
-            newStatus = SessionStatus.ACTIVE
+            newStatus = SessionStatus.ACTIVE,
         )
         val eventJson = """{"eventId":"test-event-id","sessionId":"test-session-id"}"""
         val future = CompletableFuture<SendResult<String, String>>()
@@ -50,12 +51,12 @@ class KafkaEventPublisherServiceTest {
     }
 
     @Test
-    fun `publishWorkspaceEvent should send event to workspace topic`() {
+    fun `publishWorkspaceEvent should send event to workspace topic`() = runTest {
         // Given
         val event = SessionStatusChangedEvent(
             sessionId = "test-session-id",
             previousStatus = null,
-            newStatus = SessionStatus.ACTIVE
+            newStatus = SessionStatus.ACTIVE,
         )
         val eventJson = """{"eventId":"test-event-id","sessionId":"test-session-id"}"""
         val future = CompletableFuture<SendResult<String, String>>()
@@ -71,12 +72,12 @@ class KafkaEventPublisherServiceTest {
     }
 
     @Test
-    fun `publishTaskEvent should send event to task topic`() {
+    fun `publishTaskEvent should send event to task topic`() = runTest {
         // Given
         val event = SessionStatusChangedEvent(
             sessionId = "test-session-id",
             previousStatus = null,
-            newStatus = SessionStatus.ACTIVE
+            newStatus = SessionStatus.ACTIVE,
         )
         val eventJson = """{"eventId":"test-event-id","sessionId":"test-session-id"}"""
         val future = CompletableFuture<SendResult<String, String>>()

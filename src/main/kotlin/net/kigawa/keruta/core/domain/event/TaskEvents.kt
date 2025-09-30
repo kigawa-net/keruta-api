@@ -12,7 +12,7 @@ data class TaskCreatedEvent(
     val taskId: String,
     val sessionId: String,
     val taskName: String,
-    val userId: String? = null
+    val userId: String? = null,
 ) : Event()
 
 data class TaskStatusChangedEvent(
@@ -25,7 +25,7 @@ data class TaskStatusChangedEvent(
     val previousStatus: TaskStatus?,
     val newStatus: TaskStatus,
     val userId: String? = null,
-    val reason: String? = null
+    val reason: String? = null,
 ) : Event()
 
 data class TaskCompletedEvent(
@@ -37,7 +37,7 @@ data class TaskCompletedEvent(
     val sessionId: String,
     val exitCode: Int? = null,
     val duration: Long? = null,
-    val userId: String? = null
+    val userId: String? = null,
 ) : Event()
 
 data class TaskFailedEvent(
@@ -49,5 +49,5 @@ data class TaskFailedEvent(
     val sessionId: String,
     val errorMessage: String? = null,
     val exitCode: Int? = null,
-    val userId: String? = null
+    val userId: String? = null,
 ) : Event()
