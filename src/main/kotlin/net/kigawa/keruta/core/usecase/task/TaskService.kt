@@ -22,4 +22,6 @@ interface TaskService {
     suspend fun getTaskScript(taskId: String): String?
     suspend fun getSubTasks(parentTaskId: String): List<Task>
     suspend fun createSubTask(parentTaskId: String, subTask: Task): Task
+    suspend fun executeTaskWithLock(taskId: String, execution: suspend () -> Unit): Boolean
+    suspend fun isTaskCurrentlyExecuting(taskId: String): Boolean
 }

@@ -49,6 +49,17 @@ dependencies {
     // Logging
     implementation("net.logstash.logback:logstash-logback-encoder:7.3")
 
+    // ZooKeeper
+    implementation("org.apache.zookeeper:zookeeper:3.9.1") {
+        exclude(group = "org.slf4j", module = "slf4j-log4j12")
+    }
+    implementation("org.apache.curator:curator-framework:5.5.0")
+    implementation("org.apache.curator:curator-recipes:5.5.0")
+
+    // Kafka
+    implementation("org.springframework.kafka:spring-kafka")
+    implementation("org.apache.kafka:kafka-clients:3.6.0")
+
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
@@ -58,7 +69,10 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:testcontainers")
     testImplementation("org.testcontainers:mongodb")
+    testImplementation("org.testcontainers:kafka")
     testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
+    testImplementation("org.apache.curator:curator-test:5.5.0")
+    testImplementation("org.springframework.kafka:spring-kafka-test")
 }
 
 configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {

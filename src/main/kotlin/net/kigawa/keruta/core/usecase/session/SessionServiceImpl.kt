@@ -3,10 +3,14 @@
  */
 package net.kigawa.keruta.core.usecase.session
 
+import net.kigawa.keruta.core.domain.event.SessionCreatedEvent
+import net.kigawa.keruta.core.domain.event.SessionDeletedEvent
+import net.kigawa.keruta.core.domain.event.SessionStatusChangedEvent
 import net.kigawa.keruta.core.domain.model.Session
 import net.kigawa.keruta.core.domain.model.SessionLogLevel
 import net.kigawa.keruta.core.domain.model.SessionStatus
 import net.kigawa.keruta.core.usecase.repository.SessionRepository
+import net.kigawa.keruta.infra.app.service.EventPublisherService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -17,6 +21,7 @@ open class SessionServiceImpl(
     open val sessionEventListener: SessionEventListener,
     private val broadcastService: SessionStatusBroadcastService? = null,
     private val sessionLogService: SessionLogService? = null,
+    private val eventPublisherService: EventPublisherService? = null,
 ) : SessionService {
 
     open val logger = LoggerFactory.getLogger(SessionServiceImpl::class.java)
@@ -65,6 +70,19 @@ open class SessionServiceImpl(
             sessionEventListener.onSessionCreated(createdSession)
         } catch (e: Exception) {
             logger.error("Failed to handle session creation event for session: {}", createdSession.id, e)
+        }
+
+        // Publish Kafka event
+        eventPublisherService?.let { publisher ->
+            try {
+                val event = SessionCreatedEvent(
+                    sessionId = createdSession.id,
+                    sessionName = createdSession.name
+                )
+                publisher.publishSessionEvent(event)
+            } catch (e: Exception) {
+                logger.error("Failed to publish session created event: {}", createdSession.id, e)
+            }
         }
 
         return createdSession
@@ -205,6 +223,16 @@ open class SessionServiceImpl(
             logger.error("Failed to handle session deletion event for session: {}", id, e)
         }
 
+        // Publish Kafka event
+        eventPublisherService?.let { publisher ->
+            try {
+                val event = SessionDeletedEvent(sessionId = id)
+                publisher.publishSessionEvent(event)
+            } catch (e: Exception) {
+                logger.error("Failed to publish session deleted event: {}", id, e)
+            }
+        }
+
         // Delete the session logs first
         sessionLogService?.deleteSessionLogs(id)
 
@@ -260,7 +288,19 @@ open class SessionServiceImpl(
                 }
             }
 
-            // Status change notifications are handled by keruta-executor
+            // Publish Kafka event for status change
+            eventPublisherService?.let { publisher ->
+                try {
+                    val event = SessionStatusChangedEvent(
+                        sessionId = id,
+                        previousStatus = previousStatus,
+                        newStatus = status
+                    )
+                    publisher.publishSessionEvent(event)
+                } catch (e: Exception) {
+                    logger.error("Failed to publish session status changed event: {}", id, e)
+                }
+            }
 
             logger.info("Session status updated successfully: id={} status={}", id, status)
             return savedSession
