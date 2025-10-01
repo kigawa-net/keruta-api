@@ -14,8 +14,6 @@ tasks.withType<KotlinCompile> {
 }
 
 plugins {
-    kotlin("jvm")
-    kotlin("plugin.spring")
     `java-library`
 }
 
