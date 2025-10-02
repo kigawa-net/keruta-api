@@ -7,17 +7,6 @@ plugins {
     id("org.openapi.generator") version "7.1.0"
 }
 
-// Configure subprojects to use same plugin versions
-subprojects {
-    apply(plugin = "org.jetbrains.kotlin.jvm")
-    apply(plugin = "org.jetbrains.kotlin.plugin.spring")
-    apply(plugin = "java-library")
-
-    repositories {
-        mavenCentral()
-    }
-}
-
 group = "net.kigawa"
 version = "0.0.1-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_21
@@ -45,9 +34,6 @@ configurations.all {
 }
 
 dependencies {
-    // Generated API code
-    implementation(project(":generated-api"))
-
     // Kotlin
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
