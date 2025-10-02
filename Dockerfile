@@ -12,9 +12,6 @@ COPY ./settings.gradle.kts .
 # Make gradlew executable
 RUN chmod +x ./gradlew
 
-# Download dependencies
-RUN ./gradlew dependencies --no-daemon
-
 # Copy source code
 COPY ./src src
 COPY ./generated-api generated-api
