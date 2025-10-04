@@ -17,7 +17,7 @@ COPY ./src src
 COPY ./generated-api generated-api
 
 # Build the application
-RUN ./gradlew bootJar --no-daemon
+RUN ./gradlew bootJar --no-daemon --parallel
 
 # Runtime stage
 FROM eclipse-temurin:21-jre
