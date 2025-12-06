@@ -3,6 +3,7 @@ package net.kigawa.keruta.core.usecase.task
 import net.kigawa.keruta.core.domain.model.LogLevel
 import net.kigawa.keruta.core.domain.model.Task
 import net.kigawa.keruta.core.domain.model.TaskStatus
+import net.kigawa.keruta.core.usecase.exclusion.TaskExecutionExclusionService
 import net.kigawa.keruta.core.usecase.repository.TaskRepository
 import net.kigawa.keruta.core.usecase.submodule.SubmoduleService
 import org.slf4j.LoggerFactory
@@ -15,6 +16,7 @@ open class TaskServiceImpl(
     private val taskRepository: TaskRepository,
     private val taskLogService: TaskLogService,
     private val submoduleService: SubmoduleService,
+    private val exclusionService: TaskExecutionExclusionService,
 ) : TaskService {
 
     private val logger = LoggerFactory.getLogger(TaskServiceImpl::class.java)
@@ -66,6 +68,22 @@ open class TaskServiceImpl(
     ): Task? {
         val existingTask = taskRepository.findById(id) ?: return null
 
+        // Check if task execution requires exclusive access
+        if (status == TaskStatus.IN_PROGRESS) {
+            val lock = exclusionService.acquireLock(id)
+            if (lock == null) {
+                logger.warn("Failed to acquire lock for task: $id. Task execution aborted.")
+                return updateTaskStatusWithoutLock(
+                    existingTask,
+                    TaskStatus.FAILED,
+                    "Failed to acquire execution lock",
+                    progress,
+                    "LOCK_ACQUISITION_FAILED",
+                )
+            }
+            logger.info("Successfully acquired lock for task: $id on node: ${lock.nodeId}")
+        }
+
         val updatedTask = existingTask.copy(
             status = status,
             message = message,
@@ -87,6 +105,49 @@ open class TaskServiceImpl(
         }
 
         return savedTask
+    }
+
+    private suspend fun updateTaskStatusWithoutLock(
+        existingTask: Task,
+        status: TaskStatus,
+        message: String,
+        progress: Int,
+        errorCode: String,
+    ): Task {
+        val updatedTask = existingTask.copy(
+            status = status,
+            message = message,
+            progress = progress,
+            errorCode = errorCode,
+            updatedAt = LocalDateTime.now(),
+        )
+
+        logger.info("Updating task ${existingTask.id} status to $status: $message")
+        return taskRepository.save(updatedTask)
+    }
+
+    override suspend fun executeTaskWithLock(taskId: String, execution: suspend () -> Unit): Boolean {
+        val lock = exclusionService.acquireLock(taskId)
+        return if (lock != null) {
+            try {
+                logger.info("Executing task: $taskId with lock on node: ${lock.nodeId}")
+                execution()
+                true
+            } catch (e: Exception) {
+                logger.error("Error executing task: $taskId", e)
+                throw e
+            } finally {
+                exclusionService.releaseLock(lock)
+                logger.info("Released lock for task: $taskId")
+            }
+        } else {
+            logger.warn("Could not acquire lock for task: $taskId")
+            false
+        }
+    }
+
+    override suspend fun isTaskCurrentlyExecuting(taskId: String): Boolean {
+        return exclusionService.isTaskLocked(taskId)
     }
 
     override suspend fun updateTask(id: String, name: String?, description: String?, script: String?): Task? {

@@ -15,24 +15,6 @@ repositories {
     mavenCentral()
 }
 
-// Security: Force resolution strategy for vulnerable dependencies
-configurations.all {
-    resolutionStrategy {
-        // Force latest available version for CVE-2025-48924
-        force("org.apache.commons:commons-lang3:3.18.0")
-
-        // Enable dependency verification for security vulnerabilities
-        eachDependency {
-            if (requested.group == "org.apache.commons" && requested.name == "commons-lang3") {
-                if (requested.version!! < "3.18.0") {
-                    useVersion("3.18.0")
-                    because("CVE-2025-48924 security mitigation - using latest available")
-                }
-            }
-        }
-    }
-}
-
 dependencies {
     // Kotlin
     implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -45,7 +27,6 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-websocket")
-    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
@@ -64,16 +45,21 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     // Swagger/OpenAPI
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0") {
-        exclude(group = "org.apache.commons", module = "commons-lang3")
-    }
-
-    // Security: CVE-2025-48924 affects commons-lang3 up to 3.18.0
-    // Waiting for patched version > 3.18.0 or using runtime protections
-    implementation("org.apache.commons:commons-lang3:3.18.0")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
 
     // Logging
     implementation("net.logstash.logback:logstash-logback-encoder:7.3")
+
+    // ZooKeeper
+    implementation("org.apache.zookeeper:zookeeper:3.9.1") {
+        exclude(group = "org.slf4j", module = "slf4j-log4j12")
+    }
+    implementation("org.apache.curator:curator-framework:5.5.0")
+    implementation("org.apache.curator:curator-recipes:5.5.0")
+
+    // Kafka
+    implementation("org.springframework.kafka:spring-kafka")
+    implementation("org.apache.kafka:kafka-clients:3.6.0")
 
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
@@ -84,7 +70,11 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:testcontainers")
     testImplementation("org.testcontainers:mongodb")
+    testImplementation("org.testcontainers:kafka")
     testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
+    testImplementation("org.apache.curator:curator-test:5.5.0")
+    testImplementation("org.springframework.kafka:spring-kafka-test")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 }
 
 configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
@@ -115,8 +105,8 @@ tasks.withType<Test> {
 // OpenAPI Code Generation Configuration
 openApiGenerate {
     generatorName.set("kotlin-spring")
-    inputSpec.set("${projectDir}/src/main/resources/openapi.yaml")
-    outputDir.set("${projectDir}/build/generated/openapi")
+    inputSpec.set("${project.rootDir}/src/main/resources/openapi.yaml")
+    outputDir.set("${layout.buildDirectory.get()}/generated")
     apiPackage.set("net.kigawa.keruta.api.generated")
     modelPackage.set("net.kigawa.keruta.model.generated")
     packageName.set("net.kigawa.keruta.generated")
@@ -128,21 +118,20 @@ openApiGenerate {
             "skipDefaultInterface" to "true",
             "documentationProvider" to "none", // Disable SpringDoc to avoid SpringDocConfiguration.kt
             "useSpringBoot3" to "true",
-            "serializationLibrary" to "jackson",
         ),
     )
 }
 
-// Add generated sources to source set
+// Add generated sources to compilation
 sourceSets {
     main {
         kotlin {
-            srcDir("${layout.buildDirectory.get()}/generated/openapi/src/main/kotlin")
+            srcDir("${layout.buildDirectory.get()}/generated/src/main/kotlin")
         }
     }
 }
 
-// Ensure code generation runs before compilation
+// Ensure code generation runs before compilation and ktlint
 tasks.named("compileKotlin") {
     dependsOn("openApiGenerate")
 }
