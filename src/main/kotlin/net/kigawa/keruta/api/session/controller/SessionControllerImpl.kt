@@ -125,7 +125,7 @@ class SessionControllerImpl(
         summary = "Get session by ID with detailed information",
         description = "Retrieves a specific session by its ID with detailed information",
     )
-    suspend fun getSessionByIdDetailed(@PathVariable id: String): ResponseEntity<SessionResponse> {
+    override suspend fun getSessionByIdDetailed(@PathVariable id: String): ResponseEntity<SessionResponse> {
         return try {
             val session = sessionService.getSessionById(id)
             ResponseEntity.ok(SessionResponse.fromDomain(session))
@@ -139,7 +139,7 @@ class SessionControllerImpl(
         summary = "Update session with detailed response",
         description = "Updates an existing session with detailed response (status changes are not allowed)",
     )
-    suspend fun updateSessionDetailed(
+    override suspend fun updateSessionDetailed(
         @PathVariable id: String,
         @RequestBody request: UpdateSessionRequest,
     ): ResponseEntity<SessionResponse> {
@@ -174,7 +174,7 @@ class SessionControllerImpl(
         summary = "Delete session with detailed logging",
         description = "Deletes a specific session with detailed logging",
     )
-    suspend fun deleteSessionDetailed(@PathVariable id: String): ResponseEntity<Void> {
+    override suspend fun deleteSessionDetailed(@PathVariable id: String): ResponseEntity<Void> {
         return try {
             sessionService.deleteSession(id)
             ResponseEntity.noContent().build()
@@ -185,7 +185,7 @@ class SessionControllerImpl(
 
     @GetMapping("/status/{status}")
     @Operation(summary = "Get sessions by status", description = "Retrieves all sessions with a specific status")
-    suspend fun getSessionsByStatus(@PathVariable status: String): List<SessionResponse> {
+    override suspend fun getSessionsByStatus(@PathVariable status: String): List<SessionResponse> {
         val sessionStatus = try {
             net.kigawa.keruta.core.domain.model.SessionStatus.valueOf(status.uppercase())
         } catch (e: IllegalArgumentException) {
@@ -196,7 +196,7 @@ class SessionControllerImpl(
 
     @GetMapping("/search")
     @Operation(summary = "Search sessions by name", description = "Searches sessions by name pattern")
-    suspend fun searchSessionsByName(@RequestParam name: String): List<SessionResponse> {
+    override suspend fun searchSessionsByName(@RequestParam name: String): List<SessionResponse> {
         return sessionService.searchSessionsByName(name).map { SessionResponse.fromDomain(it) }
     }
 
@@ -205,7 +205,7 @@ class SessionControllerImpl(
         summary = "Search sessions by partial ID",
         description = "Searches sessions by partial UUID (useful for finding sessions from workspace names)",
     )
-    suspend fun searchSessionsByPartialId(@RequestParam partialId: String): ResponseEntity<List<SessionResponse>> {
+    override suspend fun searchSessionsByPartialId(@RequestParam partialId: String): ResponseEntity<List<SessionResponse>> {
         logger.info("Searching sessions by partial ID: {}", partialId)
 
         // Validate input
@@ -233,7 +233,7 @@ class SessionControllerImpl(
 
     @GetMapping("/tag/{tag}")
     @Operation(summary = "Get sessions by tag", description = "Retrieves all sessions with a specific tag")
-    suspend fun getSessionsByTag(@PathVariable tag: String): List<SessionResponse> {
+    override suspend fun getSessionsByTag(@PathVariable tag: String): List<SessionResponse> {
         return sessionService.getSessionsByTag(tag).map { SessionResponse.fromDomain(it) }
     }
 
@@ -242,7 +242,7 @@ class SessionControllerImpl(
         summary = "Update session status",
         description = "External API - Status updates are not allowed from users",
     )
-    suspend fun updateSessionStatus(
+    override suspend fun updateSessionStatus(
         @PathVariable id: String,
         @RequestBody statusRequest: Map<String, String>,
     ): ResponseEntity<Map<String, String>> {
@@ -264,7 +264,7 @@ class SessionControllerImpl(
         summary = "Update session status (System Only)",
         description = "Internal API for system components to update session status",
     )
-    suspend fun updateSessionStatusSystem(
+    override suspend fun updateSessionStatusSystem(
         @PathVariable id: String,
         @RequestBody statusRequest: Map<String, String>,
     ): ResponseEntity<SessionResponse> {
@@ -295,7 +295,7 @@ class SessionControllerImpl(
 
     @PostMapping("/{id}/tags")
     @Operation(summary = "Add tag to session", description = "Adds a tag to a specific session")
-    suspend fun addTagToSession(
+    override suspend fun addTagToSession(
         @PathVariable id: String,
         @RequestBody tagRequest: Map<String, String>,
     ): ResponseEntity<SessionResponse> {
@@ -310,7 +310,7 @@ class SessionControllerImpl(
 
     @DeleteMapping("/{id}/tags/{tag}")
     @Operation(summary = "Remove tag from session", description = "Removes a tag from a specific session")
-    suspend fun removeTagFromSession(
+    override suspend fun removeTagFromSession(
         @PathVariable id: String,
         @PathVariable tag: String,
     ): ResponseEntity<SessionResponse> {
@@ -327,7 +327,7 @@ class SessionControllerImpl(
         summary = "Monitor session workspaces",
         description = "Get workspaces associated with this session from Coder via executor",
     )
-    suspend fun monitorSessionWorkspaces(@PathVariable id: String): ResponseEntity<List<CoderWorkspaceResponse>> {
+    override suspend fun monitorSessionWorkspaces(@PathVariable id: String): ResponseEntity<List<CoderWorkspaceResponse>> {
         logger.info("Monitoring workspaces for session: {}", id)
 
         return try {
@@ -353,7 +353,7 @@ class SessionControllerImpl(
         summary = "Get session workspaces",
         description = "Get workspaces associated with this session from Coder via executor",
     )
-    suspend fun getSessionWorkspaces(@PathVariable id: String): ResponseEntity<List<CoderWorkspaceResponse>> {
+    override suspend fun getSessionWorkspaces(@PathVariable id: String): ResponseEntity<List<CoderWorkspaceResponse>> {
         logger.info("Getting workspaces for session: {}", id)
 
         return try {
@@ -379,7 +379,7 @@ class SessionControllerImpl(
         summary = "Get session tasks",
         description = "Get tasks associated with this session",
     )
-    suspend fun getSessionTasks(
+    override suspend fun getSessionTasks(
         @PathVariable id: String,
         @RequestParam(required = false) status: String?,
     ): ResponseEntity<List<TaskResponse>> {
@@ -416,7 +416,7 @@ class SessionControllerImpl(
         summary = "Sync session status with workspaces",
         description = "Synchronize session status with associated workspace status from Coder. Creates workspace if none exists.",
     )
-    suspend fun syncSessionStatus(@PathVariable id: String): ResponseEntity<Map<String, Any>> {
+    override suspend fun syncSessionStatus(@PathVariable id: String): ResponseEntity<Map<String, Any>> {
         logger.info("Syncing status for session: {}", id)
 
         return try {
